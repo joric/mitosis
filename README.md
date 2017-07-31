@@ -1,6 +1,21 @@
 # Mitosis Keyboard Firmware
 Firmware for Nordic MCUs used in the Mitosis Keyboard, contains precompiled .hex files, as well as sources buildable with the Nordic SDK
 
+
+## IAR Support
+
+Original build used blue Waveshare Core51822 (B)
+modules ([$6.99](http://www.waveshare.com/core51822-b.htm)), but aliexpress has slightly smaller black YJ-14015
+modules that are also much cheaper (about [$3.50](https://www.aliexpress.com/item/BLE4-0-Bluetooth-2-4GHz-Wireless-Module-NRF51822-Board-Core51822-B/32633417101.html),
+you can also find them on [ebay](http://www.ebay.com/itm/BLE4-0-Bluetooth-2-4GHz-Wireless-Module-NRF51822-Board-Core51822-B-/282575577879)).
+It seems like precompiled firmware that works on Core51822 (B), doesn't work on YJ-14015 at all.
+Not really sure why it doesn't work after GCC toolchain, but you can build a working firmware in IAR, using provided project.
+It also needs defined `CLOCK_ENABLED` and `RTC0_ENABLED` in the receiver firmware (`nrf_drv_config.h`),
+otherwise it doesn't compile. IAR 7.50.2 compatible project is based upon `peripheral/blinky`
+sample from nRF5_SDK_11. You may also use precompiled firmware from the `precompiled_iar` folder.
+The modified IAR-compartible version also makes use of the keyswitch board LED (it blinks two times on powering up to indicate that firmware works).
+
+
 ## Install dependencies
 
 Tested on Ubuntu 16.04.2, but should be able to find alternatives on all distros. 
