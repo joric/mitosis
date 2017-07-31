@@ -9,7 +9,6 @@ openocd ^
 -f target/nrf51.cfg ^
 -c init ^
 -c "reset halt" ^
--ñ "nrf51 erase" ^
 -c "flash write_image erase %file:\=/%" ^
 -c "reset" ^
 -c exit
