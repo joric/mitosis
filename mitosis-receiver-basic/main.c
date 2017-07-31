@@ -45,7 +45,7 @@ static uint8_t data_buffer[10];
 
 // Debug helper variables
 extern nrf_gzll_error_code_t nrf_gzll_error_code;   ///< Error code
-static bool init_ok, enable_ok, push_ok, pop_ok, packet_received_left, packet_received_right;
+static bool packet_received_left, packet_received_right;
 uint32_t left_active = 0;
 uint32_t right_active = 0;
 uint8_t c;
