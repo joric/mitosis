@@ -13,7 +13,7 @@ Not really sure why it doesn't work after GCC toolchain, but you can build a wor
 It also needs defined `CLOCK_ENABLED` and `RTC0_ENABLED` in the receiver firmware (`nrf_drv_config.h`),
 otherwise it doesn't compile. IAR 7.50.2 compatible project is based upon `peripheral/blinky`
 sample from nRF5_SDK_11. You may also use precompiled firmware from the `precompiled_iar` folder.
-The modified IAR-compartible version also makes use of the keyswitch board LED (it blinks two times on powering up to indicate that firmware works).
+This version also makes use of the keyswitch board LED (it blinks two times on powering up to indicate that firmware works).
 
 
 ## Install dependencies
