@@ -3,9 +3,9 @@
 This branch adds YJ-14015 and IAR support.
 
 I'm using [IAR 7.50.2](https://www.iar.com/) for ARM,
-[nRF5_SDK_11](https://developer.nordicsemi.com/nRF5_SDK/nRF5_SDK_v11.x.x/nRF5_SDK_11.0.0_89a8197.zip),
-[OpenOCD g73b676c](http://www.freddiechopin.info/en/download/category/10-openocd-dev?download=140%3Aopenocd-0.10.0-dev-00247-g73b676c) for Windows 10
-and [ST-LINK/V2](http://www.ebay.com/itm/ST-Link-V2-Programming-Unit-mini-STM8-STM32-Emulator-Downloader-M89-Top-/331803020521).
+[nRF5_SDK_11](https://developer.nordicsemi.com/nRF5_SDK/) toolkit,
+[OpenOCD g73b676c](http://www.freddiechopin.info/en/download/category/10-openocd-dev/) for Windows 10
+and [ST-LINK/V2](http://www.ebay.com/itm/ST-Link-V2-Programming-Unit-mini-STM8-STM32-Emulator-Downloader-M89-Top-/331803020521) from ebay.
 
 ## IAR support
 
