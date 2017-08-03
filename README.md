@@ -30,8 +30,9 @@ Bat file for flashing:
 ```
 @echo off
 
-set path=C:\SDK\openocd-0.10.0-dev-00247-g73b676c\bin-x64\;%path%
-set file=C:\SDK\nRF5_SDK_11\mitosis\precompiled\precompiled-basic-receiver.hex
+set path=C:\SDK\openocd-0.10.0-dev-00247-g73b676c\bin-x64;%path%
+
+set file=%~dp0custom\iar\_build\nrf51822_xxac.hex
 
 openocd ^
 -f interface/stlink-v2.cfg ^
