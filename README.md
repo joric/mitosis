@@ -15,7 +15,7 @@ modules that are also much cheaper (about [$3.50](https://www.aliexpress.com/ite
 you can also find them on [ebay](http://www.ebay.com/itm/BLE4-0-Bluetooth-2-4GHz-Wireless-Module-NRF51822-Board-Core51822-B-/282575577879)).
 It seems like precompiled firmware that works on Core51822 (B), doesn't work on YJ-14015 at all.
 
-Not sure why it doesn't work after GCC toolchain, but you can build a working firmware in IAR, using provided project.
+Not sure why it doesn't work after GCC toolchain (update: fixed, see [#7](https://github.com/reversebias/mitosis/pull/7)), but you can build a working firmware in IAR, using provided project.
 It also needs defined `CLOCK_ENABLED` and `RTC0_ENABLED` in the receiver firmware (`nrf_drv_config.h`),
 otherwise it doesn't compile.
 
