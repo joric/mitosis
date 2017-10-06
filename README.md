@@ -2,6 +2,8 @@
 
 This branch adds YJ-14015 and IAR support.
 
+It also makes use of the keyswitch board LED (it blinks two times on powering up to indicate that firmware works).
+
 ## Hardware
 
 * [ST-LINK/V2](http://www.ebay.com/itm/ST-Link-V2-Programming-Unit-mini-STM8-STM32-Emulator-Downloader-M89-Top-/331803020521) (OpenOCD-compatible debugger/programmer)
@@ -20,20 +22,21 @@ This branch adds YJ-14015 and IAR support.
 Original build used blue Waveshare Core51822 (B)
 modules ([$6.99](http://www.waveshare.com/core51822-b.htm)), but aliexpress has slightly smaller black YJ-14015
 modules that are also much cheaper (about $3.50), you can find them on [Aliexpress](https://www.aliexpress.com/item/BLE4-0-Bluetooth-2-4GHz-Wireless-Module-NRF51822-Board-Core51822-B/32633417101.html) or [eBay](http://www.ebay.com/itm/BLE4-0-Bluetooth-2-4GHz-Wireless-Module-NRF51822-Board-Core51822-B-/282575577879).
-It seems like stock firmware that works on Core51822 (B), doesn't work on YJ-14015 at all. You can build a working firmware in IAR, using provided project. It also defines `CLOCK_ENABLED` and `RTC0_ENABLED` in the receiver firmware (`nrf_drv_config.h`),
-otherwise it doesn't compile. IAR 7.50.2 compatible project is based upon `peripheral/blinky`
-sample from nRF5_SDK_11. You may also use precompiled firmware from the `precompiled_iar` folder.
-This version also makes use of the keyswitch board LED (it blinks two times on powering up to indicate that firmware works).
+It seems like stock firmware that works on Core51822 (B), doesn't work on YJ-14015 at all.
+You can build a working firmware in IAR, using provided project.
+Mind that it defines `CLOCK_ENABLED` and `RTC0_ENABLED` in the receiver firmware (`nrf_drv_config.h`), otherwise it doesn't compile.
+You may also use precompiled firmware from the `precompiled_iar` folder.
+IAR 7.50.2 compatible project is based upon `peripheral/blinky` sample from nRF5_SDK_11.
 
 ## GCC support
 
 This repository now supports GCC for YJ-14015 as well, so there's no need for IAR.
-Use GCC-prebuild firmware from the precompiled folder or apply this diff to the stock firmware https://github.com/reversebias/mitosis/pull/7
+Use GCC-prebuild firmware from the precompiled folder or apply this diff https://github.com/reversebias/mitosis/pull/7
 
 
-## Firmware upload
+## Uploading fimware
 
-I am using Windows 10 and Windows Subsystem for Linux (WSL). To flash nRF modules, connect ST-LINK/V2 to the nRF module as shown on the pictures, and run this script:
+To flash nRF modules, connect ST-LINK/V2 to the module programming pins as shown on the pictures (SWCLK, SWDIO, GND, 3.3V - top to bottom) and run this batch (windows 10):
 
 ```
 @echo off
@@ -59,7 +62,31 @@ set path=C:\WinAVR-20100110\bin;%path%
 avrdude -p atmega32u4 -P COM9 -c avr109  -U flash:w:mitosis_default.hex
 ```
 
+## Building firmware
 
+I am using Windows 10 and Windows Subsystem for Linux (WSL) for everything.
+
+Building nRF firmware:
+
+```
+cd nRF5_SDK_11
+git clone https://github.com/joric/mitosis
+git checkout devel
+(edit /components/toolchain/gcc/Makefile.posix, set GNU_INSTALL_ROOT := /usr/)
+sudo apt install openocd gcc-arm-none-eabi
+sudo cp mitosis/49-stlinkv2.rules /etc/udev/rules.d/
+cd mitosis/mitosis-keyboard-basic/custom/armgcc
+make
+
+```
+
+Building QMK firmware:
+
+```
+sudo apt-get install gcc-avr avr-libc
+cd qmk_firmware
+make mitosis-default
+```
 
 
 
