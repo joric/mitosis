@@ -2,6 +2,8 @@
 
 This branch adds YJ-14015 and IAR support.
 
+[![mitosis-mjt](http://img.youtube.com/vi/hMlQvZNmCc8/0.jpg)](https://www.youtube.com/watch?v=hMlQvZNmCc8)
+
 It also makes use of the keyswitch board LED (it blinks two times on powering up to indicate that firmware works).
 
 I'm using [modified QMK firmware](https://github.com/joric/qmk_firmware/blob/mitosis-joric/keyboards/mitosis/mitosis.c) (with mitosis-MJT keymap) that adds LED startup sequence to the receiver as well.
