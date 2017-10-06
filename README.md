@@ -36,7 +36,7 @@ Use GCC-prebuild firmware from the precompiled folder or apply this diff https:/
 
 ## Uploading fimware
 
-To flash nRF modules, connect ST-LINK/V2 to the module programming pins as shown on the pictures (SWCLK, SWDIO, GND, 3.3V - top to bottom) and run this batch (windows 10):
+To flash nRF modules, connect ST-LINK/V2 to the module programming pins (SWCLK, SWDIO, GND, 3.3V - top to bottom) and run this batch (windows 10):
 
 ```
 @echo off
