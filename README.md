@@ -25,7 +25,7 @@ modules that are also much cheaper (about $3.50), you can find them on [Aliexpre
 It seems like stock firmware that works on Core51822 (B), doesn't work on YJ-14015 at all.
 You can build a working firmware in IAR, using provided project.
 Mind that it defines `CLOCK_ENABLED` and `RTC0_ENABLED` in the receiver firmware (`nrf_drv_config.h`), otherwise it doesn't compile.
-You may also use precompiled firmware from the `precompiled_iar` folder.
+Open .eww, run build, that's it. You may also use precompiled firmware from the `precompiled_iar` folder.
 IAR 7.50.2 compatible project is based upon `peripheral/blinky` sample from nRF5_SDK_11.
 
 ## GCC support
@@ -66,7 +66,7 @@ avrdude -p atmega32u4 -P COM9 -c avr109  -U flash:w:mitosis_default.hex
 
 I am using Windows 10 and Windows Subsystem for Linux (WSL) for everything.
 
-Building nRF firmware:
+Building nRF firmware with GCC:
 
 ```
 cd nRF5_SDK_11
