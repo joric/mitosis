@@ -4,6 +4,8 @@ This branch adds YJ-14015 and IAR support.
 
 It also makes use of the keyswitch board LED (it blinks two times on powering up to indicate that firmware works).
 
+I'm using [modified QMK firmware](https://github.com/joric/qmk_firmware/blob/mitosis-joric/keyboards/mitosis/mitosis.c) (with mitosis-MJT keymap) that adds LED startup sequence to the receiver as well.
+
 ## Hardware
 
 * [ST-LINK/V2](http://www.ebay.com/itm/ST-Link-V2-Programming-Unit-mini-STM8-STM32-Emulator-Downloader-M89-Top-/331803020521) (OpenOCD-compatible debugger/programmer)
