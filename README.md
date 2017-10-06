@@ -35,7 +35,7 @@ Use GCC-prebuild firmware from the precompiled folder or apply this diff to the 
 
 I am using Windows 10 and Windows Subsystem for Linux (WSL).
 
-Modules - connect ST-LINK/V2 to the nRF module as shown on the pictures, run this script:
+To flash nRF modules, connect ST-LINK/V2 to the nRF module as shown on the pictures, and run this script:
 
 ```
 @echo off
