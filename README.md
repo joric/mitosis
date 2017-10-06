@@ -72,8 +72,8 @@ Building nRF firmware with GCC:
 cd nRF5_SDK_11
 git clone https://github.com/joric/mitosis
 git checkout devel
-(edit /components/toolchain/gcc/Makefile.posix, set GNU_INSTALL_ROOT := /usr/)
 sudo apt install openocd gcc-arm-none-eabi
+(edit /components/toolchain/gcc/Makefile.posix, set GNU_INSTALL_ROOT := /usr/)
 sudo cp mitosis/49-stlinkv2.rules /etc/udev/rules.d/
 cd mitosis/mitosis-keyboard-basic/custom/armgcc
 make
