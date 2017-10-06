@@ -27,10 +27,8 @@ Original build used blue Waveshare Core51822 (B)
 modules ([$6.99](http://www.waveshare.com/core51822-b.htm)), but aliexpress has slightly smaller black YJ-14015
 modules that are also much cheaper (about $3.50), you can find them on [Aliexpress](https://www.aliexpress.com/item/BLE4-0-Bluetooth-2-4GHz-Wireless-Module-NRF51822-Board-Core51822-B/32633417101.html) or [eBay](http://www.ebay.com/itm/BLE4-0-Bluetooth-2-4GHz-Wireless-Module-NRF51822-Board-Core51822-B-/282575577879).
 It seems like stock firmware that works on Core51822 (B), doesn't work on YJ-14015 at all.
-You can build a working firmware in IAR, using provided project.
-Mind that it defines `CLOCK_ENABLED` and `RTC0_ENABLED` in the receiver firmware (`nrf_drv_config.h`), otherwise it doesn't compile.
-Open .eww, run build, that's it. You may also use precompiled firmware from the `precompiled_iar` folder.
-IAR 7.50.2 compatible project is based upon `peripheral/blinky` sample from nRF5_SDK_11.
+You can build a working firmware in IAR, using provided project (open .eww, run build, that's all).
+You may also use precompiled firmware from the `precompiled_iar` folder.
 
 ## GCC support
 
