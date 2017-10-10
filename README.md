@@ -11,7 +11,7 @@ I'm using [modified QMK firmware](https://github.com/joric/qmk_firmware/blob/mit
 ## Hardware
 
 * [ST-LINK/V2](http://www.ebay.com/itm/ST-Link-V2-Programming-Unit-mini-STM8-STM32-Emulator-Downloader-M89-Top-/331803020521) (OpenOCD-compatible debugger/programmer)
-* [YJ-14015](https://www.aliexpress.com/item/BLE4-0-Bluetooth-2-4GHz-Wireless-Module-NRF51822-Board-Core51822-B/32633417101.html) (nRF51822-module, 32-bit ARM Cortex M0, 128kB flash + 32kB RAM)
+* [YJ-14015](https://www.aliexpress.com/item/Core51822-BLE-4-0-Bluetooth-2-4G-Wireless-Module-NRF51822-Antenna-Board-For-ULP-SPI-I2C/32832872640.html) (nRF51822-module, 32-bit ARM Cortex M0, 128kB flash + 32kB RAM)
 
 
 ## Software
@@ -25,7 +25,7 @@ I'm using [modified QMK firmware](https://github.com/joric/qmk_firmware/blob/mit
 
 Original build used blue Waveshare Core51822 (B)
 modules ([$6.99](http://www.waveshare.com/core51822-b.htm)), but aliexpress has slightly smaller black YJ-14015
-modules that are also much cheaper (about $3.50), you can find them on [Aliexpress](https://www.aliexpress.com/item/BLE4-0-Bluetooth-2-4GHz-Wireless-Module-NRF51822-Board-Core51822-B/32633417101.html) or [eBay](http://www.ebay.com/itm/BLE4-0-Bluetooth-2-4GHz-Wireless-Module-NRF51822-Board-Core51822-B-/282575577879).
+modules that are also much cheaper (about $3.50), you can find them on Aliexpress or [eBay](http://www.ebay.com/itm/BLE4-0-Bluetooth-2-4GHz-Wireless-Module-NRF51822-Board-Core51822-B-/282575577879).
 It seems like stock firmware that works on Core51822 (B), doesn't work on YJ-14015 at all.
 You can build a working firmware in IAR, using provided project (open .eww, run build, that's all).
 You may also use precompiled firmware from the `precompiled_iar` folder.
@@ -90,7 +90,6 @@ sudo apt-get install gcc-avr avr-libc
 cd qmk_firmware
 make mitosis-default
 ```
-
 
 
 
