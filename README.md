@@ -95,7 +95,7 @@ make mitosis-default
 
 * [left half](https://raw.githubusercontent.com/joric/mitosis/devel/precompiled_iar/precompiled-basic-left.hex)
 * [right half](https://raw.githubusercontent.com/joric/mitosis/devel/precompiled_iar/precompiled-basic-right.hex)
-* [receiver] (https://raw.githubusercontent.com/joric/mitosis/devel/precompiled_iar/precompiled-basic-receiver.hex) (YJ-14015 and status LED support)
+* [receiver](https://raw.githubusercontent.com/joric/mitosis/devel/precompiled_iar/precompiled-basic-receiver.hex) (YJ-14015 and status LED support)
 
 ## QMK Firmware
 
