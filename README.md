@@ -26,7 +26,7 @@ I'm using [modified QMK firmware](https://github.com/joric/qmk_firmware/blob/mit
 Original build used blue Waveshare Core51822 (B)
 modules ([$6.99](http://www.waveshare.com/core51822-b.htm)), but aliexpress has slightly smaller black YJ-14015
 modules that are also much cheaper (about $3.50), you can find them on Aliexpress or [eBay](http://www.ebay.com/itm/BLE4-0-Bluetooth-2-4GHz-Wireless-Module-NRF51822-Board-Core51822-B-/282575577879).
-It seems like stock firmware that works on Core51822 (B), doesn't work on YJ-14015 at all.
+It seems like stock firmware that works on Core51822 (B), doesn't work on YJ-14015 at all (update, already works, see https://github.com/reversebias/mitosis/pull/7).
 You can build a working firmware in IAR, using provided project (open .eww, run build, that's all).
 You may also use precompiled firmware from the `precompiled_iar` folder.
 
