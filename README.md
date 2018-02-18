@@ -38,7 +38,7 @@ Use GCC-prebuild firmware from the precompiled folder or apply this diff https:/
 
 ## nRF51 Firmware
 
-This firmware is used for the keyboard halves.
+This firmware is used for the nRF51 modules on the keyboard halves and the receiver.
 
 ### Precompiled nRF51 Firmware
 
@@ -88,7 +88,7 @@ make
 
 ## QMK Firmware
 
-This firmware is used for the keyboard receiver.
+This firmware is used for the Arduino Pro Micro on the keyboard receiver.
 
 ### Precompiled QMK Firmware
 
