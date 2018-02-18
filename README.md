@@ -36,36 +36,19 @@ This repository now supports GCC for YJ-14015 as well, so there's no need for IA
 Use GCC-prebuild firmware from the precompiled folder or apply this diff https://github.com/reversebias/mitosis/pull/7
 (update: it's already merged into upstream).
 
+## nRF51 Firmware
 
-## Uploading fimware
+This firmware is used for the keyboard halves.
 
-To flash nRF modules, connect ST-LINK/V2 to the module programming pins (SWCLK, SWDIO, GND, 3.3V - top to bottom) and run this batch (windows 10):
+### Precompiled nRF51 Firmware
 
-```
-@echo off
-set path=C:\SDK\openocd-0.10.0-dev-00247-g73b676c\bin-x64;%path%
-set file=%~dp0custom\iar\_build\nrf51822_xxac.hex
-openocd ^
--f interface/stlink-v2.cfg ^
--f target/nrf51.cfg ^
--c init ^
--c "reset halt" ^
--c "flash write_image erase %file:\=/%" ^
--c "reset" ^
--c exit
+This precompiled firmware features YJ-14015 support and status LEDs support.
 
-```
+* left half: [precompiled-basic-left.hex](https://raw.githubusercontent.com/joric/mitosis/devel/precompiled_iar/precompiled-basic-left.hex)
+* right half: [precompiled-basic-right.hex](https://raw.githubusercontent.com/joric/mitosis/devel/precompiled_iar/precompiled-basic-right.hex)
+* receiver: [precompiled-basic-receiver.hex](https://raw.githubusercontent.com/joric/mitosis/devel/precompiled_iar/precompiled-basic-receiver.hex)
 
-To flash prebuilt QMK firmware on Pro Micro, press reset button on the receiver and run the script below.
-You can look up the bootloader port in device manager (e.g. COM9), it shows only for a few seconds after reset.
-
-
-```
-set path=C:\WinAVR-20100110\bin;%path%
-avrdude -p atmega32u4 -P COM9 -c avr109  -U flash:w:mitosis_default.hex
-```
-
-## Building firmware
+### Building nRF51 Firmware
 
 I am using Windows 10 and Windows Subsystem for Linux (WSL) for everything.
 
@@ -84,23 +67,30 @@ make
 
 ```
 
-Building QMK firmware:
+### Uploading nRF51 Firmware
+
+To flash nRF modules, connect ST-LINK/V2 to the module programming pins (SWCLK, SWDIO, GND, 3.3V - top to bottom) and run this batch (windows 10):
 
 ```
-sudo apt-get install gcc-avr avr-libc
-cd qmk_firmware
-make mitosis-default
+@echo off
+set path=C:\SDK\openocd-0.10.0-dev-00247-g73b676c\bin-x64;%path%
+set file=%~dp0custom\iar\_build\nrf51822_xxac.hex
+openocd ^
+-f interface/stlink-v2.cfg ^
+-f target/nrf51.cfg ^
+-c init ^
+-c "reset halt" ^
+-c "flash write_image erase %file:\=/%" ^
+-c "reset" ^
+-c exit
+
 ```
-
-## nRF51 Firmware
-
-Precompiled firmware, features YJ-14015 support and status LEDs support.
-
-* left half: [precompiled-basic-left.hex](https://raw.githubusercontent.com/joric/mitosis/devel/precompiled_iar/precompiled-basic-left.hex)
-* right half: [precompiled-basic-right.hex](https://raw.githubusercontent.com/joric/mitosis/devel/precompiled_iar/precompiled-basic-right.hex)
-* receiver: [precompiled-basic-receiver.hex](https://raw.githubusercontent.com/joric/mitosis/devel/precompiled_iar/precompiled-basic-receiver.hex)
 
 ## QMK Firmware
+
+This firmware is used for the keyboard receiver.
+
+### Precompiled QMK Firmware
 
 First of all, check [QMK repository](https://github.com/qmk/qmk_firmware/tree/master/keyboards/mitosis/keymaps) maybe your keymap is already merged.
 
@@ -111,6 +101,25 @@ First of all, check [QMK repository](https://github.com/qmk/qmk_firmware/tree/ma
 * mitosis-workman (workman layout) by /u/mloffer: [kle](http://www.keyboard-layout-editor.com/#/gists/db73d647ad8a67c9654a4daeab0e0873), [keymap.c](https://github.com/mloffer/mitosis-workman)
 * mitosis-atreus (atreus layout) from /u/iamjoric: [kle](http://www.keyboard-layout-editor.com/#/gists/e1b26b86c4e024d2f4f3185e5b769a00), [keymap.c](https://github.com/joric/qmk_firmware/blob/mitosis-joric/keyboards/mitosis/keymaps/atreus/keymap.c), [firmware](https://raw.githubusercontent.com/joric/qmk_firmware/mitosis-joric/precompiled/mitosis_atreus.hex)
 * mitosis-joric (experimental) from /u/iamjoric: [kle](http://www.keyboard-layout-editor.com/#/gists/3f5dd1c848bb9a7a723161ad5e0c8e39), [keymap.c](https://github.com/joric/qmk_firmware/blob/mitosis-joric/keyboards/mitosis/keymaps/joric/keymap.c), [firmware](https://raw.githubusercontent.com/joric/qmk_firmware/mitosis-joric/precompiled/mitosis_joric.hex)
+
+### Building QMK firmware:
+
+```
+sudo apt-get install gcc-avr avr-libc
+cd qmk_firmware
+make mitosis-default
+```
+
+### Uploading QMK Firmware
+
+To flash prebuilt QMK firmware on Pro Micro, press reset button on the receiver and run the script below.
+You can look up the bootloader port in device manager (e.g. COM9), it shows only for a few seconds after reset.
+
+```
+set path=C:\WinAVR-20100110\bin;%path%
+avrdude -p atmega32u4 -P COM9 -c avr109  -U flash:w:mitosis_default.hex
+```
+
 
 
 
