@@ -12,7 +12,9 @@ I'm using [modified QMK firmware](https://github.com/joric/qmk_firmware/blob/mit
 
 * [ST-LINK/V2](http://www.ebay.com/itm/ST-Link-V2-Programming-Unit-mini-STM8-STM32-Emulator-Downloader-M89-Top-/331803020521) (OpenOCD-compatible debugger/programmer)
 * [YJ-14015](https://www.aliexpress.com/item/Core51822-BLE-4-0-Bluetooth-2-4G-Wireless-Module-NRF51822-Antenna-Board-For-ULP-SPI-I2C/32832872640.html) (nRF51822-module, 32-bit ARM Cortex M0, 128kB flash + 32kB RAM)
+* PCB gerbers I used in this build: https://github.com/reversebias/mitosis-hardware
 
+I've also collected a few Kicad ports from Altium: https://github.com/joric/mitosis-hardware/tree/joric_kicad
 
 ## Software
 
