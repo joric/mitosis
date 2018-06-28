@@ -68,7 +68,7 @@
 #define KEY_PRESS_BUTTON_ID              0                                              /**< Button used as Keyboard key press. */
 #define SHIFT_BUTTON_ID                  1                                              /**< Button used as 'SHIFT' Key. */
 
-#define DEVICE_NAME                      "Nordic_Keyboard"                              /**< Name of device. Will be included in the advertising data. */
+#define DEVICE_NAME                      "Mitosis_Bluetooth"                              /**< Name of device. Will be included in the advertising data. */
 #define MANUFACTURER_NAME                "NordicSemiconductor"                          /**< Manufacturer. Will be passed to Device Information Service. */
 
 #define APP_TIMER_PRESCALER              0                                              /**< Value of the RTC1 PRESCALER register. */
