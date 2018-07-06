@@ -14,7 +14,7 @@ I'm using [modified QMK firmware](https://github.com/joric/qmk_firmware/blob/mit
 
 ## Software
 
-See the original Mitosis software repository: https://github.com/reversebias/mitosis
+Original Mitosis software repository: https://github.com/reversebias/mitosis
 
 * [IAR (IDE that includes a C/C++ compiler)](https://www.iar.com) (IAR 7.50.2 for ARM)
 * [nRF5 SDK](https://developer.nordicsemi.com/nRF5_SDK/) - nRF51/52 toolchain ([nRF5_SDK_11.0.0_89a8197.zip](https://developer.nordicsemi.com/nRF5_SDK/nRF5_SDK_v11.x.x/nRF5_SDK_11.0.0_89a8197.zip))
@@ -24,7 +24,7 @@ See the original Mitosis software repository: https://github.com/reversebias/mit
 
 ## Hardware
 
-See the original Mitosis hardware repository: https://github.com/reversebias/mitosis-hardware
+Original Mitosis hardware repository: https://github.com/reversebias/mitosis-hardware
 
 * [ST-LINK/V2][stlink]: $2.54, had in stock (you can also use $2 stm32 board instead).
 * [YJ-14015][yj-ali]: nrf51822 modules, 3 pcs: $10.5 ($3.50 * 3), free shipping, need 2/3, so $7.
