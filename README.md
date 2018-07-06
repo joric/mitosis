@@ -16,7 +16,7 @@ I'm using [modified QMK firmware](https://github.com/joric/qmk_firmware/blob/mit
 
 Original Mitosis software repository: https://github.com/reversebias/mitosis
 
-* [IAR (IDE that includes a C/C++ compiler)](https://www.iar.com) (IAR 7.50.2 for ARM)
+* [IAR](https://www.iar.com) - IDE that includes a C/C++ compiler (IAR 7.50.2 for ARM)
 * [nRF5 SDK](https://developer.nordicsemi.com/nRF5_SDK/) - nRF51/52 toolchain ([nRF5_SDK_11.0.0_89a8197.zip](https://developer.nordicsemi.com/nRF5_SDK/nRF5_SDK_v11.x.x/nRF5_SDK_11.0.0_89a8197.zip))
 * [OpenOCD](http://www.freddiechopin.info/en/download/category/10-openocd-dev/) - embedded debugger for Windows 10 ([openocd-0.10.0-dev-00247-g73b676c.7z](http://www.freddiechopin.info/en/download/category/10-openocd-dev?download=140%3Aopenocd-0.10.0-dev-00247-g73b676c))
 * [WinAVR](https://sourceforge.net/projects/winavr/) - firmware tools for AVR MCU ([WinAVR-20100110-install.exe](https://sourceforge.net/projects/winavr/files/WinAVR/20100110/WinAVR-20100110-install.exe/download))
