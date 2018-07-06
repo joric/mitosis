@@ -28,13 +28,13 @@ Original Mitosis hardware repository: https://github.com/reversebias/mitosis-har
 
 * [ST-LINK/V2][stlink]: $2.54, had in stock (you can also use $2 stm32 board instead).
 * [YJ-14015][yj-ali]: nrf51822 modules, 3 pcs: $10.5 ($3.50 * 3), free shipping, need 2/3, so $7.
-* 10 pcbs ([mitosis.zip][mitosis.zip]) from EasyEDA, $13.32 ($2 + $11.32 for trackable shipping), used 4/10, so $5.32.
-* 3 receiver boards ([receiver.zip][receiver.zip]) from OshPark, $5.40, free shipping, used only 1/3, so $1.80.
+* 10 pcbs ([mitosis.zip][mitosis.zip]) from [EasyEDA], $13.32 ($2 + $11.32 for trackable shipping), used 4/10, so $5.32.
+* 3 receiver boards ([receiver.zip][receiver.zip]) from [OshPark], $5.40, free shipping, used only 1/3, so $1.80.
 * Arduino Pro Micro: $1.94 on ebay (up to $4), free shipping, had in stock.
-* Resistor arrays: had in stock (taken from an old motherboard).
-* Si2302 mosfets: don't need them, just short the pads.
+* 1206 4.7k resistor arrays, 2 pcs: had in stock (taken from an old motherboard).
+* [Si2302] mosfets: don't need them, just short the pads.
 * AMS1117: 5v to 3v regulator, had in stock. You can use diodes for 2v drop.
-* LEDs: CLVBA-FKA, very optional, you don't need them, you can use 3 x 0402 LEDs or 1 x ASMB-MTB1-0A3A2
+* LEDs: very optional, you don't need Cree CLVBA-FKA, you can use 3 0402 LEDs or [ASMB-MTB1-0A3A2]
 * Switches and caps: most of you have more than you can handle.
 
 ### Total
@@ -157,7 +157,10 @@ make mitosis-default
 * [Wireless + Split + QMK = Mitosis (Reddit)](https://www.reddit.com/r/MechanicalKeyboards/comments/66588f/wireless_split_qmk_mitosis/)
 * [A collection of Mitosis Kicad ports from Altium (GitHub)](https://github.com/joric/mitosis-hardware/tree/joric_kicad)
 
-
+[EasyEDA]: https://easyeda.com
+[OshPark]: https://oshpark.com
+[ASMB-MTB1-0A3A2]: https://www.aliexpress.com/item/-/32809898075.html
+[Si2302]: https://www.aliexpress.com/item/-/32883659198.html
 [mitosis.zip]: https://github.com/reversebias/mitosis-hardware/blob/master/gerbers/mitosis.zip
 [receiver.zip]: https://github.com/reversebias/mitosis-hardware/blob/master/gerbers/receiver.zip
 [stlink]: http://www.ebay.com/itm/331803020521
