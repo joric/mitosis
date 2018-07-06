@@ -14,17 +14,17 @@ I'm using [modified QMK firmware](https://github.com/joric/qmk_firmware/blob/mit
 
 ## Hardware
 
-* [ST-LINK/V2](http://www.ebay.com/itm/ST-Link-V2-Programming-Unit-mini-STM8-STM32-Emulator-Downloader-M89-Top-/331803020521) (OpenOCD-compatible debugger/programmer)
-* [YJ-14015](https://www.aliexpress.com/item/Core51822-BLE-4-0-Bluetooth-2-4G-Wireless-Module-NRF51822-Antenna-Board-For-ULP-SPI-I2C/32832872640.html) (nRF51822-module, 32-bit ARM Cortex M0, 128kB flash + 32kB RAM)
-* [PCB gerbers](https://github.com/reversebias/mitosis-hardware/tree/master/gerbers) I used in this build ([mitosis.zip](https://github.com/reversebias/mitosis-hardware/blob/master/gerbers/mitosis.zip) and [receiver.zip](https://github.com/reversebias/mitosis-hardware/blob/master/gerbers/receiver.zip))
+* [ST-LINK/V2](http://www.ebay.com/itm/ST-Link-V2-Programming-Unit-mini-STM8-STM32-Emulator-Downloader-M89-Top-/331803020521) - OpenOCD-compatible debugger/programmer
+* [YJ-14015](https://www.aliexpress.com/item/Core51822-BLE-4-0-Bluetooth-2-4G-Wireless-Module-NRF51822-Antenna-Board-For-ULP-SPI-I2C/32832872640.html) - nRF51822-module, 32-bit ARM Cortex M0, 128kB flash + 32kB RAM
+* [mitosis.zip](https://github.com/reversebias/mitosis-hardware/blob/master/gerbers/mitosis.zip), [receiver.zip](https://github.com/reversebias/mitosis-hardware/blob/master/gerbers/receiver.zip) - PCB production ready gerber files I used in this build
 
 ## Software
 
-* [IAR 7.50.2 for ARM](https://www.iar.com/) (IDE that includes a C/C++ compiler)
-* [nRF5 SDK](https://developer.nordicsemi.com/nRF5_SDK/) (nRF51/52 toolchain), link to file: [nRF5_SDK_11.0.0_89a8197.zip](https://developer.nordicsemi.com/nRF5_SDK/nRF5_SDK_v11.x.x/nRF5_SDK_11.0.0_89a8197.zip)
-* [OpenOCD](http://www.freddiechopin.info/en/download/category/10-openocd-dev/) (embedded debugger for Windows 10), link to file: [openocd-0.10.0-dev-00247-g73b676c.7z](http://www.freddiechopin.info/en/download/category/10-openocd-dev?download=140%3Aopenocd-0.10.0-dev-00247-g73b676c)
-* [WinAVR](https://sourceforge.net/projects/winavr/) (firmware tools for AVR MCU), link to file: [WinAVR-20100110-install.exe](https://sourceforge.net/projects/winavr/files/WinAVR/20100110/WinAVR-20100110-install.exe/download)
-* [Zadig](https://zadig.akeo.ie/) (you will need to install libusb in order to run OpenOCD)
+* [IAR (IDE that includes a C/C++ compiler)](https://www.iar.com) (IAR 7.50.2 for ARM)
+* [nRF5 SDK](https://developer.nordicsemi.com/nRF5_SDK/) - nRF51/52 toolchain ([nRF5_SDK_11.0.0_89a8197.zip](https://developer.nordicsemi.com/nRF5_SDK/nRF5_SDK_v11.x.x/nRF5_SDK_11.0.0_89a8197.zip))
+* [OpenOCD](http://www.freddiechopin.info/en/download/category/10-openocd-dev/) - embedded debugger for Windows 10 ([openocd-0.10.0-dev-00247-g73b676c.7z](http://www.freddiechopin.info/en/download/category/10-openocd-dev?download=140%3Aopenocd-0.10.0-dev-00247-g73b676c))
+* [WinAVR](https://sourceforge.net/projects/winavr/) - firmware tools for AVR MCU ([WinAVR-20100110-install.exe](https://sourceforge.net/projects/winavr/files/WinAVR/20100110/WinAVR-20100110-install.exe/download))
+* [Zadig](https://zadig.akeo.ie/) - you will need to install libusb in order to run OpenOCD ([zadig-2.3.exe](https://zadig.akeo.ie/downloads/zadig-2.3.exe))
 
 ## IAR support
 
