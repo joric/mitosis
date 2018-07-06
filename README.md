@@ -6,25 +6,52 @@
 
 ## Summary
 
-This branch adds support of [YJ-14015](https://www.aliexpress.com/item/Core51822-BLE-4-0-Bluetooth-2-4G-Wireless-Module-NRF51822-Antenna-Board-For-ULP-SPI-I2C/32832872640.html) bluetooth modules and IAR.
+This branch adds support of [YJ-14015][yj-ebay] bluetooth modules and IAR.
 
 It also makes use of the keyswitch board LED (it blinks two times on powering up to indicate that firmware works).
 
 I'm using [modified QMK firmware](https://github.com/joric/qmk_firmware/blob/mitosis-joric/keyboards/mitosis/mitosis.c) (with mitosis-MJT keymap) that adds LED startup sequence to the receiver as well.
 
-## Hardware
-
-* [ST-LINK/V2](http://www.ebay.com/itm/ST-Link-V2-Programming-Unit-mini-STM8-STM32-Emulator-Downloader-M89-Top-/331803020521) - OpenOCD-compatible debugger/programmer
-* [YJ-14015](https://www.aliexpress.com/item/Core51822-BLE-4-0-Bluetooth-2-4G-Wireless-Module-NRF51822-Antenna-Board-For-ULP-SPI-I2C/32832872640.html) - nRF51822-module, 32-bit ARM Cortex M0, 128kB flash + 32kB RAM
-* [mitosis.zip](https://github.com/reversebias/mitosis-hardware/blob/master/gerbers/mitosis.zip), [receiver.zip](https://github.com/reversebias/mitosis-hardware/blob/master/gerbers/receiver.zip) - PCB production ready gerber files I used in this build
-
 ## Software
+
+See the original Mitosis software repository: https://github.com/reversebias/mitosis
 
 * [IAR (IDE that includes a C/C++ compiler)](https://www.iar.com) (IAR 7.50.2 for ARM)
 * [nRF5 SDK](https://developer.nordicsemi.com/nRF5_SDK/) - nRF51/52 toolchain ([nRF5_SDK_11.0.0_89a8197.zip](https://developer.nordicsemi.com/nRF5_SDK/nRF5_SDK_v11.x.x/nRF5_SDK_11.0.0_89a8197.zip))
 * [OpenOCD](http://www.freddiechopin.info/en/download/category/10-openocd-dev/) - embedded debugger for Windows 10 ([openocd-0.10.0-dev-00247-g73b676c.7z](http://www.freddiechopin.info/en/download/category/10-openocd-dev?download=140%3Aopenocd-0.10.0-dev-00247-g73b676c))
 * [WinAVR](https://sourceforge.net/projects/winavr/) - firmware tools for AVR MCU ([WinAVR-20100110-install.exe](https://sourceforge.net/projects/winavr/files/WinAVR/20100110/WinAVR-20100110-install.exe/download))
 * [Zadig](https://zadig.akeo.ie/) - you will need to install libusb in order to run OpenOCD ([zadig-2.3.exe](https://zadig.akeo.ie/downloads/zadig-2.3.exe))
+
+## Hardware
+
+See the original Mitosis hardware repository: https://github.com/reversebias/mitosis-hardware
+
+* [ST-LINK/V2][stlink]: $2.54, had in stock (you can also use $2 stm32 board instead).
+* [YJ-14015][yj-ali]: nrf51822 modules, 3 pcs: $10.5 ($3.50 * 3), free shipping, need 2/3, so $7.
+* 10 pcbs ([mitosis.zip][mitosis.zip]) from EasyEDA, $13.32 ($2 + $11.32 for trackable shipping), used 4/10, so $5.32.
+* 3 receiver boards ([receiver.zip][receiver.zip]) from OshPark, $5.40, free shipping, used only 1/3, so $1.80.
+* Arduino Pro Micro: $1.94 on ebay (up to $4), free shipping, had in stock.
+* Resistor arrays: had in stock (taken from an old motherboard).
+* Si2302 mosfets: don't need them, just short the pads.
+* AMS1117: 5v to 3v regulator, had in stock. You can use diodes for 2v drop.
+* LEDs: CLVBA-FKA, very optional, you don't need them, you can use 3 x 0402 LEDs or 1 x ASMB-MTB1-0A3A2
+* Switches and caps: most of you have more than you can handle.
+
+### Total
+
+* Keyboard: $12.32 ($7 + $5.32) and I got enough PCBs to build 3 and they can reuse receiver.
+* Receiver: $7.24 ($3.50 + $1.80 + $1.94) firmware upgrade to ble and you wouldn't need it at all.
+
+So, about $20 for the whole keyboard.
+
+### PCB Manufacturers
+
+* https://oshpark.com - 3 purple receiver PCBs, $5.40, untracked, 21 days
+* http://easyeda.com - 10 green PCBs for $2 + $11.32 shipping = $13.32, trackable, 10 days
+* https://www.elecrow.com - 6 black PCBs for $4.90 + $6.42 shipping = $11.32, trackable, 36 days
+* http://dirtypcbs.com - 10 black for $16.95 + $9.00 shipping = $25.95, untrackable, lost/refunded
+* https://www.seeedstudio.com - 10 black PCBs for $4.90 + $16.50 shipping = $21.40 - untested
+* https://jlcpcb.com - 10 black PCBs for $2 + $10.98 shipping = $12.98 - untested
 
 ## IAR support
 
@@ -131,8 +158,9 @@ make mitosis-default
 * [A collection of Mitosis Kicad ports from Altium (GitHub)](https://github.com/joric/mitosis-hardware/tree/joric_kicad)
 
 
-
-
-
-
+[mitosis.zip]: https://github.com/reversebias/mitosis-hardware/blob/master/gerbers/mitosis.zip
+[receiver.zip]: https://github.com/reversebias/mitosis-hardware/blob/master/gerbers/receiver.zip
+[stlink]: http://www.ebay.com/itm/331803020521
+[yj-ali]: https://www.aliexpress.com/item/-/32832872640.html
+[yj-ebay]: https://www.ebay.com/itm/282575577879
 
