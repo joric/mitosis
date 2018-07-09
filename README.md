@@ -28,8 +28,8 @@ Original Mitosis hardware repository: https://github.com/reversebias/mitosis-har
 
 * [ST-LINK/V2][stlink]: $2.54, had in stock (you can also use $2 stm32 board instead).
 * [YJ-14015][yj-ali]: nrf51822 modules, 3 pcs: $10.5 ($3.50 * 3), free shipping, need 2/3, so $7.
-* 10 pcbs ([mitosis.zip][mitosis.zip]) from [EasyEDA], $13.32 ($2 + $11.32 for trackable shipping), used 4/10, so $5.32.
-* 3 receiver boards ([receiver.zip][receiver.zip]) from [OshPark], $5.40, free shipping, used only 1/3, so $1.80.
+* [10 main PCB's][mitosis.zip] from [EasyEDA], $13.32 ($2 + $11.32 for trackable shipping), used 4/10, so $5.32.
+* [3 receiver PCB's][receiver.zip] from [OshPark], $5.40, free shipping, used only 1/3, so $1.80.
 * Arduino Pro Micro: $1.94 on ebay (up to $4), free shipping, had in stock.
 * 1206 4.7k resistor arrays, 2 pcs: had in stock (taken from an old motherboard).
 * [Si2302] mosfets: don't need them, just short the pads.
