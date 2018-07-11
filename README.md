@@ -88,14 +88,8 @@ To flash nRF modules, connect ST-LINK/V2 to the module programming pins (SWCLK, 
 @echo off
 set path=C:\SDK\openocd-0.10.0-dev-00247-g73b676c\bin-x64;%path%
 set file=%~dp0custom\iar\_build\nrf51822_xxac.hex
-openocd ^
--f interface/stlink-v2.cfg ^
--f target/nrf51.cfg ^
--c init ^
--c "reset halt" ^
--c "flash write_image erase %file:\=/%" ^
--c "reset" ^
--c exit
+openocd -f interface/stlink-v2.cfg -f target/nrf51.cfg ^
+-c init -c "reset halt" -c "flash write_image erase %file:\=/%" -c reset -c exit
 
 ```
 
@@ -151,6 +145,53 @@ sudo apt-get install gcc-avr avr-libc
 cd qmk_firmware
 make mitosis-default
 ```
+
+## Bluetooth version
+
+There's no working split Bluetooth Mitosis firmware so far, the simplest to start ought to be the Arduino IDE setup.
+
+### Arduino-nRF5 and BLEPeripheral libraries by Sandeep Mistry (nRF51 support)
+
+Adafruit nRF52 library doesn't support nRF51 modules such as YJ-14015 so you'd have to use [Arduino-nRF5 by Sandeep Mistry].
+I couldn't make it work with external UART but if you select BLE400 (adds -DUSE_LFXO) its built in USB works just fine.
+This library uses softdevice s130 version 2.0.1 make sure you flash it first (Burn Bootloader works too if you put it there).
+
+* Arduino IDE with BLE400 setup: https://i.imgur.com/8dfPZFm.jpg
+* BLE400 wiring with ST-Link v2: https://i.imgur.com/A9QIN2j.jpg
+
+Then you could use [arduino-BLEPeripheral] library for sketches.
+
+[Arduino-nRF5 by Sandeep Mistry]: https://github.com/sandeepmistry/arduino-nRF5
+[arduino-BLEPeripheral]: https://github.com/sandeepmistry/arduino-BLEPeripheral
+
+* https://github.com/sandeepmistry/arduino-nRF5 (Arduino-nRF5 by Sandeep Mistry)
+* https://github.com/sandeepmistry/arduino-BLEPeripheral (BLEPeripheral by Sandeep Mistry)
+
+### BlueMicro by jpconstantineau (nRF52-only)
+
+This is a drop-in Pro Micro replacement based on the nRF52 chip (no Atmega32U4 involved).
+
+First working build is Ergotravel 2:
+
+* https://www.reddit.com/r/MechanicalKeyboards/comments/8i2twe/ergotravel_2_bluemicro_wireless_split_keyboard
+
+How does it work:
+
+```
+Connections are:
+PC < -- > Master(left) < -- > Slave(right)
+Between the PC and Master, it uses the HID Bluetooth service.
+Between the two halves, it uses the Bluart service (serial over bluetooth).
+Both ways to let one half know what layer they are on.
+```
+
+* https://github.com/jpconstantineau/BlueMicro_BLE (BlueMicro firmware for Arduino IDE)
+* https://github.com/jpconstantineau/NRF52-Board (BlueMicro hardware, YJ-14015 partially supported)
+
+### Other pure bluetooth split builds (Arduino nRF52 based, so nRF52-only)
+
+* https://www.reddit.com/r/MechanicalKeyboards/comments/86asf6/curves_my_bluetooth_split (by /u/JKPro777)
+* https://gist.github.com/wez/b30683a4dfa329b86b9e0a2811a8c593 (Split Bluetooth Keyboard by wez)
 
 ## References
 
