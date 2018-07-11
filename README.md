@@ -100,12 +100,12 @@ I am using Windows 10 and Windows Subsystem for Linux (WSL) for everything.
 Building nRF firmware with GCC:
 
 ```
-cd nRF5_SDK_11
-git clone https://github.com/joric/mitosis
 sudo apt install openocd gcc-arm-none-eabi
+cd nRF5_SDK_11
 (edit /components/toolchain/gcc/Makefile.posix, set GNU_INSTALL_ROOT := /usr/)
-sudo cp mitosis/49-stlinkv2.rules /etc/udev/rules.d/
-cd mitosis && git checkout devel && cd mitosis-keyboard-basic/custom/armgcc && make
+git clone https://github.com/joric/mitosis && cd mitosis && git checkout devel
+sudo cp 49-stlinkv2.rules /etc/udev/rules.d/
+cd mitosis-keyboard-basic/custom/armgcc && make
 
 ```
 
