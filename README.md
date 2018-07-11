@@ -105,10 +105,7 @@ git clone https://github.com/joric/mitosis
 sudo apt install openocd gcc-arm-none-eabi
 (edit /components/toolchain/gcc/Makefile.posix, set GNU_INSTALL_ROOT := /usr/)
 sudo cp mitosis/49-stlinkv2.rules /etc/udev/rules.d/
-cd mitosis
-git checkout devel
-cd mitosis-keyboard-basic/custom/armgcc
-make
+cd mitosis && git checkout devel && cd mitosis-keyboard-basic/custom/armgcc && make
 
 ```
 
