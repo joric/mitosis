@@ -193,10 +193,10 @@ Both ways to let one half know what layer they are on.
 
 ## Mitosis Clones
 
-* [Interphase](https://github.com/Durburz/interphase) (66 keys, keyboard matrix with diodes, voltage regulator and AAA battery)
-* [Meiosis](https://www.reddit.com/r/MechanicalKeyboards/comments/7uasay/meiosis_a_wireless_split_ortholinear_50_keyboard) (a wireless split ortholinear 50% keyboard with Kailh LP switches)
+* [Interphase](https://github.com/Durburz/interphase) (66 keys, keyboard matrix with diodes, voltage regulator and AAA battery, KiCad project)
+* [Meiosis](https://www.reddit.com/r/MechanicalKeyboards/comments/7uasay/meiosis_a_wireless_split_ortholinear_50_keyboard) (a wireless split ortholinear 50% keyboard with Kailh LP switches, no source files available)
 * [Chimera](https://github.com/GlenPickle/Chimera) (Chimera Ergo, Chimera Ortho, Chimera Ergo Mini, Chimera Ergo 42 - no schematics, just gerbers)
-* [Orthrus](https://www.reddit.com/r/MechanicalKeyboards/comments/8txry7/orthrus_wireless_split_56_keys_based_on_mitosis) (great 52-key Atreus/Mitosis crossover by bezmi)
+* [Orthrus](https://www.reddit.com/r/MechanicalKeyboards/comments/8txry7/orthrus_wireless_split_56_keys_based_on_mitosis) (great 52-key Atreus/Mitosis crossover by bezmi, KiCad project)
 
 ## References
 
