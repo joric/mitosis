@@ -158,38 +158,29 @@ I couldn't make it work with external UART but if you select BLE400 (adds -DUSE_
 its built in USB works just fine (pins RX-P05, TX-P06, CTS-P07, RTS-P12).
 This library uses softdevice s130 version 2.0.1 make sure you flash it first
 (you may use Burn bootloader from IDE if you put s130 softdevice there).
-
-* Arduino IDE with BLE400 setup: https://i.imgur.com/8dfPZFm.jpg
-* BLE400 wiring with ST-Link v2: https://i.imgur.com/A9QIN2j.jpg
-
 Then you could use [arduino-BLEPeripheral] library for sketches.
+Sadly this library has multiple issues with Windows 10.
+Pictures: [Arduino IDE setup](https://i.imgur.com/8dfPZFm.jpg), [BLE400 wiring](https://i.imgur.com/A9QIN2j.jpg).
 
 [Arduino-nRF5 by Sandeep Mistry]: https://github.com/sandeepmistry/arduino-nRF5
 [arduino-BLEPeripheral]: https://github.com/sandeepmistry/arduino-BLEPeripheral
 
-* https://github.com/sandeepmistry/arduino-nRF5 (Arduino-nRF5 by Sandeep Mistry)
-* https://github.com/sandeepmistry/arduino-BLEPeripheral (BLEPeripheral by Sandeep Mistry)
-
-### BlueMicro by jpconstantineau (nRF52-only)
+### Ergotravel 2 and BlueMicro by jpconstantineau (nRF52-only)
 
 This is a drop-in Pro Micro replacement based on the nRF52 chip (no Atmega32U4 involved).
-
-First working build is Ergotravel 2:
-
-* https://www.reddit.com/r/MechanicalKeyboards/comments/8i2twe/ergotravel_2_bluemicro_wireless_split_keyboard
-
+First working build was [Ergotravel 2](https://www.reddit.com/r/MechanicalKeyboards/comments/8i2twe/ergotravel_2_bluemicro_wireless_split_keyboard).
+There are two BlueMicro repositories: [BlueMicro_BLE] (BlueMicro firmware) and [NRF52-Board] (BlueMicro hardware).
 How does it work:
 
 ```
-Connections are:
 PC < -- > Master(left) < -- > Slave(right)
 Between the PC and Master, it uses the HID Bluetooth service.
 Between the two halves, it uses the Bluart service (serial over bluetooth).
 Both ways to let one half know what layer they are on.
 ```
 
-* https://github.com/jpconstantineau/BlueMicro_BLE (BlueMicro firmware for Arduino IDE)
-* https://github.com/jpconstantineau/NRF52-Board (BlueMicro hardware, YJ-14015 is breakout only)
+[BlueMicro_BLE]: https://github.com/jpconstantineau/BlueMicro_BLE 
+[NRF52-Board]: https://github.com/jpconstantineau/NRF52-Board
 
 ### Other pure bluetooth split builds (Arduino nRF52 based, so nRF52-only)
 
