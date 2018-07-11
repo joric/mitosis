@@ -151,7 +151,7 @@ so they're here for the collection.
 
 ### Gazell + Bluetooth
 
-No one implemented this for the Mitosis so far. There's an example and Gazell running concurrently but it seems a bit dated:
+No one implemented this for the Mitosis so far. There's an example of Bluetooth and Gazell running concurrently but it seems a bit dated:
 https://github.com/NordicPlayground/nrf51-ble-gzll-device-uart
 
 ### Arduino nRF5
