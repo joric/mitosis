@@ -152,9 +152,12 @@ There's no working split Bluetooth Mitosis firmware so far, the simplest to star
 
 ### Arduino-nRF5 and BLEPeripheral libraries by Sandeep Mistry (nRF51 support)
 
-Adafruit nRF52 library doesn't support nRF51 modules such as YJ-14015 so you'd have to use [Arduino-nRF5 by Sandeep Mistry].
-I couldn't make it work with external UART but if you select BLE400 (adds -DUSE_LFXO) its built in USB works just fine.
-This library uses softdevice s130 version 2.0.1 make sure you flash it first (Burn Bootloader works too if you put it there).
+Adafruit nRF52 library doesn't support nRF51 modules such as YJ-14015 so you'd have to use
+[Arduino-nRF5 by Sandeep Mistry].
+I couldn't make it work with external UART but if you select BLE400 (adds -DUSE_LFXO)
+its built in USB works just fine (pins RX-P05, TX-P06, CTS-P07, RTS-P12).
+This library uses softdevice s130 version 2.0.1 make sure you flash it first
+(you may use Burn bootloader from IDE if you put s130 softdevice there).
 
 * Arduino IDE with BLE400 setup: https://i.imgur.com/8dfPZFm.jpg
 * BLE400 wiring with ST-Link v2: https://i.imgur.com/A9QIN2j.jpg
@@ -186,7 +189,7 @@ Both ways to let one half know what layer they are on.
 ```
 
 * https://github.com/jpconstantineau/BlueMicro_BLE (BlueMicro firmware for Arduino IDE)
-* https://github.com/jpconstantineau/NRF52-Board (BlueMicro hardware, YJ-14015 partially supported)
+* https://github.com/jpconstantineau/NRF52-Board (BlueMicro hardware, YJ-14015 is breakout only)
 
 ### Other pure bluetooth split builds (Arduino nRF52 based, so nRF52-only)
 
