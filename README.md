@@ -149,8 +149,9 @@ make mitosis-default
 ## Bluetooth version
 
 There's no working split Bluetooth Mitosis firmware so far, the simplest to start ought to be the Arduino IDE setup.
+Arduino nRF52-based builds are NOT COMPATIBLE with Mitosis (softdevice s132 is nRF52-only), they're here for the inspiration.
 
-### Arduino-nRF5 and BLEPeripheral libraries by Sandeep Mistry (nRF51 support)
+### Arduino-nRF5 and BLEPeripheral libraries by Sandeep Mistry (nRF51-based)
 
 Adafruit nRF52 library doesn't support nRF51 modules such as YJ-14015 so you'd have to use
 [Arduino-nRF5 by Sandeep Mistry].
@@ -165,7 +166,7 @@ Pictures: [Arduino IDE setup](https://i.imgur.com/8dfPZFm.jpg), [BLE400 wiring](
 [Arduino-nRF5 by Sandeep Mistry]: https://github.com/sandeepmistry/arduino-nRF5
 [arduino-BLEPeripheral]: https://github.com/sandeepmistry/arduino-BLEPeripheral
 
-### Ergotravel 2 and BlueMicro by jpconstantineau (nRF52-only)
+### Ergotravel 2 and BlueMicro by jpconstantineau (Arduino nRF52-based)
 
 This is a drop-in Pro Micro replacement based on the nRF52 chip (no Atmega32U4 involved).
 First working build was [Ergotravel 2](https://www.reddit.com/r/MechanicalKeyboards/comments/8i2twe/ergotravel_2_bluemicro_wireless_split_keyboard).
@@ -182,7 +183,7 @@ Both ways to let one half know what layer they are on.
 [BlueMicro_BLE]: https://github.com/jpconstantineau/BlueMicro_BLE 
 [NRF52-Board]: https://github.com/jpconstantineau/NRF52-Board
 
-### Other pure bluetooth split builds (Arduino nRF52 based, so nRF52-only)
+### Other pure bluetooth split builds (Arduino nRF52-based)
 
 * https://www.reddit.com/r/MechanicalKeyboards/comments/86asf6/curves_my_bluetooth_split (by /u/JKPro777)
 * https://gist.github.com/wez/b30683a4dfa329b86b9e0a2811a8c593 (Split Bluetooth Keyboard by wez)
