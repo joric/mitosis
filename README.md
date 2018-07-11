@@ -148,30 +148,41 @@ make mitosis-default
 
 ## Bluetooth Version
 
-There's no working split Bluetooth Mitosis firmware so far, the simplest to start ought to be the Arduino IDE setup.
-Arduino nRF52-based builds are NOT COMPATIBLE with Mitosis (softdevice s132 is nRF52-only), they're here for the inspiration.
+There's no working split Bluetooth Mitosis firmware so far.
+Arduino nRF52 builds are NOT COMPATIBLE with nRF51 and Mitosis (softdevice s132 is nRF52-only),
+so they're here for the collection.
 
-### Arduino-nRF5 and BLEPeripheral libraries by Sandeep Mistry (nRF51-based)
+### Gazell + Bluetooth
 
-Adafruit nRF52 library doesn't support nRF51 modules such as YJ-14015 so you'd have to use
-[Arduino-nRF5 by Sandeep Mistry].
-I couldn't make it work with external UART but if you select BLE400 (adds -DUSE_LFXO)
-its built in USB works just fine (pins RX-P05, TX-P06, CTS-P07, RTS-P12).
-This library uses softdevice s130 version 2.0.1 make sure you flash it first
-(you may use Burn bootloader from IDE if you put s130 softdevice there).
-Then you could use [arduino-BLEPeripheral] library for sketches.
-Sadly this library has multiple issues with Windows 10.
-Pictures: [Arduino IDE setup](https://i.imgur.com/8dfPZFm.jpg), [BLE400 wiring](https://i.imgur.com/A9QIN2j.jpg).
+No one implemented this for the Mitosis so far. There's an example and Gazell running concurrently but it seems a bit dated:
+https://github.com/NordicPlayground/nrf51-ble-gzll-device-uart
+
+### Arduino nRF5
+
+There is [Arduino-nRF5 by Sandeep Mistry] that supports nRF51.
+You could use [arduino-BLEPeripheral] library for sketches.
+Also works with BLE400 development board and its built in UART (pins RX-P05, TX-P06, CTS-P07, RTS-P12).
+Sadly this library has [multiple issues](https://github.com/sandeepmistry/arduino-BLEPeripheral/issues/160) with Windows 10
+(Pictures: [Arduino IDE setup](https://i.imgur.com/8dfPZFm.jpg), [BLE400 wiring](https://i.imgur.com/A9QIN2j.jpg)).
 
 [Arduino-nRF5 by Sandeep Mistry]: https://github.com/sandeepmistry/arduino-nRF5
 [arduino-BLEPeripheral]: https://github.com/sandeepmistry/arduino-BLEPeripheral
 
-### Ergotravel 2 and BlueMicro by jpconstantineau (Arduino nRF52-based)
+### Arduino nRF52
 
-This is a drop-in Pro Micro replacement based on the nRF52 chip (no Atmega32U4 involved).
-First working build was [Ergotravel 2](https://www.reddit.com/r/MechanicalKeyboards/comments/8i2twe/ergotravel_2_bluemicro_wireless_split_keyboard).
-There are two BlueMicro repositories: [BlueMicro_BLE] (BlueMicro firmware) and [NRF52-Board] (BlueMicro hardware).
-How does it work:
+* [Curves - my bluetooth split](https://redd.it/86asf6) by [/u/JKPro777](http://reddit.com/u/JKPro777)
+* [Split Bluetooth Keyboard](https://gist.github.com/wez/b30683a4dfa329b86b9e0a2811a8c593) (gist) by [wez](https://gist.github.com/wez)
+
+#### BlueMicro
+
+This is a drop-in Pro Micro replacement that is compatible with Arduino nRF52 boards (no Atmega32U4 involved).
+There are two BlueMicro repositories: [BlueMicro_BLE] (firmware) and [NRF52-Board] (hardware).
+There are at least two working builds:
+
+* [Iris gets the BLE treatment](https://redd.it/8rtvi7) by [/u/jpconstantineau](http://reddit.com/u/jpconstantineau)
+* [Ergotravel 2](https://redd.it/8i2twe) by [/u/jpconstantineau](http://reddit.com/u/jpconstantineau)
+
+How does it work ([from the Ergotravel 2 post](https://www.reddit.com/r/MechanicalKeyboards/comments/8i2twe/ergotravel_2_bluemicro_wireless_split_keyboard/dyp3ft8/)):
 
 ```
 PC < -- > Master(left) < -- > Slave(right)
@@ -182,11 +193,6 @@ Both ways to let one half know what layer they are on.
 
 [BlueMicro_BLE]: https://github.com/jpconstantineau/BlueMicro_BLE 
 [NRF52-Board]: https://github.com/jpconstantineau/NRF52-Board
-
-### Other pure bluetooth split builds (Arduino nRF52-based)
-
-* https://www.reddit.com/r/MechanicalKeyboards/comments/86asf6/curves_my_bluetooth_split (by /u/JKPro777)
-* https://gist.github.com/wez/b30683a4dfa329b86b9e0a2811a8c593 (Split Bluetooth Keyboard by wez)
 
 ## Mitosis Clones
 
@@ -218,3 +224,4 @@ Both ways to let one half know what layer they are on.
 [openocd-0.10.0-dev-00247-g73b676c.7z]: http://www.freddiechopin.info/en/download/category/10-openocd-dev?download=140%3Aopenocd-0.10.0-dev-00247-g73b676c
 [WinAVR-20100110-install.exe]: https://sourceforge.net/projects/winavr/files/WinAVR/20100110/WinAVR-20100110-install.exe/download
 [zadig-2.3.exe]: https://zadig.akeo.ie/downloads/zadig-2.3.exe
+
