@@ -146,7 +146,7 @@ cd qmk_firmware
 make mitosis-default
 ```
 
-## Bluetooth version
+## Bluetooth Version
 
 There's no working split Bluetooth Mitosis firmware so far, the simplest to start ought to be the Arduino IDE setup.
 Arduino nRF52-based builds are NOT COMPATIBLE with Mitosis (softdevice s132 is nRF52-only), they're here for the inspiration.
@@ -187,6 +187,13 @@ Both ways to let one half know what layer they are on.
 
 * https://www.reddit.com/r/MechanicalKeyboards/comments/86asf6/curves_my_bluetooth_split (by /u/JKPro777)
 * https://gist.github.com/wez/b30683a4dfa329b86b9e0a2811a8c593 (Split Bluetooth Keyboard by wez)
+
+## Mitosis Clones
+
+* [Interphase](https://github.com/Durburz/interphase) (66 keys, keyboard matrix with diodes, voltage regulator and AAA battery)
+* [Meiosis](https://www.reddit.com/r/MechanicalKeyboards/comments/7uasay/meiosis_a_wireless_split_ortholinear_50_keyboard) (a wireless split ortholinear 50% keyboard with Kailh LP switches)
+* [Chimera](https://github.com/GlenPickle/Chimera) (Chimera Ergo, Chimera Ortho, Chimera Ergo Mini, Chimera Ergo 42 - no source files, just gerbers)
+* [Orthrus](https://www.reddit.com/r/MechanicalKeyboards/comments/8txry7/orthrus_wireless_split_56_keys_based_on_mitosis) (great 52-key Atreus/Mitosis crossover by bezmi)
 
 ## References
 
