@@ -159,7 +159,7 @@ There is [Arduino-nRF5 by Sandeep Mistry] that supports nRF51.
 You could use [arduino-BLEPeripheral] library for sketches.
 Also works with BLE400 development board and its built in UART (pins RX-P05, TX-P06, CTS-P07, RTS-P12).
 Sadly this library has [multiple issues](https://github.com/sandeepmistry/arduino-BLEPeripheral/issues/160) with Windows 10
-(Pictures: [Arduino IDE setup](https://i.imgur.com/8dfPZFm.jpg), [BLE400 wiring](https://i.imgur.com/A9QIN2j.jpg)).
+([Arduino IDE setup](https://i.imgur.com/8dfPZFm.jpg), [BLE400 wiring](https://i.imgur.com/A9QIN2j.jpg)).
 
 [Arduino-nRF5 by Sandeep Mistry]: https://github.com/sandeepmistry/arduino-nRF5
 [arduino-BLEPeripheral]: https://github.com/sandeepmistry/arduino-BLEPeripheral
@@ -192,10 +192,12 @@ Both ways to let one half know what layer they are on.
 
 ## Mitosis Clones
 
-* [Interphase](https://github.com/Durburz/interphase) (66 keys, keyboard matrix with diodes, voltage regulator and AAA battery, KiCad project)
+* [Interphase](https://github.com/Durburz/interphase) (66 keys, keyboard matrix with diodes, voltage regulator and AAA battery, KiCad project) ([Reddit](https://redd.it/7ggeww))
 * [Meiosis](https://redd.it/7uasay) (a wireless split ortholinear 50% keyboard with Kailh LP switches, no source files available)
 * [Chimera](https://github.com/GlenPickle/Chimera) (Chimera Ergo, Chimera Ortho, Chimera Ergo Mini, Chimera Ergo 42 - no schematics, just gerbers)
-* [Orthrus](https://github.com/bezmi/orthrus) (great 52-key Atreus/Mitosis crossover by bezmi, KiCad project) ([Reddit](https://redd.it/8txry7))
+* [Kissboard](https://github.com/fhtagnn/kissboard) ([AdNW](http://adnw.de)-inspired layout, PCB's are not tested) ([Reddit](https://redd.it/8bauoz)) ([Album](https://imgur.com/a/A95FF))
+* [Dichotomy](https://redd.it/7g54l8) (48-key Mitosis clone with digital encoders, no sources available) ([Youtube](https://youtu.be/5jmmYbgtOgI)) ([Kickstarter](https://www.kickstarter.com/projects/1090732691/dichotomy-keyboard-and-mouse)) 
+* [Orthrus](https://github.com/bezmi/orthrus) (great 52-key Atreus/Mitosis crossover by [/u/bezmi](https://www.reddit.com/u/bezmi), KiCad project) ([Reddit](https://redd.it/8txry7)) 
 
 ## References
 
