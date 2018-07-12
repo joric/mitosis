@@ -144,13 +144,13 @@ make mitosis-default
 
 ## Bluetooth Version
 
-Split keyboard cannot be paired separately because global layers won't work this way.
-It needs running 2 wireless channels simultaneosly - one for the PC, second for the communication between halves.
-There's no working split Bluetooth Mitosis firmware yet.
+Split keyboard halves cannot be paired separately because global layers won't work.
+It needs 2 wireless channels running simultaneosly - one for the communication with PC, second for the communication between halves.
+There's no working Bluetooth Mitosis firmware yet, possible implementations are listed below.
 
 ### Bluetooth HID + Gazell protocol
 
-No one implemented this for the Mitosis so far. There's an example of Bluetooth and Gazell running concurrently but
+There's an example of Bluetooth and Gazell running concurrently but
 it seems a bit dated and doesn't support both Gazell host and BLE:
 https://github.com/NordicPlayground/nrf51-ble-gzll-device-uart
 
@@ -160,7 +160,7 @@ https://github.com/NordicPlayground/nrf51-ble-gzll-device-uart
 
 There is [Arduino-nRF5 by Sandeep Mistry] that supports nRF51.
 You could use [arduino-BLEPeripheral] library for sketches.
-Also works with BLE400 development board ([Arduino IDE setup](https://i.imgur.com/8dfPZFm.jpg), [BLE400 wiring](https://i.imgur.com/A9QIN2j.jpg)) and its built in UART (pins RX-P05, TX-P06, CTS-P07, RTS-P12).
+Works fine with BLE400 board ([Arduino IDE setup](https://i.imgur.com/8dfPZFm.jpg), [wiring](https://i.imgur.com/A9QIN2j.jpg)).
 Sadly this library has [multiple issues](https://github.com/sandeepmistry/arduino-BLEPeripheral/issues/160) with Windows 10.
 
 [Arduino-nRF5 by Sandeep Mistry]: https://github.com/sandeepmistry/arduino-nRF5
@@ -168,29 +168,20 @@ Sadly this library has [multiple issues](https://github.com/sandeepmistry/arduin
 
 #### Arduino nRF52
 
-Arduino nRF52 builds (usually based on [Bluefruit nRF52](https://www.adafruit.com/product/3406) boards) are NOT software and hardware compatible with nRF51 and Mitosis (softdevice s132 is nRF52-only),
-they're here just for example.
+Note that Arduino nRF52 builds (usually based on [Bluefruit nRF52](https://www.adafruit.com/product/3406) boards)
+are NOT compatible with nRF51 used in the original Mitosis keyboard
+(softdevice s132 and all the software is nRF52-only).
 
 * [Curves - my bluetooth split](https://redd.it/86asf6) by [/u/JKPro777](http://reddit.com/u/JKPro777)
 * [Split Bluetooth Keyboard](https://gist.github.com/wez/b30683a4dfa329b86b9e0a2811a8c593) (gist) by [wez](https://gist.github.com/wez)
 
-##### BlueMicro
+#### BlueMicro
 
-This is a drop-in Pro Micro replacement that is compatible with Arduino nRF52 boards (no Atmega32U4 involved).
-There are two BlueMicro repositories: [BlueMicro_BLE] (firmware) and [NRF52-Board] (hardware).
-There are at least two working builds:
+This is a drop-in Pro Micro replacement that is compatible with Arduino nRF52 boards (it's NOT compatible with nRF51).
+BlueMicro is open source, official repositories are [BlueMicro_BLE] (firmware) and [NRF52-Board] (hardware).
 
 * [Iris gets the BLE treatment](https://redd.it/8rtvi7) by [/u/jpconstantineau](http://reddit.com/u/jpconstantineau)
 * [Ergotravel 2](https://redd.it/8i2twe) by [/u/jpconstantineau](http://reddit.com/u/jpconstantineau)
-
-How does it work ([from the Ergotravel 2 post](https://www.reddit.com/r/MechanicalKeyboards/comments/8i2twe/ergotravel_2_bluemicro_wireless_split_keyboard/dyp3ft8/)):
-
-```
-PC < -- > Master(left) < -- > Slave(right)
-Between the PC and Master, it uses the HID Bluetooth service.
-Between the two halves, it uses the Bluart service (serial over bluetooth).
-Both ways to let one half know what layer they are on.
-```
 
 [BlueMicro_BLE]: https://github.com/jpconstantineau/BlueMicro_BLE 
 [NRF52-Board]: https://github.com/jpconstantineau/NRF52-Board
