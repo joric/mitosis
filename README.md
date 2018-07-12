@@ -147,7 +147,7 @@ make mitosis-default
 Mitosis is not a Bluetooth keyboard. It uses a proprietary rf-protocol (Gazell) and a dedicated receiver.
 Keyboard halves cannot be used as individual HID devices because global layers won't work.
 We need two wireless channels - Bluetooth HID for the PC and something for the communication between halves.
-There's no working Bluetooth Mitosis firmware yet, possible solutions are listed below.
+Possible solutions are listed below.
 
 ### Bluetooth HID + Gazell protocol
 
