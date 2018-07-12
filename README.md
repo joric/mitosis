@@ -144,9 +144,9 @@ make mitosis-default
 
 ## Bluetooth Version
 
-Split keyboard halves cannot be paired separately because global layers won't work.
-It needs 2 wireless channels running simultaneosly - one for the communication with PC, second for the communication between halves.
-There's no working Bluetooth Mitosis firmware yet, possible implementations are listed below.
+Mitosis is not a Bluetooth keyboard. It uses a proprietary rf-protocol (Gazell) and a dedicated receiver.
+Keyboard halves cannot be used as individual HID devices because global layers won't work.
+We need two wireless channels - Bluetooth HID for the PC and something for the communication between halves.
 
 ### Bluetooth HID + Gazell protocol
 
