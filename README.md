@@ -144,17 +144,19 @@ make mitosis-default
 
 ## Bluetooth Version
 
-There's no working split Bluetooth Mitosis firmware so far.
+There's no working split Bluetooth Mitosis firmware (yet).
 Arduino nRF52 builds are NOT COMPATIBLE with nRF51 and Mitosis (softdevice s132 is nRF52-only),
 so they're here for the collection.
 
-### Gazell + Bluetooth
+### Bluetooth HID + Gazell protocol
 
 No one implemented this for the Mitosis so far. There's an example of Bluetooth and Gazell running concurrently but
 it seems a bit dated and doesn't support both Gazell host and BLE:
 https://github.com/NordicPlayground/nrf51-ble-gzll-device-uart
 
-### Arduino nRF5
+### Bluetooth HID + BLEUart service
+
+#### Arduino nRF5
 
 There is [Arduino-nRF5 by Sandeep Mistry] that supports nRF51.
 You could use [arduino-BLEPeripheral] library for sketches.
@@ -164,14 +166,12 @@ Sadly this library has [multiple issues](https://github.com/sandeepmistry/arduin
 [Arduino-nRF5 by Sandeep Mistry]: https://github.com/sandeepmistry/arduino-nRF5
 [arduino-BLEPeripheral]: https://github.com/sandeepmistry/arduino-BLEPeripheral
 
-### Arduino nRF52
-
 #### Bluefruit nRF52
 
 * [Curves - my bluetooth split](https://redd.it/86asf6) by [/u/JKPro777](http://reddit.com/u/JKPro777)
 * [Split Bluetooth Keyboard](https://gist.github.com/wez/b30683a4dfa329b86b9e0a2811a8c593) (gist) by [wez](https://gist.github.com/wez)
 
-#### BlueMicro
+##### BlueMicro
 
 This is a drop-in Pro Micro replacement that is compatible with Arduino nRF52 boards (no Atmega32U4 involved).
 There are two BlueMicro repositories: [BlueMicro_BLE] (firmware) and [NRF52-Board] (hardware).
