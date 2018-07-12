@@ -144,9 +144,9 @@ make mitosis-default
 
 ## Bluetooth Version
 
-There's no working split Bluetooth Mitosis firmware (yet).
-Arduino nRF52 builds are NOT COMPATIBLE with nRF51 and Mitosis (softdevice s132 is nRF52-only),
-so they're here for the collection.
+Split keyboard cannot be paired separately because global layers won't work this way.
+It needs running 2 wireless channels simultaneosly - one for the PC, second for the communication between halves.
+There's no working split Bluetooth Mitosis firmware yet.
 
 ### Bluetooth HID + Gazell protocol
 
@@ -154,7 +154,7 @@ No one implemented this for the Mitosis so far. There's an example of Bluetooth 
 it seems a bit dated and doesn't support both Gazell host and BLE:
 https://github.com/NordicPlayground/nrf51-ble-gzll-device-uart
 
-### Bluetooth HID + BLEUart service
+### Bluetooth HID + UART service
 
 #### Arduino nRF5
 
@@ -166,7 +166,10 @@ Sadly this library has [multiple issues](https://github.com/sandeepmistry/arduin
 [Arduino-nRF5 by Sandeep Mistry]: https://github.com/sandeepmistry/arduino-nRF5
 [arduino-BLEPeripheral]: https://github.com/sandeepmistry/arduino-BLEPeripheral
 
-#### Bluefruit nRF52
+#### Arduino nRF52
+
+Arduino nRF52 builds (usually based on [Bluefruit nRF52](https://www.adafruit.com/product/3406) boards) are NOT software and hardware compatible with nRF51 and Mitosis (softdevice s132 is nRF52-only),
+they're here just for example.
 
 * [Curves - my bluetooth split](https://redd.it/86asf6) by [/u/JKPro777](http://reddit.com/u/JKPro777)
 * [Split Bluetooth Keyboard](https://gist.github.com/wez/b30683a4dfa329b86b9e0a2811a8c593) (gist) by [wez](https://gist.github.com/wez)
