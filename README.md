@@ -195,7 +195,7 @@ Both ways to let one half know what layer they are on.
 ## Mitosis Clones
 
 * [Interphase](https://github.com/Durburz/interphase) (66 keys, keyboard matrix with diodes, voltage regulator and AAA battery, KiCad project) ([Reddit](https://redd.it/7ggeww))
-* [Meiosis](https://redd.it/7uasay) (a wireless split ortholinear 50% keyboard with Kailh LP switches, no source files available)
+* [Meiosis](https://redd.it/7uasay) (wireless split with Kailh LP, also Telophase and Helicase, no source files available) ([Site](https://southpawdesign.net))
 * [Chimera](https://github.com/GlenPickle/Chimera) (Chimera Ergo, Chimera Ortho, Chimera Ergo Mini, Chimera Ergo 42 - no schematics, just gerbers)
 * [Kissboard](https://github.com/fhtagnn/kissboard) ([AdNW](http://adnw.de)-inspired layout, PCB's are not tested) ([Reddit](https://redd.it/8bauoz)) ([Album](https://imgur.com/a/A95FF))
 * [Dichotomy](https://redd.it/7g54l8) (48-key Mitosis clone with digital encoders, no sources available) ([Youtube](https://youtu.be/5jmmYbgtOgI)) ([Kickstarter](https://www.kickstarter.com/projects/1090732691/dichotomy-keyboard-and-mouse)) 
