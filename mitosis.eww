@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+
+<workspace>
+  <project>
+    <path>$WS_DIR$\mitosis-keyboard-basic\custom\iar\keyboard.ewp</path>
+  </project>
+  <project>
+    <path>$WS_DIR$\mitosis-receiver-basic\custom\iar\receiver.ewp</path>
+  </project>
+  <batchBuild/>
+</workspace>

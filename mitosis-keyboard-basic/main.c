@@ -215,6 +215,15 @@ int main()
     // Set the GPIOTE PORT event as interrupt source, and enable interrupts for GPIOTE
     NRF_GPIOTE->INTENSET = GPIOTE_INTENSET_PORT_Msk;
     NVIC_EnableIRQ(GPIOTE_IRQn);
+    
+    nrf_gpio_cfg_output(LED_PIN);
+    nrf_gpio_pin_set(LED_PIN);
+    nrf_delay_ms(250);
+    nrf_gpio_pin_clear(LED_PIN);
+    nrf_delay_ms(250);
+    nrf_gpio_pin_set(LED_PIN);
+    nrf_delay_ms(250);
+    nrf_gpio_pin_clear(LED_PIN);
 
 
     // Main loop, constantly sleep, waiting for RTC and gpio IRQs
