@@ -150,21 +150,23 @@ so they're here for the collection.
 
 ### Gazell + Bluetooth
 
-No one implemented this for the Mitosis so far. There's an example of Bluetooth and Gazell running concurrently but it seems a bit dated:
+No one implemented this for the Mitosis so far. There's an example of Bluetooth and Gazell running concurrently but
+it seems a bit dated and doesn't support both Gazell host and BLE:
 https://github.com/NordicPlayground/nrf51-ble-gzll-device-uart
 
 ### Arduino nRF5
 
 There is [Arduino-nRF5 by Sandeep Mistry] that supports nRF51.
 You could use [arduino-BLEPeripheral] library for sketches.
-Also works with BLE400 development board and its built in UART (pins RX-P05, TX-P06, CTS-P07, RTS-P12).
-Sadly this library has [multiple issues](https://github.com/sandeepmistry/arduino-BLEPeripheral/issues/160) with Windows 10
-([Arduino IDE setup](https://i.imgur.com/8dfPZFm.jpg), [BLE400 wiring](https://i.imgur.com/A9QIN2j.jpg)).
+Also works with BLE400 development board ([Arduino IDE setup](https://i.imgur.com/8dfPZFm.jpg), [BLE400 wiring](https://i.imgur.com/A9QIN2j.jpg)) and its built in UART (pins RX-P05, TX-P06, CTS-P07, RTS-P12).
+Sadly this library has [multiple issues](https://github.com/sandeepmistry/arduino-BLEPeripheral/issues/160) with Windows 10.
 
 [Arduino-nRF5 by Sandeep Mistry]: https://github.com/sandeepmistry/arduino-nRF5
 [arduino-BLEPeripheral]: https://github.com/sandeepmistry/arduino-BLEPeripheral
 
 ### Arduino nRF52
+
+#### Bluefruit nRF52
 
 * [Curves - my bluetooth split](https://redd.it/86asf6) by [/u/JKPro777](http://reddit.com/u/JKPro777)
 * [Split Bluetooth Keyboard](https://gist.github.com/wez/b30683a4dfa329b86b9e0a2811a8c593) (gist) by [wez](https://gist.github.com/wez)
