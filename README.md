@@ -30,11 +30,11 @@ Original Mitosis hardware repository: https://github.com/reversebias/mitosis-har
 * [YJ-14015][yj-ali]: nrf51822 modules, 3 pcs: $10.5 ($3.50 * 3), free shipping, need 2/3, so $7.
 * [10 main PCB's][mitosis.zip] from [EasyEDA], $13.32 ($2 + $11.32 for trackable shipping), used 4/10, so $5.32.
 * [3 receiver PCB's][receiver.zip] from [OshPark], $5.40, free shipping, used only 1/3, so $1.80.
-* Arduino Pro Micro: $1.94 on ebay (up to $4), free shipping, had in stock.
+* [Arduino Pro Micro](https://www.aliexpress.com/item/-/32648920631.html) from Aliexpres (price varies from $1.94 to $4), had in stock.
+* [Si2302] mosfets: board survives reverse polarity for a short while, just short the pads as [here](https://i.imgur.com/h1Mx8Yw.jpg).
+* [ASMB-MTB1-0A3A2] from Aliexpress (or Cree CLVBA-FKA, or 3 single LEDs, very optional)
+* AMS1117: 5v to 3v regulator, had in stock. You probably can use diodes for 2v drop.
 * 1206 4.7k resistor arrays, 2 pcs: had in stock (taken from an old motherboard).
-* [Si2302] mosfets: don't need them, just short the pads.
-* AMS1117: 5v to 3v regulator, had in stock. You can use diodes for 2v drop.
-* LEDs: very optional, you don't need Cree CLVBA-FKA, you can use 3 0402 LEDs or [ASMB-MTB1-0A3A2]
 * Switches and caps: most of you have more than you can handle.
 
 ### Total
@@ -42,7 +42,7 @@ Original Mitosis hardware repository: https://github.com/reversebias/mitosis-har
 * Keyboard: $12.32 ($7 + $5.32) and I got enough PCBs to build 3 and they can reuse receiver.
 * Receiver: $7.24 ($3.50 + $1.80 + $1.94) firmware upgrade to ble and you wouldn't need it at all.
 
-So, about $20 for the whole keyboard.
+So, about $20 for a single keyboard.
 
 ### PCB Manufacturers
 
