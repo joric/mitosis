@@ -191,7 +191,7 @@
           <name>CCDefines</name>
           <state>BLE_STACK_SUPPORT_REQD</state>
           <state>S130</state>
-          <state>BOARD_PCA10028</state>
+          <state>BOARD_CUSTOM</state>
           <state>BSP_UART_SUPPORT</state>
           <state>SOFTDEVICE_PRESENT</state>
           <state>NRF51</state>
@@ -325,12 +325,13 @@
         </option>
         <option>
           <name>CCIncludePath2</name>
-          <state>$PROJ_DIR$\..\..\..\config\ble_app_hids_keyboard_s130_pca10028</state>
+          <state>$PROJ_DIR$\..\..\..\config\ble_app_hids_keyboard_s130_custom</state>
           <state>$PROJ_DIR$\..\..\..\config</state>
           <state>$PROJ_DIR$\..\..\..\..\..\components\ble\ble_advertising</state>
           <state>$PROJ_DIR$\..\..\..\..\..\components\ble\ble_services\ble_bas</state>
           <state>$PROJ_DIR$\..\..\..\..\..\components\ble\ble_services\ble_dis</state>
           <state>$PROJ_DIR$\..\..\..\..\..\components\ble\ble_services\ble_hids</state>
+          <state>$PROJ_DIR$\..\..\..\..\..\components\ble\ble_services\ble_nus</state>
           <state>$PROJ_DIR$\..\..\..\..\..\components\ble\common</state>
           <state>$PROJ_DIR$\..\..\..\..\..\components\ble\device_manager</state>
           <state>$PROJ_DIR$\..\..\..\..\..\components\device</state>
@@ -341,6 +342,8 @@
           <state>$PROJ_DIR$\..\..\..\..\..\components\drivers_nrf\hal</state>
           <state>$PROJ_DIR$\..\..\..\..\..\components\drivers_nrf\pstorage</state>
           <state>$PROJ_DIR$\..\..\..\..\..\components\drivers_nrf\uart</state>
+          <state>$PROJ_DIR$\..\..\..\..\..\components\drivers_nrf\clock</state>
+          <state>$PROJ_DIR$\..\..\..\..\..\components\drivers_nrf\rtc</state>
           <state>$PROJ_DIR$\..\..\..\..\..\components\libraries\button</state>
           <state>$PROJ_DIR$\..\..\..\..\..\components\libraries\experimental_section_vars</state>
           <state>$PROJ_DIR$\..\..\..\..\..\components\libraries\fifo</state>
@@ -359,6 +362,7 @@
           <state>$PROJ_DIR$\..\..\..\..\..\components\toolchain\CMSIS\Include</state>
           <state>$PROJ_DIR$\..\..\..\..\..\examples\bsp</state>
           <state>$PROJ_DIR$\..\..\..\..\..\external\segger_rtt</state>
+          <state>$PROJ_DIR$\..\..\..\..\..\components\properitary_rf\gzll</state>
         </option>
         <option>
           <name>CCStdIncCheck</name>
@@ -518,7 +522,7 @@
           <name>ADefines</name>
           <state>BLE_STACK_SUPPORT_REQD</state>
           <state>S130</state>
-          <state>BOARD_PCA10028</state>
+          <state>BOARD_CUSTOM</state>
           <state>BSP_UART_SUPPORT</state>
           <state>SOFTDEVICE_PRESENT</state>
           <state>NRF51</state>
@@ -619,7 +623,7 @@
         </option>
         <option>
           <name>AUserIncludes</name>
-          <state>$PROJ_DIR$\..\..\..\config\ble_app_hids_keyboard_s130_pca10028</state>
+          <state>$PROJ_DIR$\..\..\..\config\ble_app_hids_keyboard_s130_custom</state>
           <state>$PROJ_DIR$\..\..\..\config</state>
           <state>$PROJ_DIR$\..\..\..\..\..\components\ble\ble_advertising</state>
           <state>$PROJ_DIR$\..\..\..\..\..\components\ble\ble_services\ble_bas</state>
@@ -686,7 +690,7 @@
         </option>
         <option>
           <name>OOCOutputFile</name>
-          <state>ble_app_hids_keyboard_s130_pca10028.hex</state>
+          <state>ble_app_hids_keyboard_s130_custom.hex</state>
         </option>
         <option>
           <name>OOCCommandLineProducer</name>
@@ -741,7 +745,7 @@
         </option>
         <option>
           <name>IlinkOutputFile</name>
-          <state>ble_app_hids_keyboard_s130_pca10028.out</state>
+          <state>ble_app_hids_keyboard_s130_custom.out</state>
         </option>
         <option>
           <name>IlinkDebugInfoEnable</name>
@@ -853,7 +857,8 @@
         </option>
         <option>
           <name>IlinkAdditionalLibs</name>
-          <state></state>
+          <state>$PROJ_DIR$\..\..\..\..\..\components\properitary_rf\gzll\iar\gzll_iar.a</state>
+          <state>$PROJ_DIR$\..\..\..\..\..\components\properitary_rf\gzll\iar\gzll_sd_resource_iar.a</state>
         </option>
         <option>
           <name>IlinkOverrideProgramEntryLabel</name>
@@ -1091,6 +1096,9 @@
       <name>$PROJ_DIR$\..\..\..\..\..\components\ble\ble_services\ble_hids\ble_hids.c</name>
     </file>
     <file>
+      <name>$PROJ_DIR$\..\..\..\..\..\components\ble\ble_services\ble_nus\ble_nus.c</name>
+    </file>
+    <file>
       <name>$PROJ_DIR$\..\..\..\..\..\components\ble\common\ble_srv_common.c</name>
     </file>
     <file>
@@ -1103,7 +1111,13 @@
       <name>$PROJ_DIR$\..\..\..\..\..\components\libraries\uart\app_uart_fifo.c</name>
     </file>
     <file>
+      <name>$PROJ_DIR$\..\..\..\..\..\components\libraries\util\app_util_platform.c</name>
+    </file>
+    <file>
       <name>$PROJ_DIR$\..\..\..\..\..\components\drivers_nrf\delay\nrf_delay.c</name>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\..\..\..\..\components\drivers_nrf\clock\nrf_drv_clock.c</name>
     </file>
     <file>
       <name>$PROJ_DIR$\..\..\..\..\..\components\drivers_nrf\common\nrf_drv_common.c</name>
@@ -1113,6 +1127,9 @@
     </file>
     <file>
       <name>$PROJ_DIR$\..\..\..\..\..\components\drivers_nrf\uart\nrf_drv_uart.c</name>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\..\..\..\..\components\drivers_nrf\nrf_soc_nosd\nrf_nvic.c</name>
     </file>
     <file>
       <name>$PROJ_DIR$\..\..\..\..\..\components\drivers_nrf\pstorage\pstorage.c</name>
@@ -1143,9 +1160,6 @@
     </file>
     <file>
       <name>$PROJ_DIR$\..\..\..\..\..\components\libraries\trace\app_trace.c</name>
-    </file>
-    <file>
-      <name>$PROJ_DIR$\..\..\..\..\..\components\libraries\util\app_util_platform.c</name>
     </file>
     <file>
       <name>$PROJ_DIR$\..\..\..\..\..\components\libraries\fstorage\fstorage.c</name>

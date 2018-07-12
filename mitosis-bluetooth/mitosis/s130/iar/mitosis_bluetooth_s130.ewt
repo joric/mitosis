@@ -1057,19 +1057,19 @@
   <group>
     <name>Board Support</name>
     <file>
-      <name>$PROJ_DIR$\..\..\..\..\..\bsp\bsp.c</name>
+      <name>$PROJ_DIR$\..\..\..\..\..\examples\bsp\bsp.c</name>
     </file>
     <file>
-      <name>$PROJ_DIR$\..\..\..\..\..\bsp\bsp_btn_ble.c</name>
+      <name>$PROJ_DIR$\..\..\..\..\..\examples\bsp\bsp_btn_ble.c</name>
     </file>
   </group>
   <group>
     <name>Device</name>
     <file>
-      <name>$PROJ_DIR$\..\..\..\..\..\..\components\toolchain\iar\iar_startup_nrf51.s</name>
+      <name>$PROJ_DIR$\..\..\..\..\..\components\toolchain\iar\iar_startup_nrf51.s</name>
     </file>
     <file>
-      <name>$PROJ_DIR$\..\..\..\..\..\..\components\toolchain\system_nrf51.c</name>
+      <name>$PROJ_DIR$\..\..\..\..\..\components\toolchain\system_nrf51.c</name>
     </file>
   </group>
   <group>
@@ -1084,118 +1084,127 @@
   <group>
     <name>nRF_BLE</name>
     <file>
-      <name>$PROJ_DIR$\..\..\..\..\..\..\components\ble\common\ble_advdata.c</name>
+      <name>$PROJ_DIR$\..\..\..\..\..\components\ble\common\ble_advdata.c</name>
     </file>
     <file>
-      <name>$PROJ_DIR$\..\..\..\..\..\..\components\ble\ble_advertising\ble_advertising.c</name>
+      <name>$PROJ_DIR$\..\..\..\..\..\components\ble\ble_advertising\ble_advertising.c</name>
     </file>
     <file>
-      <name>$PROJ_DIR$\..\..\..\..\..\..\components\ble\ble_services\ble_bas\ble_bas.c</name>
+      <name>$PROJ_DIR$\..\..\..\..\..\components\ble\ble_services\ble_bas\ble_bas.c</name>
     </file>
     <file>
-      <name>$PROJ_DIR$\..\..\..\..\..\..\components\ble\common\ble_conn_params.c</name>
+      <name>$PROJ_DIR$\..\..\..\..\..\components\ble\common\ble_conn_params.c</name>
     </file>
     <file>
-      <name>$PROJ_DIR$\..\..\..\..\..\..\components\ble\ble_services\ble_dis\ble_dis.c</name>
+      <name>$PROJ_DIR$\..\..\..\..\..\components\ble\ble_services\ble_dis\ble_dis.c</name>
     </file>
     <file>
-      <name>$PROJ_DIR$\..\..\..\..\..\..\components\ble\ble_services\ble_hids\ble_hids.c</name>
+      <name>$PROJ_DIR$\..\..\..\..\..\components\ble\ble_services\ble_hids\ble_hids.c</name>
     </file>
     <file>
-      <name>$PROJ_DIR$\..\..\..\..\..\..\components\ble\common\ble_srv_common.c</name>
+      <name>$PROJ_DIR$\..\..\..\..\..\components\ble\ble_services\ble_nus\ble_nus.c</name>
     </file>
     <file>
-      <name>$PROJ_DIR$\..\..\..\..\..\..\components\ble\device_manager\device_manager_peripheral.c</name>
+      <name>$PROJ_DIR$\..\..\..\..\..\components\ble\common\ble_srv_common.c</name>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\..\..\..\..\components\ble\device_manager\device_manager_peripheral.c</name>
     </file>
   </group>
   <group>
     <name>nRF_Drivers</name>
     <file>
-      <name>$PROJ_DIR$\..\..\..\..\..\..\components\libraries\uart\app_uart_fifo.c</name>
+      <name>$PROJ_DIR$\..\..\..\..\..\components\libraries\uart\app_uart_fifo.c</name>
     </file>
     <file>
-      <name>$PROJ_DIR$\..\..\..\..\..\..\components\drivers_nrf\delay\nrf_delay.c</name>
+      <name>$PROJ_DIR$\..\..\..\..\..\components\libraries\util\app_util_platform.c</name>
     </file>
     <file>
-      <name>$PROJ_DIR$\..\..\..\..\..\..\components\drivers_nrf\common\nrf_drv_common.c</name>
+      <name>$PROJ_DIR$\..\..\..\..\..\components\drivers_nrf\delay\nrf_delay.c</name>
     </file>
     <file>
-      <name>$PROJ_DIR$\..\..\..\..\..\..\components\drivers_nrf\gpiote\nrf_drv_gpiote.c</name>
+      <name>$PROJ_DIR$\..\..\..\..\..\components\drivers_nrf\clock\nrf_drv_clock.c</name>
     </file>
     <file>
-      <name>$PROJ_DIR$\..\..\..\..\..\..\components\drivers_nrf\uart\nrf_drv_uart.c</name>
+      <name>$PROJ_DIR$\..\..\..\..\..\components\drivers_nrf\common\nrf_drv_common.c</name>
     </file>
     <file>
-      <name>$PROJ_DIR$\..\..\..\..\..\..\components\drivers_nrf\pstorage\pstorage.c</name>
+      <name>$PROJ_DIR$\..\..\..\..\..\components\drivers_nrf\gpiote\nrf_drv_gpiote.c</name>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\..\..\..\..\components\drivers_nrf\uart\nrf_drv_uart.c</name>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\..\..\..\..\components\drivers_nrf\nrf_soc_nosd\nrf_nvic.c</name>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\..\..\..\..\components\drivers_nrf\pstorage\pstorage.c</name>
     </file>
   </group>
   <group>
     <name>nRF_Libraries</name>
     <file>
-      <name>$PROJ_DIR$\..\..\..\..\..\..\components\libraries\button\app_button.c</name>
+      <name>$PROJ_DIR$\..\..\..\..\..\components\libraries\button\app_button.c</name>
     </file>
     <file>
-      <name>$PROJ_DIR$\..\..\..\..\..\..\components\libraries\util\app_error.c</name>
+      <name>$PROJ_DIR$\..\..\..\..\..\components\libraries\util\app_error.c</name>
     </file>
     <file>
-      <name>$PROJ_DIR$\..\..\..\..\..\..\components\libraries\util\app_error_weak.c</name>
+      <name>$PROJ_DIR$\..\..\..\..\..\components\libraries\util\app_error_weak.c</name>
     </file>
     <file>
-      <name>$PROJ_DIR$\..\..\..\..\..\..\components\libraries\fifo\app_fifo.c</name>
+      <name>$PROJ_DIR$\..\..\..\..\..\components\libraries\fifo\app_fifo.c</name>
     </file>
     <file>
-      <name>$PROJ_DIR$\..\..\..\..\..\..\components\libraries\scheduler\app_scheduler.c</name>
+      <name>$PROJ_DIR$\..\..\..\..\..\components\libraries\scheduler\app_scheduler.c</name>
     </file>
     <file>
-      <name>$PROJ_DIR$\..\..\..\..\..\..\components\libraries\timer\app_timer.c</name>
+      <name>$PROJ_DIR$\..\..\..\..\..\components\libraries\timer\app_timer.c</name>
     </file>
     <file>
-      <name>$PROJ_DIR$\..\..\..\..\..\..\components\libraries\timer\app_timer_appsh.c</name>
+      <name>$PROJ_DIR$\..\..\..\..\..\components\libraries\timer\app_timer_appsh.c</name>
     </file>
     <file>
-      <name>$PROJ_DIR$\..\..\..\..\..\..\components\libraries\trace\app_trace.c</name>
+      <name>$PROJ_DIR$\..\..\..\..\..\components\libraries\trace\app_trace.c</name>
     </file>
     <file>
-      <name>$PROJ_DIR$\..\..\..\..\..\..\components\libraries\util\app_util_platform.c</name>
+      <name>$PROJ_DIR$\..\..\..\..\..\components\libraries\fstorage\fstorage.c</name>
     </file>
     <file>
-      <name>$PROJ_DIR$\..\..\..\..\..\..\components\libraries\fstorage\fstorage.c</name>
+      <name>$PROJ_DIR$\..\..\..\..\..\components\libraries\util\nrf_assert.c</name>
     </file>
     <file>
-      <name>$PROJ_DIR$\..\..\..\..\..\..\components\libraries\util\nrf_assert.c</name>
+      <name>$PROJ_DIR$\..\..\..\..\..\components\libraries\util\nrf_log.c</name>
     </file>
     <file>
-      <name>$PROJ_DIR$\..\..\..\..\..\..\components\libraries\util\nrf_log.c</name>
+      <name>$PROJ_DIR$\..\..\..\..\..\components\libraries\uart\retarget.c</name>
     </file>
     <file>
-      <name>$PROJ_DIR$\..\..\..\..\..\..\components\libraries\uart\retarget.c</name>
-    </file>
-    <file>
-      <name>$PROJ_DIR$\..\..\..\..\..\..\components\libraries\sensorsim\sensorsim.c</name>
+      <name>$PROJ_DIR$\..\..\..\..\..\components\libraries\sensorsim\sensorsim.c</name>
     </file>
   </group>
   <group>
     <name>nRF_Segger_RTT</name>
     <file>
-      <name>$PROJ_DIR$\..\..\..\..\..\..\external\segger_rtt\RTT_Syscalls_IAR.c</name>
+      <name>$PROJ_DIR$\..\..\..\..\..\external\segger_rtt\RTT_Syscalls_IAR.c</name>
     </file>
     <file>
-      <name>$PROJ_DIR$\..\..\..\..\..\..\external\segger_rtt\SEGGER_RTT.c</name>
+      <name>$PROJ_DIR$\..\..\..\..\..\external\segger_rtt\SEGGER_RTT.c</name>
     </file>
     <file>
-      <name>$PROJ_DIR$\..\..\..\..\..\..\external\segger_rtt\SEGGER_RTT_printf.c</name>
+      <name>$PROJ_DIR$\..\..\..\..\..\external\segger_rtt\SEGGER_RTT_printf.c</name>
     </file>
   </group>
   <group>
     <name>nRF_SoftDevice</name>
     <file>
-      <name>$PROJ_DIR$\..\..\..\..\..\..\components\softdevice\s130\doc\s130_nrf51_2.0.0_licence_agreement.txt</name>
+      <name>$PROJ_DIR$\..\..\..\..\..\components\softdevice\s130\doc\s130_nrf51_2.0.0_licence_agreement.txt</name>
     </file>
     <file>
-      <name>$PROJ_DIR$\..\..\..\..\..\..\components\softdevice\common\softdevice_handler\softdevice_handler.c</name>
+      <name>$PROJ_DIR$\..\..\..\..\..\components\softdevice\common\softdevice_handler\softdevice_handler.c</name>
     </file>
     <file>
-      <name>$PROJ_DIR$\..\..\..\..\..\..\components\softdevice\common\softdevice_handler\softdevice_handler_appsh.c</name>
+      <name>$PROJ_DIR$\..\..\..\..\..\components\softdevice\common\softdevice_handler\softdevice_handler_appsh.c</name>
     </file>
   </group>
 </project>

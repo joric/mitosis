@@ -26,6 +26,17 @@
  * Also it would accept pairing requests from any peer device.
  */
 
+
+#define COMPILE_RIGHT
+#include "nrf_drv_config.h"
+#include "nrf_drv_config_mitosis.h"
+#include "mitosis.h"
+#include "nrf_gzll.h"
+#include "nrf_gpio.h"
+#include "nrf_delay.h"
+#include "nrf_drv_clock.h"
+//#include "nrf_drv_rtc.h"
+
 #include <stdint.h>
 #include <string.h>
 #include "nordic_common.h"
@@ -53,6 +64,8 @@
 #include "pstorage.h"
 #include "app_trace.h"
 
+
+
 #if BUTTONS_NUMBER <2
 #error "Not enough resources on board"
 #endif
@@ -68,7 +81,7 @@
 #define KEY_PRESS_BUTTON_ID              0                                              /**< Button used as Keyboard key press. */
 #define SHIFT_BUTTON_ID                  1                                              /**< Button used as 'SHIFT' Key. */
 
-#define DEVICE_NAME                      "Mitosis_Bluetooth"                              /**< Name of device. Will be included in the advertising data. */
+#define DEVICE_NAME                      "Mitosis-BT"                              /**< Name of device. Will be included in the advertising data. */
 #define MANUFACTURER_NAME                "NordicSemiconductor"                          /**< Manufacturer. Will be passed to Device Information Service. */
 
 #define APP_TIMER_PRESCALER              0                                              /**< Value of the RTC1 PRESCALER register. */
@@ -134,6 +147,43 @@
 #define SHIFT_KEY_CODE                   0x02                                           /**< Key code indicating the press of the Shift Key. */
 
 #define MAX_KEYS_IN_ONE_REPORT           (INPUT_REPORT_KEYS_MAX_LEN - SCAN_CODE_POS)    /**< Maximum number of key presses that can be sent in one Input Report. */
+
+
+/*
+// Setup switch pins with pullups
+static void gpio_config(void)
+{
+    nrf_gpio_cfg_sense_input(S01, NRF_GPIO_PIN_PULLUP, NRF_GPIO_PIN_SENSE_LOW);
+    nrf_gpio_cfg_sense_input(S02, NRF_GPIO_PIN_PULLUP, NRF_GPIO_PIN_SENSE_LOW);
+    nrf_gpio_cfg_sense_input(S03, NRF_GPIO_PIN_PULLUP, NRF_GPIO_PIN_SENSE_LOW);
+    nrf_gpio_cfg_sense_input(S04, NRF_GPIO_PIN_PULLUP, NRF_GPIO_PIN_SENSE_LOW);
+    nrf_gpio_cfg_sense_input(S05, NRF_GPIO_PIN_PULLUP, NRF_GPIO_PIN_SENSE_LOW);
+    nrf_gpio_cfg_sense_input(S06, NRF_GPIO_PIN_PULLUP, NRF_GPIO_PIN_SENSE_LOW);
+    nrf_gpio_cfg_sense_input(S07, NRF_GPIO_PIN_PULLUP, NRF_GPIO_PIN_SENSE_LOW);
+    nrf_gpio_cfg_sense_input(S08, NRF_GPIO_PIN_PULLUP, NRF_GPIO_PIN_SENSE_LOW);
+    nrf_gpio_cfg_sense_input(S09, NRF_GPIO_PIN_PULLUP, NRF_GPIO_PIN_SENSE_LOW);
+    nrf_gpio_cfg_sense_input(S10, NRF_GPIO_PIN_PULLUP, NRF_GPIO_PIN_SENSE_LOW);
+    nrf_gpio_cfg_sense_input(S11, NRF_GPIO_PIN_PULLUP, NRF_GPIO_PIN_SENSE_LOW);
+    nrf_gpio_cfg_sense_input(S12, NRF_GPIO_PIN_PULLUP, NRF_GPIO_PIN_SENSE_LOW);
+    nrf_gpio_cfg_sense_input(S13, NRF_GPIO_PIN_PULLUP, NRF_GPIO_PIN_SENSE_LOW);
+    nrf_gpio_cfg_sense_input(S14, NRF_GPIO_PIN_PULLUP, NRF_GPIO_PIN_SENSE_LOW);
+    nrf_gpio_cfg_sense_input(S15, NRF_GPIO_PIN_PULLUP, NRF_GPIO_PIN_SENSE_LOW);
+    nrf_gpio_cfg_sense_input(S16, NRF_GPIO_PIN_PULLUP, NRF_GPIO_PIN_SENSE_LOW);
+    nrf_gpio_cfg_sense_input(S17, NRF_GPIO_PIN_PULLUP, NRF_GPIO_PIN_SENSE_LOW);
+    nrf_gpio_cfg_sense_input(S18, NRF_GPIO_PIN_PULLUP, NRF_GPIO_PIN_SENSE_LOW);
+    nrf_gpio_cfg_sense_input(S19, NRF_GPIO_PIN_PULLUP, NRF_GPIO_PIN_SENSE_LOW);
+    nrf_gpio_cfg_sense_input(S20, NRF_GPIO_PIN_PULLUP, NRF_GPIO_PIN_SENSE_LOW);
+    nrf_gpio_cfg_sense_input(S21, NRF_GPIO_PIN_PULLUP, NRF_GPIO_PIN_SENSE_LOW);
+    nrf_gpio_cfg_sense_input(S22, NRF_GPIO_PIN_PULLUP, NRF_GPIO_PIN_SENSE_LOW);
+    nrf_gpio_cfg_sense_input(S23, NRF_GPIO_PIN_PULLUP, NRF_GPIO_PIN_SENSE_LOW);
+}
+
+// Return the key states, masked with valid key pins
+static uint32_t read_keys(void)
+{
+    return ~NRF_GPIO->IN & INPUT_MASK;
+}
+*/
 
 
 /**Buffer queue access macros
@@ -1335,7 +1385,9 @@ static void bsp_event_handler(bsp_event_t event)
             }
             break;
 
-        case BSP_EVENT_KEY_0:
+        default:
+          
+          if (event>=BSP_EVENT_KEY_0 && event<=BSP_EVENT_KEY_LAST) {
             if (m_conn_handle != BLE_CONN_HANDLE_INVALID)
             {
                 keys_send(1, p_key);
@@ -1347,9 +1399,8 @@ static void bsp_event_handler(bsp_event_t event)
                     size = 0;
                 }
             }
-            break;
-
-        default:
+          }
+          
             break;
     }
 }
@@ -1497,12 +1548,31 @@ int main(void)
     services_init();
     sensor_simulator_init();
     conn_params_init();
-    buffer_init();
+    buffer_init();   
 
     // Start execution.
     timers_start();
     err_code = ble_advertising_start(BLE_ADV_MODE_FAST);
     APP_ERROR_CHECK(err_code);
+
+    //gpio_config();
+    
+    /*
+    // Set the GPIOTE PORT event as interrupt source, and enable interrupts for GPIOTE
+    NRF_GPIOTE->INTENSET = GPIOTE_INTENSET_PORT_Msk;    
+    NVIC_EnableIRQ(GPIOTE_IRQn);
+    
+    nrf_gpio_cfg_output(LED_PIN);
+    nrf_gpio_pin_set(LED_PIN);
+    nrf_delay_ms(250);
+    nrf_gpio_pin_clear(LED_PIN);
+    nrf_delay_ms(250);
+    nrf_gpio_pin_set(LED_PIN);
+    nrf_delay_ms(250);
+    nrf_gpio_pin_clear(LED_PIN);
+    */
+
+    //read_keys();
 
     // Enter main loop.
     for (;;)
