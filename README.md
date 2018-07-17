@@ -175,7 +175,7 @@ Note that Arduino nRF52 builds (usually based on [Bluefruit nRF52](https://www.a
 are NOT compatible with the Mitosis keyboard (softdevice s132 and all the software is nRF52-only, Mitosis is nRF51-based).
 
 * [Curves - my bluetooth split](https://redd.it/86asf6) by [/u/JKPro777](http://reddit.com/u/JKPro777)
-* [Split Bluetooth Keyboard](https://gist.github.com/wez/b30683a4dfa329b86b9e0a2811a8c593) (gist) by [wez](https://gist.github.com/wez)
+* [Split Bluetooth Keyboard](https://gist.github.com/wez/b30683a4dfa329b86b9e0a2811a8c593) (gist) by [wez](https://gist.github.com/wez) ([Reddit](https://redd.it/7fdrdz))
 
 #### BlueMicro
 
