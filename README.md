@@ -33,8 +33,8 @@ Original Mitosis hardware repository: https://github.com/reversebias/mitosis-har
 * [Arduino Pro Micro](https://www.aliexpress.com/item/-/32648920631.html) from Aliexpress (price varies from $2.54 to $4), had in stock.
 * [Si2302] mosfets: board survives reverse polarity for a short while, you may just [short the pads](https://i.imgur.com/h1Mx8Yw.jpg).
 * [ASMB-MTB1-0A3A2] from Aliexpress (or Cree CLVBA-FKA, or 3 single LEDs, very optional)
-* AMS1117: 5v to 3v regulator, had in stock. You probably can use diodes for 2v drop.
-* 1206 4.7k resistor arrays, 2 pcs: had in stock (taken from an old motherboard).
+* [AMS1117]: 5v to 3v regulator, had in stock. You probably can use diodes for 2v drop.
+* [1206 4.7k] resistor arrays, 2 pcs: had in stock (taken from an old motherboard).
 * Switches and caps: most of you have more than you can handle.
 
 ### Total
@@ -219,4 +219,6 @@ BlueMicro is open source, official repositories are [BlueMicro_BLE] (firmware) a
 [openocd-0.10.0-dev-00247-g73b676c.7z]: http://www.freddiechopin.info/en/download/category/10-openocd-dev?download=140%3Aopenocd-0.10.0-dev-00247-g73b676c
 [WinAVR-20100110-install.exe]: https://sourceforge.net/projects/winavr/files/WinAVR/20100110/WinAVR-20100110-install.exe/download
 [zadig-2.3.exe]: https://zadig.akeo.ie/downloads/zadig-2.3.exe
+[AMS1117]: https://www.aliexpress.com/item/-/32826077143.html
+[1206 4.7k]: https://www.aliexpress.com/item/-/32853745131.html
 
