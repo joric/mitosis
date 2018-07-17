@@ -156,6 +156,9 @@ https://github.com/NordicPlayground/nrf51-ble-gzll-device-uart
 
 ### Bluetooth UART service
 
+There are a few split keyboards that successfully run Bluetooth HID and Bluetooth UART service concurrently.
+Most of them use Adafruit nRF52 library and simple sketches written and compiled in Arduino IDE.
+
 #### Arduino nRF5
 
 There is [Arduino-nRF5 by Sandeep Mistry] that supports nRF51.
