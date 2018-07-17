@@ -148,13 +148,13 @@ Mitosis is not a Bluetooth keyboard. It uses a proprietary rf-protocol (Gazell) 
 Global layers need two wireless channels - Bluetooth HID and something for the communication between halves.
 Possible solutions are listed below.
 
-### Bluetooth HID + Gazell protocol
+### Gazell
 
 There's an example of Bluetooth and Gazell running concurrently but
 it seems a bit dated and doesn't support both Gazell host and BLE:
 https://github.com/NordicPlayground/nrf51-ble-gzll-device-uart
 
-### Bluetooth HID + UART service
+### Bluetooth UART service
 
 #### Arduino nRF5
 
