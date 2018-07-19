@@ -120,7 +120,8 @@ int main(void)
     // main loop
     while (true)
     {
-        bool dump = packet_received_left || packet_received_right;
+        bool left = packet_received_left;
+        bool right = packet_received_right;
       
         // detecting received packet from interupt, and unpacking
         if (packet_received_left)
@@ -191,7 +192,7 @@ int main(void)
 
         // checking for a poll request from QMK
         //if (app_uart_get(&c) == NRF_SUCCESS && c == 's')        
-        if (dump)
+        if (left || right)
         {
             // sending data to QMK, and an end byte
             //nrf_drv_uart_tx(data_buffer,10);
@@ -200,7 +201,36 @@ int main(void)
             // debugging help, for printing keystates to a serial console
             
             //for (uint8_t i = 0; i < 10; i++) app_uart_put(data_buffer[i]);
+          
+          if (left) {
+            LogDebug("L " \
+                   BYTE_TO_BINARY_PATTERN " " \
+                   BYTE_TO_BINARY_PATTERN " " \
+                   BYTE_TO_BINARY_PATTERN " " \
+                   BYTE_TO_BINARY_PATTERN " " \
+                   BYTE_TO_BINARY_PATTERN "\n", \
+                   BYTE_TO_BINARY(data_buffer[0]), \
+                   BYTE_TO_BINARY(data_buffer[2]), \
+                   BYTE_TO_BINARY(data_buffer[4]), \
+                   BYTE_TO_BINARY(data_buffer[6]), \
+                   BYTE_TO_BINARY(data_buffer[8]));            
+          }
+          
+          if (right) {
+            LogDebug("R " \
+                   BYTE_TO_BINARY_PATTERN " " \
+                   BYTE_TO_BINARY_PATTERN " " \
+                   BYTE_TO_BINARY_PATTERN " " \
+                   BYTE_TO_BINARY_PATTERN " " \
+                   BYTE_TO_BINARY_PATTERN "\n", \
+                   BYTE_TO_BINARY(data_buffer[1]), \
+                   BYTE_TO_BINARY(data_buffer[3]), \
+                   BYTE_TO_BINARY(data_buffer[5]), \
+                   BYTE_TO_BINARY(data_buffer[7]), \
+                   BYTE_TO_BINARY(data_buffer[9]));            
+          }          
             
+            /*
             LogDebug(BYTE_TO_BINARY_PATTERN " " \
                    BYTE_TO_BINARY_PATTERN " " \
                    BYTE_TO_BINARY_PATTERN " " \
@@ -221,7 +251,7 @@ int main(void)
                    BYTE_TO_BINARY(data_buffer[7]), \
                    BYTE_TO_BINARY(data_buffer[8]), \
                    BYTE_TO_BINARY(data_buffer[9]));
-            
+            */
             nrf_delay_us(100);           
             
         }

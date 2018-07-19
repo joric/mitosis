@@ -36,7 +36,7 @@ ShowSource=1
 Freq=10000000
 MultiCoreRunAll=1
 [DebugChecksum]
-Checksum=484094435
+Checksum=1109663924
 [StLinkDriver]
 CStepIntDis=_ 0
 stlinkserialNo=846755D1
