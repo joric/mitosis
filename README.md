@@ -151,8 +151,10 @@ Possible solutions are listed below.
 ### Gazell
 
 There's an example of Bluetooth and Gazell running concurrently but
-it seems a bit dated and doesn't support both Gazell host and BLE:
-https://github.com/NordicPlayground/nrf51-ble-gzll-device-uart
+it seems a bit dated and doesn't support both Gazell host and BLE.
+
+* https://github.com/NordicPlayground/nrf51-ble-gzll-device-uart BLE and Gazell running concurrently (no Gazell host)
+* https://github.com/NordicPlayground/nRF51-multi-role-conn-observer-advertiser example usage of the timeslot API
 
 ### Bluetooth UART service
 
