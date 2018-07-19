@@ -1,12 +1,24 @@
 "--endian=little" 
 
-"--cpu=Cortex-M0+" 
+"--cpu=Cortex-M0" 
 
 "--fpu=None" 
 
+"-p" 
+
+"C:\Program Files (x86)\IAR Systems\Embedded Workbench 7.3\arm\CONFIG\debugger\NordicSemi\nRF51822-QFAA.ddf" 
+
 "--semihosting=none" 
 
-"--multicore_nr_of_cores=1" 
+"--device=nRF51822-QFAA" 
+
+"--drv_interface=SWD" 
+
+"--stlink_reset_strategy=0,0" 
+
+"--drv_swo_clock_setup=72000000,0,2000000" 
+
+"--drv_catch_exceptions=0x000" 
 
 
 

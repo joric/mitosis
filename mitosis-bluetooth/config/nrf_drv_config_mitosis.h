@@ -10,8 +10,8 @@
  *
  */
 
-#ifndef NRF_DRV_CONFIG_H
-#define NRF_DRV_CONFIG_H
+#ifndef NRF_DRV_CONFIG_MITOSIS_H
+#define NRF_DRV_CONFIG_MITOSIS_H
 
 /**
  * Provide a non-zero value here in applications that need to use several
@@ -83,4 +83,4 @@
 
 #include "nrf_drv_config_validation.h"
 
-#endif // NRF_DRV_CONFIG_H
+#endif // NRF_DRV_CONFIG_MITOSIS_H

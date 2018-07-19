@@ -1159,9 +1159,6 @@
       <name>$PROJ_DIR$\..\..\..\..\..\components\libraries\scheduler\app_scheduler.c</name>
     </file>
     <file>
-      <name>$PROJ_DIR$\..\..\..\..\..\components\libraries\timer\app_timer.c</name>
-    </file>
-    <file>
       <name>$PROJ_DIR$\..\..\..\..\..\components\libraries\timer\app_timer_appsh.c</name>
     </file>
     <file>

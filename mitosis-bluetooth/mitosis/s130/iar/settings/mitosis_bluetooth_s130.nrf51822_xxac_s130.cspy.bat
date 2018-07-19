@@ -25,7 +25,7 @@ if not "%~1" == "" goto debugFile
 
 @echo on 
 
-"C:\Program Files (x86)\IAR Systems\Embedded Workbench 7.3\common\bin\cspybat" -f "D:\Projects\github\mitosis\nRF5_SDK_11\mitosis\mitosis-bluetooth\mitosis\s130\iar\settings\mitosis_bluetooth_s130.nrf51822_xxac_s130.general.xcl" --backend -f "D:\Projects\github\mitosis\nRF5_SDK_11\mitosis\mitosis-bluetooth\mitosis\s130\iar\settings\mitosis_bluetooth_s130.nrf51822_xxac_s130.driver.xcl" 
+"C:\Program Files (x86)\IAR Systems\Embedded Workbench 7.3\common\bin\cspybat" -f "D:\Projects\mitosis-keyboard\nRF5_SDK_11\mitosis\mitosis-bluetooth\mitosis\s130\iar\settings\mitosis_bluetooth_s130.nrf51822_xxac_s130.general.xcl" --backend -f "D:\Projects\mitosis-keyboard\nRF5_SDK_11\mitosis\mitosis-bluetooth\mitosis\s130\iar\settings\mitosis_bluetooth_s130.nrf51822_xxac_s130.driver.xcl" 
 
 @echo off 
 goto end 
@@ -34,7 +34,7 @@ goto end
 
 @echo on 
 
-"C:\Program Files (x86)\IAR Systems\Embedded Workbench 7.3\common\bin\cspybat" -f "D:\Projects\github\mitosis\nRF5_SDK_11\mitosis\mitosis-bluetooth\mitosis\s130\iar\settings\mitosis_bluetooth_s130.nrf51822_xxac_s130.general.xcl" "--debug_file=%~1" --backend -f "D:\Projects\github\mitosis\nRF5_SDK_11\mitosis\mitosis-bluetooth\mitosis\s130\iar\settings\mitosis_bluetooth_s130.nrf51822_xxac_s130.driver.xcl" 
+"C:\Program Files (x86)\IAR Systems\Embedded Workbench 7.3\common\bin\cspybat" -f "D:\Projects\mitosis-keyboard\nRF5_SDK_11\mitosis\mitosis-bluetooth\mitosis\s130\iar\settings\mitosis_bluetooth_s130.nrf51822_xxac_s130.general.xcl" "--debug_file=%~1" --backend -f "D:\Projects\mitosis-keyboard\nRF5_SDK_11\mitosis\mitosis-bluetooth\mitosis\s130\iar\settings\mitosis_bluetooth_s130.nrf51822_xxac_s130.driver.xcl" 
 
 @echo off 
 :end

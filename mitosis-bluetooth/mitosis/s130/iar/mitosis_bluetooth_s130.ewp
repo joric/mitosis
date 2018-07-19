@@ -55,7 +55,7 @@
         </option>
         <option>
           <name>OGCoreOrChip</name>
-          <state>0</state>
+          <state>1</state>
         </option>
         <option>
           <name>GRuntimeLibSelect</name>
@@ -89,7 +89,7 @@
         </option>
         <option>
           <name>OGChipSelectEditMenu</name>
-          <state>Default	None</state>
+          <state>nRF51822-QFAA	NordicSemi nRF51822-QFAA</state>
         </option>
         <option>
           <name>GenLowLevelInterface</name>
@@ -128,7 +128,7 @@
         <option>
           <name>GBECoreSlave</name>
           <version>22</version>
-          <state>35</state>
+          <state>34</state>
         </option>
         <option>
           <name>OGUseCmsis</name>
@@ -145,11 +145,11 @@
         <option>
           <name>CoreVariant</name>
           <version>22</version>
-          <state>35</state>
+          <state>34</state>
         </option>
         <option>
           <name>GFPUDeviceSlave</name>
-          <state>Default	None</state>
+          <state>nRF51822-QFAA	NordicSemi nRF51822-QFAA</state>
         </option>
         <option>
           <name>FPU2</name>
@@ -168,7 +168,7 @@
         <option>
           <name>GFPUCoreSlave2</name>
           <version>22</version>
-          <state>35</state>
+          <state>34</state>
         </option>
       </data>
     </settings>
@@ -1151,9 +1151,6 @@
     </file>
     <file>
       <name>$PROJ_DIR$\..\..\..\..\..\components\libraries\scheduler\app_scheduler.c</name>
-    </file>
-    <file>
-      <name>$PROJ_DIR$\..\..\..\..\..\components\libraries\timer\app_timer.c</name>
     </file>
     <file>
       <name>$PROJ_DIR$\..\..\..\..\..\components\libraries\timer\app_timer_appsh.c</name>
