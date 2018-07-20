@@ -355,6 +355,7 @@
           <state>$PROJ_DIR$\..\..\..\..\..\components\libraries\trace</state>
           <state>$PROJ_DIR$\..\..\..\..\..\components\libraries\uart</state>
           <state>$PROJ_DIR$\..\..\..\..\..\components\libraries\util</state>
+          <state>$PROJ_DIR$\..\..\..\..\..\components\libraries\gpiote</state>
           <state>$PROJ_DIR$\..\..\..\..\..\components\softdevice\common\softdevice_handler</state>
           <state>$PROJ_DIR$\..\..\..\..\..\components\softdevice\s130\headers</state>
           <state>$PROJ_DIR$\..\..\..\..\..\components\softdevice\s130\headers\nrf51</state>
@@ -721,7 +722,7 @@
       <archiveVersion>1</archiveVersion>
       <data>
         <prebuild></prebuild>
-        <postbuild></postbuild>
+        <postbuild>D:\Projects\mitosis-keyboard\nRF5_SDK_11\mitosis\mitosis-bluetooth\upload_bt.cmd</postbuild>
       </data>
     </settings>
     <settings>
@@ -1150,7 +1151,13 @@
       <name>$PROJ_DIR$\..\..\..\..\..\components\libraries\fifo\app_fifo.c</name>
     </file>
     <file>
+      <name>$PROJ_DIR$\..\..\..\..\..\components\libraries\gpiote\app_gpiote.c</name>
+    </file>
+    <file>
       <name>$PROJ_DIR$\..\..\..\..\..\components\libraries\scheduler\app_scheduler.c</name>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\..\..\..\..\components\libraries\timer\app_timer.c</name>
     </file>
     <file>
       <name>$PROJ_DIR$\..\..\..\..\..\components\libraries\timer\app_timer_appsh.c</name>
