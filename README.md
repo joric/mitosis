@@ -76,9 +76,9 @@ This firmware is used for the nRF51 modules on the keyboard halves and the recei
 
 This precompiled firmware features YJ-14015 support and status LEDs support.
 
-* left half: [precompiled-basic-left.hex](https://raw.githubusercontent.com/joric/mitosis/devel/precompiled_iar/precompiled-basic-left.hex)
-* right half: [precompiled-basic-right.hex](https://raw.githubusercontent.com/joric/mitosis/devel/precompiled_iar/precompiled-basic-right.hex)
-* receiver: [precompiled-basic-receiver.hex](https://raw.githubusercontent.com/joric/mitosis/devel/precompiled_iar/precompiled-basic-receiver.hex)
+* [precompiled-basic-left.hex](https://raw.githubusercontent.com/joric/mitosis/devel/precompiled_iar/precompiled-basic-left.hex) (left half)
+* [precompiled-basic-right.hex](https://raw.githubusercontent.com/joric/mitosis/devel/precompiled_iar/precompiled-basic-right.hex) (right half)
+* [precompiled-basic-receiver.hex](https://raw.githubusercontent.com/joric/mitosis/devel/precompiled_iar/precompiled-basic-receiver.hex) (receiver)
 
 ### Uploading nRF51 Firmware
 
@@ -116,13 +116,24 @@ This firmware is used for the Arduino Pro Micro on the keyboard receiver.
 
 First of all, check [QMK repository](https://github.com/qmk/qmk_firmware/tree/master/keyboards/mitosis/keymaps) maybe your keymap is already merged.
 
-* mitosis-default (original) from /u/reverse_bias: [kle](http://www.keyboard-layout-editor.com/#/gists/f89d2ff79b72e920939b), [keymap.c](https://github.com/qmk/qmk_firmware/blob/master/keyboards/mitosis/keymaps/default/keymap.c), [firmware](https://raw.githubusercontent.com/joric/qmk_firmware/mitosis-joric/precompiled/mitosis_default.hex), [pic](http://i.imgur.com/Ioh0Iix.png)
-* mitosis-qwerty (qwerty layout) from /u/runninghack: [kle](http://www.keyboard-layout-editor.com/#/gists/acec41432b5ce0eb341d88245a20d9da), [keymap.c](https://github.com/runninghack/qmk_firmware/blob/master/keyboards/mitosis/keymaps/qwerty/keymap.c), [firmware](https://raw.githubusercontent.com/joric/qmk_firmware/mitosis-joric/precompiled/mitosis_qwerty.hex), [pic](https://i.imgur.com/Jt0lTWt.png)
-* mitosis-mjt (qwerty layout) from /u/kaybeerry: [kle](http://www.keyboard-layout-editor.com/#/gists/e213fec721cb035614cef401cd6750d6), [keymap.c](https://github.com/mterhar/qmk_firmware/blob/master/keyboards/mitosis/keymaps/mjt/keymap.c), [firmware](https://raw.githubusercontent.com/joric/qmk_firmware/mitosis-joric/precompiled/mitosis_mjt.hex), [pic](https://i.imgur.com/BiKsnIV.png)
-* mitosis-carvac_dv (qwerty layout) by /u/Carvac: [keymap.c](https://github.com/CarVac/qmk_firmware/blob/master/keyboards/mitosis/keymaps/carvac_dv/keymap.c)
-* mitosis-workman (workman layout) by /u/mloffer: [kle](http://www.keyboard-layout-editor.com/#/gists/db73d647ad8a67c9654a4daeab0e0873), [keymap.c](https://github.com/mloffer/mitosis-workman)
-* mitosis-atreus (atreus layout) from /u/iamjoric: [kle](http://www.keyboard-layout-editor.com/#/gists/e1b26b86c4e024d2f4f3185e5b769a00), [keymap.c](https://github.com/joric/qmk_firmware/blob/mitosis-joric/keyboards/mitosis/keymaps/atreus/keymap.c), [firmware](https://raw.githubusercontent.com/joric/qmk_firmware/mitosis-joric/precompiled/mitosis_atreus.hex)
-* mitosis-joric (experimental) from /u/iamjoric: [kle](http://www.keyboard-layout-editor.com/#/gists/3f5dd1c848bb9a7a723161ad5e0c8e39), [keymap.c](https://github.com/joric/qmk_firmware/blob/mitosis-joric/keyboards/mitosis/keymaps/joric/keymap.c), [firmware](https://raw.githubusercontent.com/joric/qmk_firmware/mitosis-joric/precompiled/mitosis_joric.hex)
+* [mitosis_mjt.hex] (recommended) by [/u/kaybeerry](https://reddit.com/u/kaybeerry) ([KLE](http://www.keyboard-layout-editor.com/#/gists/e213fec721cb035614cef401cd6750d6), [keymap.c](https://github.com/mterhar/qmk_firmware/blob/master/keyboards/mitosis/keymaps/mjt/keymap.c), [Image](https://i.imgur.com/BiKsnIV.png))
+* [mitosis_default.hex] (original) by [/u/reverse_bias](https://reddit.com/u/reverse_bias) ([KLE](http://www.keyboard-layout-editor.com/#/gists/f89d2ff79b72e920939b), [keymap.c](https://github.com/qmk/qmk_firmware/blob/master/keyboards/mitosis/keymaps/default/keymap.c), [Image](http://i.imgur.com/Ioh0Iix.png))
+* [mitosis_qwerty.hex] by [/u/runninghack](https://reddit.com//u/runninghack) ([KLE](http://www.keyboard-layout-editor.com/#/gists/acec41432b5ce0eb341d88245a20d9da), [keymap.c](https://github.com/runninghack/qmk_firmware/blob/master/keyboards/mitosis/keymaps/qwerty/keymap.c), [Image](https://i.imgur.com/Jt0lTWt.png))
+* [mitosis_atreus.hex] by [/u/iamjoric](https://reddit.com//u/iamjoric) ([KLE](http://www.keyboard-layout-editor.com/#/gists/e1b26b86c4e024d2f4f3185e5b769a00), [keymap.c](https://github.com/joric/qmk_firmware/blob/mitosis-joric/keyboards/mitosis/keymaps/atreus/keymap.c))
+* [mitosis_joric.hex] (experimental) by [/u/iamjoric](https://reddit.com/u/iamjoric) ([KLE](http://www.keyboard-layout-editor.com/#/gists/3f5dd1c848bb9a7a723161ad5e0c8e39), [keymap.c](https://github.com/joric/qmk_firmware/blob/mitosis-joric/keyboards/mitosis/keymaps/joric/keymap.c))
+
+[mitosis_default.hex]: https://raw.githubusercontent.com/joric/qmk_firmware/mitosis-joric/precompiled/mitosis_default.hex
+[mitosis_qwerty.hex]: https://raw.githubusercontent.com/joric/qmk_firmware/mitosis-joric/precompiled/mitosis_qwerty.hex
+[mitosis_mjt.hex]: https://raw.githubusercontent.com/joric/qmk_firmware/mitosis-joric/precompiled/mitosis_mjt.hex
+[mitosis_atreus.hex]: https://raw.githubusercontent.com/joric/qmk_firmware/mitosis-joric/precompiled/mitosis_atreus.hex
+[mitosis_joric.hex]: https://raw.githubusercontent.com/joric/qmk_firmware/mitosis-joric/precompiled/mitosis_joric.hex
+
+Not compiled:
+
+* [Datagrok](https://github.com/qmk/qmk_firmware/tree/master/keyboards/mitosis/keymaps/datagrok) by [datagrok](https://github.com/datagrok)
+* [Carvac_dv](https://github.com/CarVac/qmk_firmware/blob/master/keyboards/mitosis/keymaps/carvac_dv) by [/u/Carvac](https://reddit.com/u/Carvac)
+* [Workman](https://github.com/mloffer/mitosis-workman) by [/u/mloffer](https://reddit.com/u/mloffer) ([KLE](http://www.keyboard-layout-editor.com/#/gists/db73d647ad8a67c9654a4daeab0e0873), [Image](https://github.com/mloffer/mitosis-workman/blob/master/mitosis-workman.png?raw=true))
+
 
 ### Uploading QMK Firmware
 
@@ -150,11 +161,11 @@ Possible solutions are listed below.
 
 ### Gazell
 
-There's an example of Bluetooth and Gazell running concurrently but
-it seems a bit dated and doesn't support both Gazell host and BLE.
+There are examples of Bluetooth and Gazell running concurrently but no working HID firmware yet.
 
-* https://github.com/NordicPlayground/nrf51-ble-gzll-device-uart BLE and Gazell running concurrently (no Gazell host)
-* https://github.com/NordicPlayground/nRF51-multi-role-conn-observer-advertiser example usage of the timeslot API
+* https://github.com/NordicPlayground/nrf51-ble-gzll-device-uart (no Gazell host supported)
+* https://github.com/NordicPlayground/nRF51-multi-role-conn-observer-advertiser (usage of the timeslot API)
+* https://github.com/joric/mitosis/tree/devel/mitosis-bluetooth (work in progress)
 
 ### Bluetooth UART service
 
