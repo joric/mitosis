@@ -195,7 +195,7 @@ uint8_t battery_level_get(void) {
 #define APP_TIMER_PRESCALER              0                                              /**< Value of the RTC1 PRESCALER register. */
 #define APP_TIMER_OP_QUEUE_SIZE          4                                              /**< Size of timer operation queues. */
 
-#define BATTERY_LEVEL_MEAS_INTERVAL      APP_TIMER_TICKS(20000, APP_TIMER_PRESCALER)     /**< Battery level measurement interval (ticks). */
+#define BATTERY_LEVEL_MEAS_INTERVAL      APP_TIMER_TICKS(60000, APP_TIMER_PRESCALER)     /**< Battery level measurement interval (ticks). */
 #define MIN_BATTERY_LEVEL                81                                             /**< Minimum simulated battery level. */
 #define MAX_BATTERY_LEVEL                100                                            /**< Maximum simulated battery level. */
 #define BATTERY_LEVEL_INCREMENT          1                                              /**< Increment between each simulated battery level measurement. */
