@@ -67,7 +67,7 @@ void app_error_handler_custom(ret_code_t error_code, uint32_t line_num, const ui
 #define ADDR_FMT "%02x:%02x:%02x:%02x:%02x:%02x"
 #define ADDR_T(a) a[0], a[1], a[2], a[3], a[4], a[5]
 
-#define TN(id) {static char buf[16]; sprintf(buf, "0x%04x", id); return buf; }
+#define TN(id) {static char buf[32]; sprintf(buf, "0x%04x", id); return buf; }
 #define T(id) if (type == id) return #id; else
 
 char *bspEventName(int type) {
@@ -199,7 +199,6 @@ uint8_t battery_level_get(void) {
 #define INPUT_REP_REF_ID					0	/**< Id of reference to Keyboard Input Report. */
 #define OUTPUT_REP_REF_ID					0	/**< Id of reference to Keyboard Output Report. */
 #define APP_FEATURE_NOT_SUPPORTED			BLE_GATT_STATUS_ATTERR_APP_BEGIN + 2	/**< Reply when unsupported features are requested. */
-#define MAX_BUFFER_ENTRIES					5	/**< Number of elements that can be enqueued */
 #define BASE_USB_HID_SPEC_VERSION			0x0101	/**< Version number of base USB HID Specification implemented by this application. */
 #define INPUT_REPORT_KEYS_MAX_LEN			8	/**< Maximum length of the Input Report characteristic. */
 #define DEAD_BEEF							0xDEADBEEF				/**< Value used as error code on stack dump, can be used to identify stack location on stack unwind. */
@@ -246,33 +245,6 @@ static uint32_t read_keys(void)
 }
 */
 
-/**Buffer queue access macros
- *
- * @{ */
-/** Initialization of buffer list */
-#define BUFFER_LIST_INIT()	\
-				do	\
-				{	\
-						buffer_list.rp = 0;	\
-						buffer_list.wp = 0;	\
-						buffer_list.count = 0;	\
-				} while (0)
-
-/** Provide status of data list is full or not */
-#define BUFFER_LIST_FULL()\
-				((MAX_BUFFER_ENTRIES == buffer_list.count - 1) ? true : false)
-
-/** Provides status of buffer list is empty or not */
-#define BUFFER_LIST_EMPTY()\
-				((0 == buffer_list.count) ? true : false)
-
-#define BUFFER_ELEMENT_INIT(i)\
-				do \
-				{ \
-						buffer_list.buffer[(i)].p_data = NULL; \
-				} while (0)
-
-/** @} */
 
 typedef enum {
 	BLE_NO_ADV,						/**< No advertising running. */
@@ -283,25 +255,6 @@ typedef enum {
 	BLE_SLEEP,						/**< Go to system-off. */
 } ble_advertising_mode_t;
 
-/** Abstracts buffer element */
-typedef struct hid_key_buffer {
-	uint8_t data_offset;				/**< Max Data that can be buffered for all entries */
-	uint8_t data_len;					/**< Total length of data */
-	uint8_t *p_data;					/**< Scanned key pattern */
-	ble_hids_t *p_instance;			/**< Identifies peer and service instance */
-} buffer_entry_t;
-
-STATIC_ASSERT(sizeof(buffer_entry_t) % 4 == 0);
-
-/** Circular buffer list */
-typedef struct {
-	buffer_entry_t buffer[MAX_BUFFER_ENTRIES];				 /**< Maximum number of entries that can enqueued in the list */
-	uint8_t rp;								/**< Index to the read location */
-	uint8_t wp;								/**< Index to write location */
-	uint8_t count;					/**< Number of elements in the list */
-} buffer_list_t;
-
-STATIC_ASSERT(sizeof(buffer_list_t) % 4 == 0);
 
 static ble_hids_t m_hids;	/**< Structure used to identify the HID service. */
 static ble_bas_t m_bas;		/**< Structure used to identify the battery service. */
@@ -316,7 +269,6 @@ static bool m_caps_on = false;				/**< Variable to indicate if Caps Lock is turn
 
 static ble_uuid_t m_adv_uuids[] = { {BLE_UUID_HUMAN_INTERFACE_DEVICE_SERVICE, BLE_UUID_TYPE_BLE} };
 
-static buffer_list_t buffer_list;
 static void on_hids_evt(ble_hids_t * p_hids, ble_hids_evt_t * p_evt);
 
 void assert_nrf_callback(uint16_t line_num, const uint8_t * p_file_name) {
@@ -599,64 +551,6 @@ static void timers_start(void) {
 }
 
 
-static void buffer_init(void) {
-	uint32_t buffer_count;
-
-	BUFFER_LIST_INIT();
-
-	for (buffer_count = 0; buffer_count < MAX_BUFFER_ENTRIES; buffer_count++) {
-		BUFFER_ELEMENT_INIT(buffer_count);
-	}
-}
-
-
-static uint32_t buffer_dequeue(bool tx_flag) {
-	buffer_entry_t *p_element;
-	uint32_t err_code = NRF_SUCCESS;
-	//uint16_t actual_len;
-
-
-	if (BUFFER_LIST_EMPTY()) {
-		err_code = NRF_ERROR_NOT_FOUND;
-	} else {
-		bool remove_element = true;
-
-		p_element = &buffer_list.buffer[(buffer_list.rp)];
-
-		(void)p_element;
-
-		if (tx_flag) {
-			/*
-			err_code =
-				send_key_scan_press_release(p_element->p_instance, p_element->p_data, p_element->data_len, p_element->data_offset, &actual_len);
-			// An additional notification is needed for release of all keys, therefore check
-			// is for actual_len <= element->data_len and not actual_len < element->data_len
-			if ((err_code == BLE_ERROR_NO_TX_PACKETS)
-				&& (actual_len <= p_element->data_len)) {
-				// Transmission could not be completed, do not remove the entry, adjust next data to
-				// be transmitted
-				p_element->data_offset = actual_len;
-				remove_element = false;
-			}
-			*/
-		}
-
-		if (remove_element) {
-			BUFFER_ELEMENT_INIT(buffer_list.rp);
-
-			buffer_list.rp++;
-			buffer_list.count--;
-
-			if (buffer_list.rp == MAX_BUFFER_ENTRIES) {
-				buffer_list.rp = 0;
-			}
-		}
-	}
-
-	return err_code;
-}
-
-
 static void on_hid_rep_char_write(ble_hids_evt_t * p_evt) {
 	if (p_evt->params.char_write.char_id.rep_type == BLE_HIDS_REP_TYPE_OUTPUT) {
 		uint32_t err_code;
@@ -872,12 +766,12 @@ static void on_ble_evt(ble_evt_t * p_ble_evt) {
 
 		case BLE_EVT_TX_COMPLETE:
 			// Send next key event
-			(void)buffer_dequeue(true);
+			//(void)buffer_dequeue(true);
 			break;
 
 		case BLE_GAP_EVT_DISCONNECTED:
 			// Dequeue all keys without transmission.
-			(void)buffer_dequeue(false);
+			//(void)buffer_dequeue(false);
 
 			m_conn_handle = BLE_CONN_HANDLE_INVALID;
 
@@ -1180,7 +1074,6 @@ int main(void) {
 	advertising_init();
 	services_init();
 	conn_params_init();
-	buffer_init();
 
 	// Start execution.
 	timers_start();
