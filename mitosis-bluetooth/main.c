@@ -58,6 +58,12 @@ int printf(const char *fmt, ...) {
 //#define printf(x,...) false
 #endif // DEBUG
 
+#undef APP_ERROR_HANDLER
+#define APP_ERROR_HANDLER(ERR_CODE) app_error_handler_custom((ERR_CODE), __LINE__, (uint8_t*) __FILE__);
+void app_error_handler_custom(ret_code_t error_code, uint32_t line_num, const uint8_t * p_file_name) {
+	printf("ERROR! code: %d line: %d file: %s\n", error_code, line_num, p_file_name);
+}
+
 #define ADDR_FMT "%02x:%02x:%02x:%02x:%02x:%02x"
 #define ADDR_T(a) a[0], a[1], a[2], a[3], a[4], a[5]
 
@@ -593,61 +599,6 @@ static void timers_start(void) {
 }
 
 
-static bool is_shift_key_pressed(void) {
-	bool result;
-	uint32_t err_code = bsp_button_is_pressed(SHIFT_BUTTON_ID, &result);
-	APP_ERROR_CHECK(err_code);
-	return result;
-}
-
-
-static uint32_t send_key_scan_press_release(ble_hids_t * p_hids, uint8_t * p_key_pattern, uint16_t pattern_len,
-											uint16_t pattern_offset, uint16_t * p_actual_len) {
-	uint32_t err_code;
-	uint16_t offset;
-	uint16_t data_len;
-	uint8_t data[INPUT_REPORT_KEYS_MAX_LEN];
-
-	// HID Report Descriptor enumerates an array of size 6, the pattern hence shall not be any
-	// longer than this.
-	STATIC_ASSERT((INPUT_REPORT_KEYS_MAX_LEN - 2) == 6);
-
-	ASSERT(pattern_len <= (INPUT_REPORT_KEYS_MAX_LEN - 2));
-
-	offset = pattern_offset;
-	data_len = pattern_len;
-
-	do {
-		// Reset the data buffer.
-		memset(data, 0, sizeof(data));
-
-		// Copy the scan code.
-		memcpy(data + SCAN_CODE_POS + offset, p_key_pattern + offset, data_len - offset);
-
-		if (is_shift_key_pressed()) {
-			data[MODIFIER_KEY_POS] |= SHIFT_KEY_CODE;
-		}
-
-		if (!m_in_boot_mode) {
-			err_code = ble_hids_inp_rep_send(p_hids, INPUT_REPORT_KEYS_INDEX, INPUT_REPORT_KEYS_MAX_LEN, data);
-		} else {
-			err_code = ble_hids_boot_kb_inp_rep_send(p_hids, INPUT_REPORT_KEYS_MAX_LEN, data);
-		}
-
-		if (err_code != NRF_SUCCESS) {
-			break;
-		}
-
-		offset++;
-	}
-	while (offset <= data_len);
-
-	*p_actual_len = offset;
-
-	return err_code;
-}
-
-
 static void buffer_init(void) {
 	uint32_t buffer_count;
 
@@ -662,7 +613,8 @@ static void buffer_init(void) {
 static uint32_t buffer_dequeue(bool tx_flag) {
 	buffer_entry_t *p_element;
 	uint32_t err_code = NRF_SUCCESS;
-	uint16_t actual_len;
+	//uint16_t actual_len;
+
 
 	if (BUFFER_LIST_EMPTY()) {
 		err_code = NRF_ERROR_NOT_FOUND;
@@ -671,10 +623,12 @@ static uint32_t buffer_dequeue(bool tx_flag) {
 
 		p_element = &buffer_list.buffer[(buffer_list.rp)];
 
+		(void)p_element;
+
 		if (tx_flag) {
+			/*
 			err_code =
-				send_key_scan_press_release(p_element->p_instance, p_element->p_data, p_element->data_len, p_element->data_offset,
-											&actual_len);
+				send_key_scan_press_release(p_element->p_instance, p_element->p_data, p_element->data_len, p_element->data_offset, &actual_len);
 			// An additional notification is needed for release of all keys, therefore check
 			// is for actual_len <= element->data_len and not actual_len < element->data_len
 			if ((err_code == BLE_ERROR_NO_TX_PACKETS)
@@ -684,6 +638,7 @@ static uint32_t buffer_dequeue(bool tx_flag) {
 				p_element->data_offset = actual_len;
 				remove_element = false;
 			}
+			*/
 		}
 
 		if (remove_element) {
@@ -1036,19 +991,15 @@ static void hidEmuKbdSendReport( uint8_t modifier, uint8_t keycode ) {
 	buf[6] = 0;         // Keycode 5
 	buf[7] = 0;         // Keycode 6
 
-	uint32_t err_code;
-
-	if (!m_in_boot_mode) {
-		err_code = ble_hids_inp_rep_send(&m_hids, INPUT_REPORT_KEYS_INDEX, INPUT_REPORT_KEYS_MAX_LEN, buf);
-	} else {
-		err_code = ble_hids_boot_kb_inp_rep_send(&m_hids, INPUT_REPORT_KEYS_MAX_LEN, buf);
+	if (m_conn_handle != BLE_CONN_HANDLE_INVALID) {
+		printf("Sending HID report: %02x %02x %02x %02x %02x %02x %02x %02x\n", buf[0],buf[1],buf[2],buf[3],buf[4],buf[5],buf[6],buf[7]);
+		uint32_t err_code = ble_hids_inp_rep_send(&m_hids, INPUT_REPORT_KEYS_INDEX, INPUT_REPORT_KEYS_MAX_LEN, buf);
+		APP_ERROR_CHECK(err_code);
 	}
-
-	APP_ERROR_CHECK(err_code);
 }
 
+
 void send_winkey() {
-	printf("sending winkey\n");
 	hidEmuKbdSendReport( 0x80, 0 ); // winkey
 	nrf_delay_us(1000);
 	hidEmuKbdSendReport( 0, KEY_NONE );
