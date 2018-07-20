@@ -1,6 +1,6 @@
 // Mitosis-BT, https://github.com/joric/mitosis/tree/devel
 
-#define DEBUG // enables UART, etc.
+#define DEBUG					// enables UART, etc.
 
 #define COMPILE_RIGHT
 #include "mitosis.h"
@@ -65,7 +65,7 @@ void app_error_handler_custom(ret_code_t error_code, uint32_t line_num, const ui
 }
 
 #define ADDR_FMT "%02x:%02x:%02x:%02x:%02x:%02x"
-#define ADDR_T(a) a[0], a[1], a[2], a[3], a[4], a[5]
+#define ADDR_T(a) a[5], a[4], a[3], a[2], a[1], a[0]
 
 #define TN(id) {static char buf[32]; sprintf(buf, "0x%04x", id); return buf; }
 #define T(id) if (type == id) return #id; else
@@ -107,6 +107,26 @@ char *gapEventName(int type) {
 	T(BLE_GAP_EVT_CONN_SEC_UPDATE);
 	T(BLE_GAP_EVT_TIMEOUT);
 	T(BLE_GAP_EVT_RSSI_CHANGED);
+
+	T(BLE_GATTC_EVT_PRIM_SRVC_DISC_RSP);
+	T(BLE_GATTC_EVT_REL_DISC_RSP);
+	T(BLE_GATTC_EVT_CHAR_DISC_RSP);
+	T(BLE_GATTC_EVT_DESC_DISC_RSP);
+	T(BLE_GATTC_EVT_ATTR_INFO_DISC_RSP);
+	T(BLE_GATTC_EVT_CHAR_VAL_BY_UUID_READ_RSP);
+	T(BLE_GATTC_EVT_READ_RSP);
+	T(BLE_GATTC_EVT_CHAR_VALS_READ_RSP);
+	T(BLE_GATTC_EVT_WRITE_RSP);
+	T(BLE_GATTC_EVT_HVX);
+	T(BLE_GATTC_EVT_TIMEOUT);
+
+	T(BLE_GATTS_EVT_WRITE);
+	T(BLE_GATTS_EVT_RW_AUTHORIZE_REQUEST);
+	T(BLE_GATTS_EVT_SYS_ATTR_MISSING);
+	T(BLE_GATTS_EVT_HVC);
+	T(BLE_GATTS_EVT_SC_CONFIRM);
+	T(BLE_GATTS_EVT_TIMEOUT);
+
 	TN(type);
 };
 
@@ -292,7 +312,7 @@ static void battery_level_update(void) {
 
 	battery_level = battery_level_get();	//(uint8_t)sensorsim_measure(&m_battery_sim_state, &m_battery_sim_cfg);
 
-	//printf("%s - battery_level: %d\n", __FUNCTION__, battery_level);	// kind of noisy (reduce timer rate?)
+	//printf("%s - battery_level: %d\n", __FUNCTION__, battery_level);  // kind of noisy (reduce timer rate?)
 
 	err_code = ble_bas_battery_level_update(&m_bas, battery_level);
 	if ((err_code != NRF_SUCCESS) && (err_code != NRF_ERROR_INVALID_STATE)
@@ -552,6 +572,9 @@ static void timers_start(void) {
 
 
 static void on_hid_rep_char_write(ble_hids_evt_t * p_evt) {
+
+	printf("%s - %d (%s)\n", __FUNCTION__, p_evt->evt_type, hidsEventName(p_evt->evt_type));
+
 	if (p_evt->params.char_write.char_id.rep_type == BLE_HIDS_REP_TYPE_OUTPUT) {
 		uint32_t err_code;
 		uint8_t report_val;
@@ -570,6 +593,8 @@ static void on_hid_rep_char_write(ble_hids_evt_t * p_evt) {
 				err_code = bsp_indication_set(BSP_INDICATE_ALERT_3);
 				APP_ERROR_CHECK(err_code);
 
+				printf("CapsLock is turned ON\n");
+
 				//keys_send(sizeof(m_caps_on_key_scan_str), m_caps_on_key_scan_str);
 				m_caps_on = true;
 			} else if (m_caps_on && ((report_val & OUTPUT_REPORT_BIT_MASK_CAPS_LOCK)
@@ -577,6 +602,8 @@ static void on_hid_rep_char_write(ble_hids_evt_t * p_evt) {
 				// Caps Lock is turned Off .
 				err_code = bsp_indication_set(BSP_INDICATE_ALERT_OFF);
 				APP_ERROR_CHECK(err_code);
+
+				printf("CapsLock is turned OFF\n");
 
 				//keys_send(sizeof(m_caps_off_key_scan_str), m_caps_off_key_scan_str);
 				m_caps_on = false;
@@ -751,16 +778,16 @@ static void on_ble_evt(ble_evt_t * p_ble_evt) {
 		printf("%s - %d (%s)\n", __FUNCTION__, p_ble_evt->header.evt_id, gapEventName(p_ble_evt->header.evt_id));
 
 	switch (p_ble_evt->header.evt_id) {
+
 		case BLE_GAP_EVT_CONNECTED:
 			err_code = bsp_indication_set(BSP_INDICATE_CONNECTED);
 			APP_ERROR_CHECK(err_code);
 			m_conn_handle = p_ble_evt->evt.gap_evt.conn_handle;
 
 			{
-				ble_gap_addr_t * p_addr = & p_ble_evt->evt.gap_evt.params.connected.peer_addr;
-				printf("Connected to: " ADDR_FMT "\n", ADDR_T(p_addr->addr));
+				ble_gap_addr_t *p_addr = &p_ble_evt->evt.gap_evt.params.connected.peer_addr;
+				printf("Connected to " ADDR_FMT "\n", ADDR_T(p_addr->addr));
 			}
-
 
 			break;
 
@@ -873,20 +900,21 @@ static void scheduler_init(void) {
 #define KEY_NONE                    0x00
 #define HID_KEYBOARD_IN_RPT_LEN     8
 
-static void hidEmuKbdSendReport( uint8_t modifier, uint8_t keycode ) {
+static void hidEmuKbdSendReport(uint8_t modifier, uint8_t keycode) {
 	uint8_t buf[HID_KEYBOARD_IN_RPT_LEN];
 
-	buf[0] = modifier;  // Modifier keys
-	buf[1] = 0;         // Reserved
-	buf[2] = keycode;   // Keycode 1
-	buf[3] = 0;         // Keycode 2
-	buf[4] = 0;         // Keycode 3
-	buf[5] = 0;         // Keycode 4
-	buf[6] = 0;         // Keycode 5
-	buf[7] = 0;         // Keycode 6
+	buf[0] = modifier;			// Modifier keys
+	buf[1] = 0;					// Reserved
+	buf[2] = keycode;			// Keycode 1
+	buf[3] = 0;					// Keycode 2
+	buf[4] = 0;					// Keycode 3
+	buf[5] = 0;					// Keycode 4
+	buf[6] = 0;					// Keycode 5
+	buf[7] = 0;					// Keycode 6
 
 	if (m_conn_handle != BLE_CONN_HANDLE_INVALID) {
-		printf("Sending HID report: %02x %02x %02x %02x %02x %02x %02x %02x\n", buf[0],buf[1],buf[2],buf[3],buf[4],buf[5],buf[6],buf[7]);
+		printf("Sending HID report: %02x %02x %02x %02x %02x %02x %02x %02x\n", buf[0], buf[1], buf[2], buf[3], buf[4], buf[5],
+			   buf[6], buf[7]);
 		uint32_t err_code = ble_hids_inp_rep_send(&m_hids, INPUT_REPORT_KEYS_INDEX, INPUT_REPORT_KEYS_MAX_LEN, buf);
 		APP_ERROR_CHECK(err_code);
 	}
@@ -894,9 +922,9 @@ static void hidEmuKbdSendReport( uint8_t modifier, uint8_t keycode ) {
 
 
 void send_winkey() {
-	hidEmuKbdSendReport( 0x80, 0 ); // winkey
+	hidEmuKbdSendReport(0x80, 0);	// winkey
 	nrf_delay_us(1000);
-	hidEmuKbdSendReport( 0, KEY_NONE );
+	hidEmuKbdSendReport(0, KEY_NONE);
 }
 
 
@@ -1064,7 +1092,7 @@ int main(void) {
 	timers_init();
 	buttons_leds_init(&erase_bonds);
 
-	//erase_bonds = true;			//for faster discovery NB!!! remove in final version
+	//erase_bonds = true;           //for faster discovery NB!!! remove in final version
 	printf("erase bonds: %d\n", erase_bonds);
 
 	ble_stack_init();
@@ -1084,8 +1112,7 @@ int main(void) {
 	err_code = sd_ble_gap_address_get(&addr);
 	APP_ERROR_CHECK(err_code);
 
-	printf( "Address: " ADDR_FMT "\n", ADDR_T(addr.addr) );
-
+	printf("Endpoint: " ADDR_FMT "\n", ADDR_T(addr.addr));
 
 	printf("Entering main loop.\n");
 
@@ -1095,11 +1122,10 @@ int main(void) {
 		power_manage();
 
 		uint8_t c;
-		if (app_uart_get(&c) == NRF_SUCCESS && c>=32 && c<=127) {
+		if (app_uart_get(&c) == NRF_SUCCESS && c >= 32 && c <= 127) {
 			printf("got from UART: %c\n", c);
-			if (c=='w')
+			if (c == 'w')
 				send_winkey();
 		}
 	}
 }
-
