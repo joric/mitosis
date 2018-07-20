@@ -589,26 +589,18 @@ static void on_hid_rep_char_write(ble_hids_evt_t * p_evt) {
 			APP_ERROR_CHECK(err_code);
 
 			if (!m_caps_on && ((report_val & OUTPUT_REPORT_BIT_MASK_CAPS_LOCK) != 0)) {
-				// Caps Lock is turned On.
 				err_code = bsp_indication_set(BSP_INDICATE_ALERT_3);
 				APP_ERROR_CHECK(err_code);
-
 				printf("CapsLock is turned ON\n");
-
-				//keys_send(sizeof(m_caps_on_key_scan_str), m_caps_on_key_scan_str);
 				m_caps_on = true;
-			} else if (m_caps_on && ((report_val & OUTPUT_REPORT_BIT_MASK_CAPS_LOCK)
-									 == 0)) {
-				// Caps Lock is turned Off .
+			} else if (m_caps_on && ((report_val & OUTPUT_REPORT_BIT_MASK_CAPS_LOCK) == 0)) {
 				err_code = bsp_indication_set(BSP_INDICATE_ALERT_OFF);
 				APP_ERROR_CHECK(err_code);
-
 				printf("CapsLock is turned OFF\n");
-
-				//keys_send(sizeof(m_caps_off_key_scan_str), m_caps_off_key_scan_str);
 				m_caps_on = false;
 			} else {
 				// The report received is not supported by this application. Do nothing.
+				printf("Unknown report value: %d\n", report_val);
 			}
 		}
 	}
