@@ -27,8 +27,9 @@
 #define BSP_LED_4_MASK (1<<BSP_LED_4)
 
 #define LEDS_MASK      (BSP_LED_0_MASK | BSP_LED_1_MASK | BSP_LED_2_MASK | BSP_LED_3_MASK | BSP_LED_4_MASK)
-/* all LEDs are lit when GPIO is low */
-#define LEDS_INV_MASK  LEDS_MASK
+
+// #define LEDS_INV_MASK  LEDS_MASK // all LEDs are lit when GPIO is low
+#define LEDS_INV_MASK  0 // all LEDs are off when GPIO is low -- joric
 
 #define BUTTONS_NUMBER 2
 
