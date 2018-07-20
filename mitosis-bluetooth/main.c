@@ -1080,9 +1080,9 @@ int main(void) {
 	err_code = ble_advertising_start(BLE_ADV_MODE_FAST);
 	APP_ERROR_CHECK(err_code);
 
-    ble_gap_addr_t addr;
-    err_code = sd_ble_gap_address_get(&addr);
-    APP_ERROR_CHECK(err_code);
+	ble_gap_addr_t addr;
+	err_code = sd_ble_gap_address_get(&addr);
+	APP_ERROR_CHECK(err_code);
 
 	printf( "Address: " ADDR_FMT "\n", ADDR_T(addr.addr) );
 
