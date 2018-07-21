@@ -2,15 +2,15 @@
 #define BLE400_H
 
 // LEDs definitions for BLE400
-#define LEDS_NUMBER    5
+#define LEDS_NUMBER    1
 
-#define LED_START      18
-#define LED_1          18
-#define LED_2          19
-#define LED_3          20
-#define LED_4          21
-#define LED_5          22
-#define LED_STOP       22
+#define LED_START      23
+#define LED_1          23
+#define LED_2          23
+#define LED_3          23
+#define LED_4          23
+#define LED_5          23
+#define LED_STOP       23
 
 #define LEDS_LIST { LED_1, LED_2, LED_3, LED_4, LED_5 }
 
@@ -28,8 +28,8 @@
 
 #define LEDS_MASK      (BSP_LED_0_MASK | BSP_LED_1_MASK | BSP_LED_2_MASK | BSP_LED_3_MASK | BSP_LED_4_MASK)
 
-// #define LEDS_INV_MASK  LEDS_MASK // all LEDs are lit when GPIO is low
-#define LEDS_INV_MASK  0 // all LEDs are off when GPIO is low -- joric
+#define LEDS_INV_MASK  LEDS_MASK // all LEDs are lit when GPIO is low
+//#define LEDS_INV_MASK  0 // all LEDs are off when GPIO is low -- joric
 
 #define BUTTONS_NUMBER 2
 
@@ -50,8 +50,8 @@
 #define BUTTONS_MASK   0x001E0000
 
 // BLE400 UART pins, note TX and RX swapped -- joric
-#define TX_PIN_NUMBER  9
-#define RX_PIN_NUMBER  11
+#define TX_PIN_NUMBER  19
+#define RX_PIN_NUMBER  18
 #define CTS_PIN_NUMBER 8
 #define RTS_PIN_NUMBER 10
 #define HWFC           true

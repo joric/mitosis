@@ -104,9 +104,7 @@ Since nRF51 and ST-Link doesn't support SWO I just hooked up a single TX pin (pi
 
 ![](https://i.imgur.com/tXjixUZ.jpg)
 
+The second half is connected to power pins only.
 
+![](https://i.imgur.com/IozHbrJ.jpg)
 
-
-
-
- 
