@@ -100,6 +100,10 @@ As you can see, no OpenOCD needed! Pins on STM32F103 are: SWCLK/SWD - A5, SDO/SW
 
 ![](https://i.imgur.com/3xpO7ag.png)
 
+Since nRF51 and ST-Link doesn't support SWO I just hooked up a single TX pin (pin 19) for debug. It actually works!
+
+![](https://i.imgur.com/tXjixUZ.jpg)
+
 
 
 
