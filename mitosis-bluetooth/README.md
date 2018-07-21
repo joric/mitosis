@@ -116,8 +116,8 @@ and the best case scenario for nRF51822 Core-B (reference design) is 26 or 27 ke
 ### Reference nRF51822
 ![](https://i.stack.imgur.com/GcSxL.jpg)
 
-### Pinout
-![](https://i.imgur.com/Zyj0P3n.jpg)
+### Pins
+![](https://i.imgur.com/nrbKERB.jpg)
 
 ### PCB
 ![](https://i.imgur.com/3xpO7ag.png)
