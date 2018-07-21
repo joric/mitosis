@@ -75,7 +75,10 @@ or like this:
 ### Blue Pill
 
 There are $2 STM32F103 modules (Blue Pill) that you can use as ST-Link replacement.
-Flash blackmagic.bin via UART:
+Most likely you get 64K device (page is not writeable, etc.) so just use ST-Link Demonstrator UI,
+hook up STM32F103 via UART, force select 128K device, 0x08002000 and flash blackmagic.bin from there.
+See instructions:
+
 * https://gojimmypi.blogspot.com/2017/07/BluePill-STM32F103-to-BlackMagic-Probe.html
 
 ![](https://i.imgur.com/9fDjU5q.jpg)
