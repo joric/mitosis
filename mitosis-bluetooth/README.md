@@ -96,6 +96,9 @@ As you can see, no OpenOCD needed! Pins on STM32F103 are: SWCLK/SWD - A5, SDO/SW
 
 ![](https://i.imgur.com/V3RtvBr.jpg)
 
+## Mitosis Pinout
+
+![](https://i.imgur.com/3xpO7ag.png)
 
 
 
