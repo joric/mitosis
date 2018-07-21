@@ -96,7 +96,11 @@ As you can see, no OpenOCD needed! Pins on STM32F103 are: SWCLK/SWD - A5, SDO/SW
 
 ![](https://i.imgur.com/V3RtvBr.jpg)
 
+## Debugging
+
 Since nRF51 and ST-Link doesn't support SWO I just hooked up a single TX pin (pin 19) for debug. It actually works!
+
+So you only need ONE pin to print messages in the terminal (I use Arduino IDE Serial Monitor) via UART.
 
 ![](https://i.imgur.com/tXjixUZ.jpg)
 
