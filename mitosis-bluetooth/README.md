@@ -96,10 +96,6 @@ As you can see, no OpenOCD needed! Pins on STM32F103 are: SWCLK/SWD - A5, SDO/SW
 
 ![](https://i.imgur.com/V3RtvBr.jpg)
 
-## Mitosis Pinout
-
-![](https://i.imgur.com/3xpO7ag.png)
-
 Since nRF51 and ST-Link doesn't support SWO I just hooked up a single TX pin (pin 19) for debug. It actually works!
 
 ![](https://i.imgur.com/tXjixUZ.jpg)
@@ -108,3 +104,20 @@ The second half is connected to power pins only.
 
 ![](https://i.imgur.com/IozHbrJ.jpg)
 
+
+## Schematics
+
+There were speculations that Core 51822 has 32 GPIO pins available, so it's possible to make an Atreus62 without
+using a keyboard matrix. It is not true. GPIO 26/27 are shared by the 32kHz crystal. Pin 31 (AINT7) isn't
+routed outside as well. So mitosis only have 4 extra pins available: 11, 12, 20, plus LED pin (17 or 23)
+and the best case scenario for nRF51822 Core-B (reference design) is 26 or 27 keys on each side,
+52 keys total (54 if you get rid of the LED).
+
+### Reference nRF51822
+![](https://i.stack.imgur.com/GcSxL.jpg)
+
+### Pinout
+![](https://i.imgur.com/Zyj0P3n.jpg)
+
+### PCB
+![](https://i.imgur.com/3xpO7ag.png)
