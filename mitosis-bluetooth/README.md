@@ -56,8 +56,49 @@ BlueMicro is open source, official repositories are [BlueMicro_BLE] (firmware) a
 
 I'm using ST-Link V2, BLE400 board and its built-in USB-UART.
 
-For debugging I'm using Serial Monitor from Arduino IDE at 115200 baud.
+BLE400 also has built-in UART (unfortunately, ST-Link V2 doesn't have SWO pin for printf, so I had to use UART at 115200).
+
+Also it seems SWO inherently doesn't work on nRF51822's ([there is no tracing hardware in the nRF51 series](https://devzone.nordicsemi.com/f/nordic-q-a/1875/nrf51822---debug-output-via-j-link-swo)).
+
+
+### ST-Link V2
 
 ![](https://i.imgur.com/A9QIN2j.jpg)
 
+or like this:
+
+![](https://i.imgur.com/5khy8c0.jpg)
+
 ![](https://i.imgur.com/ZwavvEz.jpg)
+
+
+### Blue Pill
+
+There are $2 STM32F103 modules (Blue Pill) that you can use as ST-Link replacement.
+Flash blackmagic.bin via UART:
+* https://gojimmypi.blogspot.com/2017/07/BluePill-STM32F103-to-BlackMagic-Probe.html
+
+![](https://i.imgur.com/9fDjU5q.jpg)
+
+Programming nRF51 is tricky, first merge s130 softdevice hex with your hex using nRF Command line tools, then use GDB.
+
+```
+mergehex.exe -m s130.hex mitosis.hex -o out.hex
+arm-none-eabi-gdb.exe -ex "target extended-remote \\.\COM5" -ex "mon swdp_scan" -ex "att 1" ^
+-ex "mon erase_mass" –ex "load out.hex" –ex "quit"
+
+```
+
+Then disconnect the programmer and reconnect power, or run the program with gdb prompt - "load out.hex", "run".
+
+As you can see, no OpenOCD needed! Pins on STM32F103 are: SWCLK/SWD - A5, SDO/SWIO/SWDIO - B14.
+
+![](https://i.imgur.com/V3RtvBr.jpg)
+
+
+
+
+
+
+
+ 
