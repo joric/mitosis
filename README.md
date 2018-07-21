@@ -26,7 +26,7 @@ Original Mitosis software repository: https://github.com/reversebias/mitosis
 
 Original Mitosis hardware repository: https://github.com/reversebias/mitosis-hardware
 
-* [ST-LINK/V2][stlink]: $2.54, had in stock (you can also use $2 stm32 board instead).
+* [ST-LINK/V2][stlink]: $2.54, had in stock (you can also use [$2 stm32 board instead](https://gojimmypi.blogspot.com/2017/07/BluePill-STM32F103-to-BlackMagic-Probe.html)).
 * [YJ-14015][yj-ali]: nrf51822 modules, 3 pcs: $10.5 ($3.50 * 3), free shipping, need 2/3, so $7.
 * [10 main PCB's][mitosis.zip] from [EasyEDA], $13.32 ($2 + $11.32 for trackable shipping), used 4/10, so $5.32.
 * [3 receiver PCB's][receiver.zip] from [OshPark], $5.40, free shipping, used only 1/3, so $1.80.
