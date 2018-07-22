@@ -125,4 +125,4 @@ and the best case scenario for nRF51822 Core-B (reference design) is 26 or 27 ke
 
 ### Mitosis PCB
 
-![](https://i.imgur.com/VdZkkjr.jpg)
+![](https://i.imgur.com/VdZkkjr.png)
