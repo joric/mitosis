@@ -63,11 +63,11 @@ Also it seems SWO inherently doesn't work on nRF51822's ([there is no tracing ha
 
 ### ST-Link V2
 
-![](https://i.imgur.com/A9QIN2j.jpg)
+![](https://i.imgur.com/yabRCdf.jpg)
 
 or like this:
 
-![](https://i.imgur.com/5khy8c0.jpg)
+![](https://i.imgur.com/618PLuO.jpg)
 
 ![](https://i.imgur.com/ZwavvEz.jpg)
 
@@ -79,7 +79,7 @@ Most likely you get 64K device (page is not writeable, etc.) so just run [STM32 
 GUI, hook up STM32F103 via UART (use 5V, RX to A9, TX to A10), force select 128K device, 0x08002000, and flash blackmagic.bin from there.
 See detailed instructions: https://gojimmypi.blogspot.com/2017/07/BluePill-STM32F103-to-BlackMagic-Probe.html
 
-![](https://i.imgur.com/9fDjU5q.jpg)
+![](https://i.imgur.com/sLyYM27.jpg)
 
 Programming nRF51 is tricky, first merge s130 softdevice hex with your hex using nRF Command line tools, then use GDB.
 
@@ -94,7 +94,7 @@ Then disconnect the programmer and reconnect power, or run the program with gdb 
 
 As you can see, no OpenOCD needed! Pins on STM32F103 are: SWCLK/SWD - A5, SDO/SWIO/SWDIO - B14.
 
-![](https://i.imgur.com/V3RtvBr.jpg)
+![](https://i.imgur.com/X7xIXMN.jpg)
 
 ## Debugging
 
