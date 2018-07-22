@@ -117,19 +117,15 @@ routed outside as well. So mitosis only have 4 extra pins available: 11, 12, 20,
 and the best case scenario for nRF51822 Core-B (reference design) is 26 or 27 keys on each side,
 52 keys total (54 if you get rid of the LED).
 
-### Reference nRF51822
-![](https://i.stack.imgur.com/GcSxL.jpg)
+### nRF51822 Core-B Schematics
+![](http://i.imgur.com/8aF2mbI.png)
+
+### nRF51822 Core-B Pinout
+![](https://www.waveshare.com/img/devkit/accBoard/Core51822-B/Core51822-B-pin.jpg)
 
 ### Pins
 ![](https://i.imgur.com/nrbKERB.jpg)
 
-### PCB
-![](https://i.imgur.com/3xpO7ag.png)
+### Mitosis PCB (SVG version, zoomable)
 
-### Keyboard
-
-![](https://i.imgur.com/b9qDIDl.png)
-
-### Receiver
-
-![](https://i.imgur.com/noFp4Ge.png)
+![](../images/mitosis.svg)
