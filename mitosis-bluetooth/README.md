@@ -123,11 +123,6 @@ and the best case scenario for nRF51822 Core-B (reference design) is 26 or 27 ke
 ### nRF51822 Core-B Pinout
 ![](https://www.waveshare.com/img/devkit/accBoard/Core51822-B/Core51822-B-pin.jpg)
 
-### Pins
-![](https://i.imgur.com/nrbKERB.jpg)
+### Mitosis PCB
 
-### Mitosis PCB (SVG version, zoomable)
-
-[Download](../images/mitosis.svg?raw=true)
-
-![](../images/mitosis.svg)
+![](https://i.imgur.com/VdZkkjr.jpg)
