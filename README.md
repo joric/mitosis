@@ -166,6 +166,7 @@ make mitosis-default
 * [Dichotomy](https://redd.it/7g54l8) (48-key Mitosis clone with digital encoders, no sources available) ([Youtube](https://youtu.be/5jmmYbgtOgI)) ([Kickstarter](https://www.kickstarter.com/projects/1090732691/dichotomy-keyboard-and-mouse)) 
 * [Trident](https://github.com/YCF/Trident) (Wireless Let's Split by [/u/imFengz](https://www.reddit.com/u/imFengz), module and battery placed between the switches) ([Reddit](https://redd.it/6um7eg)) ([Image](https://i.imgur.com/mCTgwu5.png))
 * [Orthrus](https://github.com/bezmi/orthrus) (great 52-key Atreus/Mitosis crossover by [/u/bezmi](https://www.reddit.com/u/bezmi), KiCad project) ([Reddit](https://redd.it/8txry7)) 
+* [Comet](https://github.com/satt99/comet46-hardware) (Comet46 - split 40% wireless keyboard) by [/u/SaT99](https://www.reddit.com/user/SaT999) ([Gallery](https://imgur.com/a/vs1W5qB)) ([Firmware](https://github.com/satt99/comet46-firmware)) ([Reddit](https://redd.it/8ykwjj))
 
 ## References
 
