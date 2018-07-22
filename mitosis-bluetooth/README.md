@@ -102,8 +102,6 @@ Since nRF51 and ST-Link doesn't support SWO I just hooked up a single TX pin (pi
 
 So you only need ONE pin to print messages in the terminal (I use Arduino IDE Serial Monitor) via UART.
 
-![](https://i.imgur.com/tXjixUZ.jpg)
-
 The second half is connected to power pins only.
 
 ![](https://i.imgur.com/IozHbrJ.jpg)
