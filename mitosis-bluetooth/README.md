@@ -63,13 +63,13 @@ Also it seems SWO inherently doesn't work on nRF51822's ([there is no tracing ha
 
 ### ST-Link V2
 
+Connect to nRF51822 pins directly:
+
 ![](https://i.imgur.com/yabRCdf.jpg)
 
-or like this:
+Or to the SWD connector:
 
-![](https://i.imgur.com/618PLuO.jpg)
-
-![](https://i.imgur.com/ZwavvEz.jpg)
+![](https://i.imgur.com/KuVSU8h.jpg)
 
 
 ### Blue Pill
