@@ -125,3 +125,11 @@ and the best case scenario for nRF51822 Core-B (reference design) is 26 or 27 ke
 
 ### PCB
 ![](https://i.imgur.com/3xpO7ag.png)
+
+### Keyboard
+
+![](https://i.imgur.com/b9qDIDl.png)
+
+### Receiver
+
+![](https://i.imgur.com/noFp4Ge.png)
