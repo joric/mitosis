@@ -159,8 +159,8 @@ void sys_evt_dispatch(uint32_t evt_id)
             break;
     }
 
-	//pstorage_sys_event_handler(sys_evt);
-	//ble_advertising_on_sys_evt(sys_evt);
+	pstorage_sys_event_handler(evt_id);
+	ble_advertising_on_sys_evt(evt_id);
 }
 
 static uint8_t data_payload_left[NRF_GZLL_CONST_MAX_PAYLOAD_LENGTH];  ///< Placeholder for data payload received from host.
@@ -172,6 +172,8 @@ static uint8_t data_buffer[10];
 uint32_t left_active = 0;
 uint32_t right_active = 0;
 
+bool was_pressed = false;
+bool winkey_trigger = false;
 
 void m_process_gazelle() {
         bool left = packet_received_left;
@@ -308,6 +310,12 @@ void m_process_gazelle() {
             */
             nrf_delay_us(100);
 		}
+
+		bool pressed = data_buffer[8] & 16;
+		if (pressed && pressed != was_pressed) {
+			winkey_trigger = true;
+		}
+		was_pressed = pressed;
 }
 
 
@@ -708,9 +716,16 @@ static volatile bool debouncing = false;
 #define DEBOUNCE_MEAS_INTERVAL			APP_TIMER_TICKS(5, APP_TIMER_PRESCALER)
 
 void key_handler(uint32_t k);
+void send_winkey();
 
 // 1000Hz debounce sampling
 static void handler_debounce(void *p_context){
+
+	if (winkey_trigger) {
+		printf("winkey trigger!\n");
+		send_winkey();
+		winkey_trigger = false;
+	}
 
     // debouncing, waits until there have been no transitions in 5ms (assuming five 1ms ticks)
     if (debouncing)
@@ -1355,6 +1370,12 @@ static void on_ble_evt(ble_evt_t * p_ble_evt) {
 			APP_ERROR_CHECK(err_code);
 			break;
 
+    	case BLE_GATTS_EVT_SYS_ATTR_MISSING:
+        	// No system attributes have been stored.
+        	err_code = sd_ble_gatts_sys_attr_set(m_conn_handle, NULL, 0, 0);
+        	APP_ERROR_CHECK(err_code);
+        break; // BLE_GATTS_EVT_SYS_ATTR_MISSING
+
 		default:
 			// No implementation needed.
 			break;
@@ -1438,50 +1459,9 @@ static void hidEmuKbdSendReport(uint8_t modifier, uint8_t keycode) {
 
 void send_winkey() {
 	hidEmuKbdSendReport(0x80, 0);	// winkey
-	nrf_delay_us(1000);
+	nrf_delay_us(10000);
 	hidEmuKbdSendReport(0, KEY_NONE);
 }
-
-#ifdef USE_BSP
-static void bsp_event_handler(bsp_event_t event) {
-	uint32_t err_code;
-
-	printf("%s - %d (%s)\n", __FUNCTION__, event, bspEventName(event));
-
-	switch (event) {
-		case BSP_EVENT_SLEEP:
-			sleep_mode_enter();
-			break;
-
-		case BSP_EVENT_DISCONNECT:
-			err_code = sd_ble_gap_disconnect(m_conn_handle, BLE_HCI_REMOTE_USER_TERMINATED_CONNECTION);
-			if (err_code != NRF_ERROR_INVALID_STATE) {
-				APP_ERROR_CHECK(err_code);
-			}
-			break;
-
-		case BSP_EVENT_WHITELIST_OFF:
-			err_code = ble_advertising_restart_without_whitelist();
-			if (err_code != NRF_ERROR_INVALID_STATE) {
-				APP_ERROR_CHECK(err_code);
-			}
-			break;
-
-		case BSP_EVENT_KEY_0:
-			send_winkey();
-			break;
-
-		case BSP_EVENT_KEY_1:
-			printf("terminating connection\n");
-			sd_ble_gap_disconnect(m_conn_handle, BLE_HCI_REMOTE_USER_TERMINATED_CONNECTION);
-			ble_advertising_restart_without_whitelist();
-			break;
-
-		default:
-			break;
-	}
-}
-#endif
 
 static void advertising_init(void) {
 	uint32_t err_code;
@@ -1587,6 +1567,12 @@ void key_handler(uint32_t bits) {
 	if (keys & (1 << S20)) {
 		send_winkey();
 	}
+
+	if (keys & (1 << S16)) {
+		printf("terminating connection button pressed\n");
+		sd_ble_gap_disconnect(m_conn_handle, BLE_HCI_REMOTE_USER_TERMINATED_CONNECTION);
+		ble_advertising_restart_without_whitelist();
+	}
 }
 
 int main(void) {
@@ -1605,6 +1591,14 @@ int main(void) {
 #endif
 
 	gpio_config();
+
+    nrf_gpio_cfg_output(LED_PIN);
+	for (int i=0; i<3; i++) {
+	    nrf_gpio_pin_set(LED_PIN);
+	    nrf_delay_ms(250);
+	    nrf_gpio_pin_clear(LED_PIN);
+	    nrf_delay_ms(250);
+	}
 
 	debouncing = false;
 	debounce_ticks = 0;
