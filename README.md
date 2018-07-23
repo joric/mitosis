@@ -68,6 +68,7 @@ This repository now supports GCC for YJ-14015 as well, so there's no need for IA
 Use GCC-prebuild firmware from the precompiled folder or apply this diff https://github.com/reversebias/mitosis/pull/7
 (update: it's already merged into upstream).
 
+
 ## nRF51 Firmware
 
 This firmware is used for the nRF51 modules on the keyboard halves and the receiver.
@@ -82,6 +83,9 @@ This precompiled firmware features YJ-14015 support and status LEDs support.
 
 ### Uploading nRF51 Firmware
 
+
+#### ST-Link V2
+
 To flash nRF modules, connect ST-LINK/V2 to the module programming pins (SWCLK, SWDIO, GND, 3.3V - top to bottom) and run this batch (windows 10):
 
 ```
@@ -92,6 +96,36 @@ openocd -f interface/stlink-v2.cfg -f target/nrf51.cfg ^
 -c init -c "reset halt" -c "flash write_image erase %file:\=/%" -c reset -c exit
 
 ```
+
+#### BluePill
+
+This is basically an [$1.80](https://www.aliexpress.com/item//32583160323.html) STM32 board (STM32F103C8T6) that you can use as an ST-Link V2 replacement.
+Most likely you get 64K device (page is not writeable, etc.) so just run STM32 Flash loader GUI,
+hook up STM32F103 via UART, force select 128K device, 0x08002000, and flash blackmagic.bin from there.
+No OpenOCD needed, the server is in the firmware.
+
+* https://gojimmypi.blogspot.com/2017/07/BluePill-STM32F103-to-BlackMagic-Probe.html (Detailed instructions)
+* https://www.st.com/en/development-tools/flasher-stm32.html (STM32 Flash loader)
+* [BluePill attached to the UART adapter](https://i.imgur.com/sLyYM27.jpg) (RX - A9, TX - A10)
+* [BluePill attached to the nRF51822 chip](https://i.imgur.com/X7xIXMN.jpg) (SWCLK - A5, SWDIO - B14)
+
+Note that if you use softdevice (e.g. s130) you need to use mergehex utility from the 
+[nRF5x Command Line Tools](http://infocenter.nordicsemi.com/index.jsp?topic=%2Fcom.nordic.infocenter.tools%2Fdita%2Ftools%2Fnrf5x_command_line_tools%2Fnrf5x_installation.html):
+
+```
+mergehex.exe -m s130.hex mitosis.hex -o out.hex
+```
+
+Then use arm-none-eabi-gdb for uploading (you can find it in the Arduino IDE folders, with the nRF51 board installed):
+
+```
+arm-none-eabi-gdb.exe -ex "target extended-remote \\.\COM5" -ex "mon swdp_scan" -ex "att 1" ^
+-ex "mon erase_mass" –ex "load out.hex" –ex "quit"
+
+```
+
+Then disconnect the programmer and reconnect power, or run the program from the GDB prompt - "load out.hex", "run".
+
 
 ### Building nRF51 Firmware
 
@@ -153,10 +187,6 @@ cd qmk_firmware
 make mitosis-default
 ```
 
-## Bluetooth Version
-
-* https://github.com/joric/mitosis/tree/devel/mitosis-bluetooth (work in progress)
-
 ## Mitosis Clones
 
 * [Interphase](https://github.com/Durburz/interphase) (66 keys, keyboard matrix with diodes, voltage regulator and AAA battery, KiCad project) ([Reddit](https://redd.it/7ggeww))
@@ -167,6 +197,31 @@ make mitosis-default
 * [Trident](https://github.com/YCF/Trident) (Wireless Let's Split by [/u/imFengz](https://www.reddit.com/u/imFengz), module and battery placed between the switches) ([Reddit](https://redd.it/6um7eg)) ([Image](https://i.imgur.com/mCTgwu5.png))
 * [Orthrus](https://github.com/bezmi/orthrus) (great 52-key Atreus/Mitosis crossover by [/u/bezmi](https://www.reddit.com/u/bezmi), KiCad project) ([Reddit](https://redd.it/8txry7)) 
 * [Comet](https://github.com/satt99/comet46-hardware) (Comet46 - split 40% wireless keyboard) by [/u/SaT99](https://www.reddit.com/user/SaT999) ([Gallery](https://imgur.com/a/vs1W5qB)) ([Firmware](https://github.com/satt99/comet46-firmware)) ([Reddit](https://redd.it/8ykwjj))
+
+
+## Bluetooth Version
+
+* https://github.com/joric/mitosis/tree/devel/mitosis-bluetooth (work in progress)
+
+## Debugging
+
+Unfortunately, neither nRF51822 nor ST-Link V2 have SWO pin for printf
+([there is no tracing hardware in the nRF51 series](https://devzone.nordicsemi.com/f/nordic-q-a/1875/nrf51822---debug-output-via-j-link-swo)),
+so I had to use UART for debugging.
+You only need ONE pin to print messages via UART (I set up pin 19 as TX_PIN_NUMBER on the Mitosis and use Arduino IDE Serial Monitor).
+[The second half is connected to the power pins only](https://i.imgur.com/IozHbrJ.jpg).
+
+## Schematics
+
+There were speculations that Core 51822 has 32 GPIO pins available, so it's possible to make an Atreus62 without
+using a keyboard matrix. It is not true. GPIO 26/27 are shared by the 32kHz crystal. Pin 31 (AINT7) isn't
+routed outside as well. So mitosis only have 4 extra pins available: 11, 12, 20, plus LED pin (17 or 23)
+and the best case scenario for nRF51822 Core-B (reference design) is 26 or 27 keys on each side,
+52 keys total (54 if you get rid of the LED).
+
+* [nRF51822 Core-B Schematics](http://i.imgur.com/8aF2mbI.png)
+* [nRF51822 Core-B Pinout](https://www.waveshare.com/img/devkit/accBoard/Core51822-B/Core51822-B-pin.jpg)
+* [Mitosis PCB](https://i.imgur.com/apx8W8W.png)
 
 ## References
 

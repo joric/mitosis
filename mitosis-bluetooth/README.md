@@ -17,7 +17,6 @@ There are examples of Bluetooth and Gazell running concurrently but no working H
 * https://github.com/NordicPlayground/nrf51-ble-gzll-device-uart (no Gazell host supported)
 * https://github.com/NordicPlayground/nRF51-multi-role-conn-observer-advertiser (usage of the timeslot API)
 
-
 ### Bluetooth UART service
 
 There are a few split keyboards that successfully run Bluetooth HID and Bluetooth UART service concurrently.
@@ -51,58 +50,4 @@ BlueMicro is open source, official repositories are [BlueMicro_BLE] (firmware) a
 
 [BlueMicro_BLE]: https://github.com/jpconstantineau/BlueMicro_BLE 
 [NRF52-Board]: https://github.com/jpconstantineau/NRF52-Board
-
-## Programming
-
-### ST-Link V2
-
-I'm mostly using ST-Link V2, BLE400 board and its built-in USB-UART.
-
-* [ST-Link V2 attached directly to nRF51822 pins](https://i.imgur.com/yabRCdf.jpg)
-* [ST-Link V2 attached to the BLE400 SWD connector](https://i.imgur.com/KuVSU8h.jpg)
-
-### BluePill
-
-This is basically an [$1.80](https://www.aliexpress.com/item//32583160323.html) STM32 board (STM32F103C8T6) that you can use as an ST-Link V2 replacement.
-Most likely you get 64K device (page is not writeable, etc.) so just run STM32 Flash loader GUI,
-hook up STM32F103 via UART, force select 128K device, 0x08002000, and flash blackmagic.bin from there.
-
-* https://gojimmypi.blogspot.com/2017/07/BluePill-STM32F103-to-BlackMagic-Probe.html (Detailed instructions)
-* https://www.st.com/en/development-tools/flasher-stm32.html (STM32 Flash loader)
-* [BluePill attached to the UART adapter](https://i.imgur.com/sLyYM27.jpg) (RX - A9, TX - A10)
-* [BluePill attached to the nRF51822 chip](https://i.imgur.com/X7xIXMN.jpg) (SWCLK - A5, SWDIO - B14)
-
-Programming nRF51 is tricky, first merge s130 softdevice hex with your hex using nRF Command line tools, then use GDB.
-
-```
-mergehex.exe -m s130.hex mitosis.hex -o out.hex
-arm-none-eabi-gdb.exe -ex "target extended-remote \\.\COM5" -ex "mon swdp_scan" -ex "att 1" ^
--ex "mon erase_mass" –ex "load out.hex" –ex "quit"
-
-```
-
-Then disconnect the programmer and reconnect power, or run the program with gdb prompt - "load out.hex", "run".
-No OpenOCD needed, the server is in the firmware.
-
-### Debugging
-
-Unfortunately, neither nRF51822 nor ST-Link V2 have SWO pin for printf
-([there is no tracing hardware in the nRF51 series](https://devzone.nordicsemi.com/f/nordic-q-a/1875/nrf51822---debug-output-via-j-link-swo)),
-so I had to use UART for debugging.
-You only need ONE pin to print messages via UART (I set up pin 19 as TX_PIN_NUMBER on the Mitosis and use Arduino IDE Serial Monitor).
-[The second half is connected to the power pins only](https://i.imgur.com/IozHbrJ.jpg).
-
-
-## Schematics
-
-There were speculations that Core 51822 has 32 GPIO pins available, so it's possible to make an Atreus62 without
-using a keyboard matrix. It is not true. GPIO 26/27 are shared by the 32kHz crystal. Pin 31 (AINT7) isn't
-routed outside as well. So mitosis only have 4 extra pins available: 11, 12, 20, plus LED pin (17 or 23)
-and the best case scenario for nRF51822 Core-B (reference design) is 26 or 27 keys on each side,
-52 keys total (54 if you get rid of the LED).
-
-* [nRF51822 Core-B Schematics](http://i.imgur.com/8aF2mbI.png)
-* [nRF51822 Core-B Pinout](https://www.waveshare.com/img/devkit/accBoard/Core51822-B/Core51822-B-pin.jpg)
-* [Mitosis PCB](https://i.imgur.com/apx8W8W.png)
-
 
