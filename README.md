@@ -100,16 +100,16 @@ openocd -f interface/stlink-v2.cfg -f target/nrf51.cfg ^
 #### BluePill
 
 This is basically an [$1.80](https://www.aliexpress.com/item//32583160323.html) STM32 board (STM32F103C8T6) that you can use as an ST-Link V2 replacement.
+No OpenOCD needed.
+You need to flash the programmer firmware ([Blackmagic](https://github.com/blacksphere/blackmagic)) first.
 Most likely you get 64K device (page is not writeable, etc.) so just run STM32 Flash loader GUI,
-hook up STM32F103 via UART, force select 128K device, 0x08002000, and flash blackmagic.bin from there.
-No OpenOCD needed, the server is in the firmware.
+hook up STM32F103 via UART ([RX - A9, TX - A10](https://i.imgur.com/sLyYM27.jpg)), force select 128K device, 0x08002000, and flash blackmagic.bin from there.
+Then unplug UART and hook up nRF51 ([SWCLK - A5, SWDIO - B14](https://i.imgur.com/Ikt8yZz.jpg)).
 
-* https://gojimmypi.blogspot.com/2017/07/BluePill-STM32F103-to-BlackMagic-Probe.html (Detailed instructions)
+* https://gojimmypi.blogspot.com/2017/07/BluePill-STM32F103-to-BlackMagic-Probe.html (detailed instructions)
 * https://www.st.com/en/development-tools/flasher-stm32.html (STM32 Flash loader)
-* [BluePill attached to the UART adapter](https://i.imgur.com/sLyYM27.jpg) (RX - A9, TX - A10)
-* [BluePill attached to the nRF51822 chip](https://i.imgur.com/X7xIXMN.jpg) (SWCLK - A5, SWDIO - B14)
 
-Note that if you use softdevice (e.g. s130) you need to use mergehex utility from the 
+Note that if you use Bluetooth (e.g. s130) you need to use mergehex utility from the 
 [nRF5x Command Line Tools](http://infocenter.nordicsemi.com/index.jsp?topic=%2Fcom.nordic.infocenter.tools%2Fdita%2Ftools%2Fnrf5x_command_line_tools%2Fnrf5x_installation.html):
 
 ```
