@@ -16,3 +16,4 @@
 * Initial qwerty layout
 * Better pairing
 * QMK layout support
+* Switching between receiver and Bluetooth modes
