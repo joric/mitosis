@@ -1118,7 +1118,7 @@ static void device_manager_init(bool erase_bonds) {
 
 
 static void buttons_leds_init(bool * p_erase_bonds) {
-	*p_erase_bonds = 0;//(startup_event == BSP_EVENT_CLEAR_BONDING_DATA);
+	*p_erase_bonds = (read_keys() & (1 << S16)) ? 1 : 0;
 }
 
 
@@ -1140,7 +1140,7 @@ void uart_error_handle(app_uart_evt_t * p_event) {
 void key_handler(uint32_t bits) {
 	printf("keys: %d\n", bits);
 
-	if (keys & (1 << R_S20)) {
+	if (keys & (1 << S20)) {
 		send_winkey();
 	}
 }
