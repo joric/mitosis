@@ -254,8 +254,8 @@ BlueMicro is open source, official repositories are [BlueMicro_BLE] (firmware) a
 Neither nRF51822 nor ST-Link V2 have SWO pin for printf
 ([there is no tracing hardware in the nRF51 series](https://devzone.nordicsemi.com/f/nordic-q-a/1875/nrf51822---debug-output-via-j-link-swo)),
 so I had to use UART. You only need ONE pin to print messages via UART (e.g. using Arduino IDE Serial Monitor).
-There are no free broken out pins on the Mitosis so I've temporarily used
-pin 19 (bottom right key) as TX_PIN_NUMBER and it worked just fine.
+There are no free broken out pins on the Mitosis so I've used pin 19 (bottom right key) as TX_PIN_NUMBER
+and it worked ([see mitosis-bluetooth](https://github.com/joric/mitosis/tree/devel/mitosis-bluetooth)).
 
 ## Schematics
 
