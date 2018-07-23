@@ -1046,6 +1046,9 @@
   <group>
     <name>Application</name>
     <file>
+      <name>$PROJ_DIR$\..\..\..\app_timer_qdec.c</name>
+    </file>
+    <file>
       <name>$PROJ_DIR$\..\..\..\main.c</name>
     </file>
   </group>
@@ -1155,9 +1158,6 @@
     </file>
     <file>
       <name>$PROJ_DIR$\..\..\..\..\..\components\libraries\scheduler\app_scheduler.c</name>
-    </file>
-    <file>
-      <name>$PROJ_DIR$\..\..\..\..\..\components\libraries\timer\app_timer.c</name>
     </file>
     <file>
       <name>$PROJ_DIR$\..\..\..\..\..\components\libraries\timer\app_timer_appsh.c</name>

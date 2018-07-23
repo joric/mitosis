@@ -71,6 +71,448 @@ void app_error_handler_custom(ret_code_t error_code, uint32_t line_num, const ui
 	printf("ERROR! code: %d line: %d file: %s\n", error_code, line_num, p_file_name);
 }
 
+
+////////////////////////////////////////
+
+#include <stdint.h>
+#include <stdio.h>
+#include <string.h>
+#include "nrf_assert.h"
+#include "nrf_soc.h"
+#include "nrf_gzll.h"
+#include "app_error.h"
+#include "app_util_platform.h"
+
+//void notification_cb(nrf_impl_notification_t notification);
+/*lint -e526 "Symbol RADIO_IRQHandler not defined" */
+void RADIO_IRQHandler(void);
+
+#define TX_PAYLOAD_LENGTH   3
+#define ACK_PAYLOAD_LENGTH  1
+
+// Binary printing
+#define BYTE_TO_BINARY_PATTERN "%c%c%c%c%c"
+#define BYTE_TO_BINARY(byte)  \
+  (byte & 0x10 ? '#' : '.'), \
+  (byte & 0x08 ? '#' : '.'), \
+  (byte & 0x04 ? '#' : '.'), \
+  (byte & 0x02 ? '#' : '.'), \
+  (byte & 0x01 ? '#' : '.')
+
+
+static nrf_radio_request_t  m_timeslot_request;
+static uint32_t             m_slot_length;
+static volatile bool        m_cmd_received = false;
+static volatile bool        m_gzll_initialized = false;
+
+static nrf_radio_signal_callback_return_param_t signal_callback_return_param;
+//static uint8_t ack_payload[ACK_PAYLOAD_LENGTH];
+
+void HardFault_Handler(uint32_t program_counter, uint32_t link_register)
+{
+}
+
+void m_configure_next_event(void) {
+	//printf("%s\n", __FUNCTION__);
+    m_slot_length                                  = 25000;
+    m_timeslot_request.request_type                = NRF_RADIO_REQ_TYPE_EARLIEST;
+    //m_timeslot_request.params.earliest.hfclk       = NRF_RADIO_HFCLK_CFG_XTAL_GUARANTEED;
+	m_timeslot_request.params.earliest.hfclk	 	= NRF_RADIO_HFCLK_CFG_NO_GUARANTEE;
+    m_timeslot_request.params.earliest.priority    = NRF_RADIO_PRIORITY_NORMAL;
+    m_timeslot_request.params.earliest.length_us   = m_slot_length;
+    m_timeslot_request.params.earliest.timeout_us  = 1000000;
+}
+
+void sys_evt_dispatch(uint32_t evt_id)
+{
+	printf("%s\n", __FUNCTION__);
+
+    uint32_t err_code;
+
+    switch (evt_id)
+    {
+        case NRF_EVT_RADIO_SIGNAL_CALLBACK_INVALID_RETURN:
+            ASSERT(false);
+            break;
+
+        case NRF_EVT_RADIO_SESSION_IDLE:
+            ASSERT(false);
+            break;
+
+        case NRF_EVT_RADIO_SESSION_CLOSED:
+            ASSERT(false);
+            break;
+
+        case NRF_EVT_RADIO_BLOCKED:
+            m_configure_next_event();
+            err_code = sd_radio_request(&m_timeslot_request);
+            APP_ERROR_CHECK(err_code);
+            break;
+
+        case NRF_EVT_RADIO_CANCELED:
+            m_configure_next_event();
+            err_code = sd_radio_request(&m_timeslot_request);
+            APP_ERROR_CHECK(err_code);
+            break;
+
+        default:
+            break;
+    }
+
+	//pstorage_sys_event_handler(sys_evt);
+	//ble_advertising_on_sys_evt(sys_evt);
+}
+
+static uint8_t data_payload_left[NRF_GZLL_CONST_MAX_PAYLOAD_LENGTH];  ///< Placeholder for data payload received from host.
+static uint8_t data_payload_right[NRF_GZLL_CONST_MAX_PAYLOAD_LENGTH];  ///< Placeholder for data payload received from host.
+
+static bool packet_received_left, packet_received_right;
+static uint8_t ack_payload[TX_PAYLOAD_LENGTH];                   ///< Payload to attach to ACK sent to device.
+static uint8_t data_buffer[10];
+uint32_t left_active = 0;
+uint32_t right_active = 0;
+
+
+void m_process_gazelle() {
+        bool left = packet_received_left;
+        bool right = packet_received_right;
+
+        // detecting received packet from interupt, and unpacking
+        if (packet_received_left)
+        {
+            packet_received_left = false;
+
+            data_buffer[0] = ((data_payload_left[0] & 1<<3) ? 1:0) << 0 |
+                             ((data_payload_left[0] & 1<<4) ? 1:0) << 1 |
+                             ((data_payload_left[0] & 1<<5) ? 1:0) << 2 |
+                             ((data_payload_left[0] & 1<<6) ? 1:0) << 3 |
+                             ((data_payload_left[0] & 1<<7) ? 1:0) << 4;
+
+            data_buffer[2] = ((data_payload_left[1] & 1<<6) ? 1:0) << 0 |
+                             ((data_payload_left[1] & 1<<7) ? 1:0) << 1 |
+                             ((data_payload_left[0] & 1<<0) ? 1:0) << 2 |
+                             ((data_payload_left[0] & 1<<1) ? 1:0) << 3 |
+                             ((data_payload_left[0] & 1<<2) ? 1:0) << 4;
+
+            data_buffer[4] = ((data_payload_left[1] & 1<<1) ? 1:0) << 0 |
+                             ((data_payload_left[1] & 1<<2) ? 1:0) << 1 |
+                             ((data_payload_left[1] & 1<<3) ? 1:0) << 2 |
+                             ((data_payload_left[1] & 1<<4) ? 1:0) << 3 |
+                             ((data_payload_left[1] & 1<<5) ? 1:0) << 4;
+
+            data_buffer[6] = ((data_payload_left[2] & 1<<5) ? 1:0) << 1 |
+                             ((data_payload_left[2] & 1<<6) ? 1:0) << 2 |
+                             ((data_payload_left[2] & 1<<7) ? 1:0) << 3 |
+                             ((data_payload_left[1] & 1<<0) ? 1:0) << 4;
+
+            data_buffer[8] = ((data_payload_left[2] & 1<<1) ? 1:0) << 1 |
+                             ((data_payload_left[2] & 1<<2) ? 1:0) << 2 |
+                             ((data_payload_left[2] & 1<<3) ? 1:0) << 3 |
+                             ((data_payload_left[2] & 1<<4) ? 1:0) << 4;
+        }
+
+        if (packet_received_right)
+        {
+            packet_received_right = false;
+
+            data_buffer[1] = ((data_payload_right[0] & 1<<7) ? 1:0) << 0 |
+                             ((data_payload_right[0] & 1<<6) ? 1:0) << 1 |
+                             ((data_payload_right[0] & 1<<5) ? 1:0) << 2 |
+                             ((data_payload_right[0] & 1<<4) ? 1:0) << 3 |
+                             ((data_payload_right[0] & 1<<3) ? 1:0) << 4;
+
+            data_buffer[3] = ((data_payload_right[0] & 1<<2) ? 1:0) << 0 |
+                             ((data_payload_right[0] & 1<<1) ? 1:0) << 1 |
+                             ((data_payload_right[0] & 1<<0) ? 1:0) << 2 |
+                             ((data_payload_right[1] & 1<<7) ? 1:0) << 3 |
+                             ((data_payload_right[1] & 1<<6) ? 1:0) << 4;
+
+            data_buffer[5] = ((data_payload_right[1] & 1<<5) ? 1:0) << 0 |
+                             ((data_payload_right[1] & 1<<4) ? 1:0) << 1 |
+                             ((data_payload_right[1] & 1<<3) ? 1:0) << 2 |
+                             ((data_payload_right[1] & 1<<2) ? 1:0) << 3 |
+                             ((data_payload_right[1] & 1<<1) ? 1:0) << 4;
+
+            data_buffer[7] = ((data_payload_right[1] & 1<<0) ? 1:0) << 0 |
+                             ((data_payload_right[2] & 1<<7) ? 1:0) << 1 |
+                             ((data_payload_right[2] & 1<<6) ? 1:0) << 2 |
+                             ((data_payload_right[2] & 1<<5) ? 1:0) << 3;
+
+            data_buffer[9] = ((data_payload_right[2] & 1<<4) ? 1:0) << 0 |
+                             ((data_payload_right[2] & 1<<3) ? 1:0) << 1 |
+                             ((data_payload_right[2] & 1<<2) ? 1:0) << 2 |
+                             ((data_payload_right[2] & 1<<1) ? 1:0) << 3;
+        }
+
+        // checking for a poll request from QMK
+        //if (app_uart_get(&c) == NRF_SUCCESS && c == 's')
+        if (left || right)
+        {
+            // sending data to QMK, and an end byte
+            //nrf_drv_uart_tx(data_buffer,10);
+            //app_uart_put(0xE0);
+
+            // debugging help, for printing keystates to a serial console
+
+            //for (uint8_t i = 0; i < 10; i++) app_uart_put(data_buffer[i]);
+
+          if (left) {
+            printf("L " \
+                   BYTE_TO_BINARY_PATTERN " " \
+                   BYTE_TO_BINARY_PATTERN " " \
+                   BYTE_TO_BINARY_PATTERN " " \
+                   BYTE_TO_BINARY_PATTERN " " \
+                   BYTE_TO_BINARY_PATTERN "\n", \
+                   BYTE_TO_BINARY(data_buffer[0]), \
+                   BYTE_TO_BINARY(data_buffer[2]), \
+                   BYTE_TO_BINARY(data_buffer[4]), \
+                   BYTE_TO_BINARY(data_buffer[6]), \
+                   BYTE_TO_BINARY(data_buffer[8]));
+          }
+
+          if (right) {
+            printf("R " \
+                   BYTE_TO_BINARY_PATTERN " " \
+                   BYTE_TO_BINARY_PATTERN " " \
+                   BYTE_TO_BINARY_PATTERN " " \
+                   BYTE_TO_BINARY_PATTERN " " \
+                   BYTE_TO_BINARY_PATTERN "\n", \
+                   BYTE_TO_BINARY(data_buffer[1]), \
+                   BYTE_TO_BINARY(data_buffer[3]), \
+                   BYTE_TO_BINARY(data_buffer[5]), \
+                   BYTE_TO_BINARY(data_buffer[7]), \
+                   BYTE_TO_BINARY(data_buffer[9]));
+          }
+
+            /*
+            LogDebug(BYTE_TO_BINARY_PATTERN " " \
+                   BYTE_TO_BINARY_PATTERN " " \
+                   BYTE_TO_BINARY_PATTERN " " \
+                   BYTE_TO_BINARY_PATTERN " " \
+                   BYTE_TO_BINARY_PATTERN " " \
+                   BYTE_TO_BINARY_PATTERN " " \
+                   BYTE_TO_BINARY_PATTERN " " \
+                   BYTE_TO_BINARY_PATTERN " " \
+                   BYTE_TO_BINARY_PATTERN " " \
+                   BYTE_TO_BINARY_PATTERN "\n", \
+                   BYTE_TO_BINARY(data_buffer[0]), \
+                   BYTE_TO_BINARY(data_buffer[1]), \
+                   BYTE_TO_BINARY(data_buffer[2]), \
+                   BYTE_TO_BINARY(data_buffer[3]), \
+                   BYTE_TO_BINARY(data_buffer[4]), \
+                   BYTE_TO_BINARY(data_buffer[5]), \
+                   BYTE_TO_BINARY(data_buffer[6]), \
+                   BYTE_TO_BINARY(data_buffer[7]), \
+                   BYTE_TO_BINARY(data_buffer[8]), \
+                   BYTE_TO_BINARY(data_buffer[9]));
+            */
+            nrf_delay_us(100);
+		}
+}
+
+
+
+static void m_on_start(void)
+{
+    bool res = false;
+    signal_callback_return_param.params.request.p_next = NULL;
+    signal_callback_return_param.callback_action = NRF_RADIO_SIGNAL_CALLBACK_ACTION_NONE;
+
+    if (!m_gzll_initialized)
+    {
+		/*
+        res = nrf_gzll_init(NRF_GZLL_MODE_DEVICE);
+        ASSERT(res);
+        res = nrf_gzll_set_device_channel_selection_policy(NRF_GZLL_DEVICE_CHANNEL_SELECTION_POLICY_USE_CURRENT);
+        ASSERT(res);
+        res = nrf_gzll_set_xosc_ctl(NRF_GZLL_XOSC_CTL_MANUAL);
+        ASSERT(res);
+        res = nrf_gzll_set_max_tx_attempts(0);
+        ASSERT(res);
+        res = nrf_gzll_set_base_address_0(0xE7E7E7E7);
+        ASSERT(res);
+        res = nrf_gzll_enable();
+        ASSERT(res);
+		*/
+    // Initialize Gazell
+    nrf_gzll_init(NRF_GZLL_MODE_HOST);
+
+	nrf_gzll_set_device_channel_selection_policy(NRF_GZLL_DEVICE_CHANNEL_SELECTION_POLICY_USE_CURRENT);
+	nrf_gzll_set_xosc_ctl(NRF_GZLL_XOSC_CTL_MANUAL);
+	nrf_gzll_set_max_tx_attempts(0);
+
+    // Addressing
+    nrf_gzll_set_base_address_0(0x01020304);
+    nrf_gzll_set_base_address_1(0x05060708);
+
+    // Load data into TX queue
+    ack_payload[0] = 0x55;
+    nrf_gzll_add_packet_to_tx_fifo(0, data_payload_left, TX_PAYLOAD_LENGTH);
+    nrf_gzll_add_packet_to_tx_fifo(1, data_payload_left, TX_PAYLOAD_LENGTH);
+
+    // Enable Gazell to start sending over the air
+    nrf_gzll_enable();
+
+
+        m_gzll_initialized = true;
+
+		printf("%s - All OK\n", __FUNCTION__);
+    }
+    else
+    {
+        //res = nrf_gzll_init(NRF_GZLL_MODE_HOST);
+		nrf_gzll_set_mode(NRF_GZLL_MODE_HOST);
+       	ASSERT(res);
+		//printf("%s - something weird\n", __FUNCTION__);
+    }
+
+
+
+    NRF_TIMER0->INTENSET = TIMER_INTENSET_COMPARE0_Msk;
+    NRF_TIMER0->CC[0] = m_slot_length - 4000; // TODO: Use define instead of magic number
+    NVIC_EnableIRQ(TIMER0_IRQn);
+
+	(void)res;
+}
+
+static void m_on_multitimer(void)
+{
+	//printf("%s\n", __FUNCTION__);
+
+    NRF_TIMER0->EVENTS_COMPARE[0] = 0;
+    if (nrf_gzll_get_mode() != NRF_GZLL_MODE_SUSPEND)
+    {
+        signal_callback_return_param.params.request.p_next = NULL;
+        signal_callback_return_param.callback_action = NRF_RADIO_SIGNAL_CALLBACK_ACTION_NONE;
+        (void)nrf_gzll_set_mode(NRF_GZLL_MODE_SUSPEND);
+        NRF_TIMER0->INTENSET = TIMER_INTENSET_COMPARE0_Msk;
+        NRF_TIMER0->CC[0] = m_slot_length - 1000;
+    }
+    else
+    {
+        ASSERT(nrf_gzll_get_mode() == NRF_GZLL_MODE_SUSPEND);
+        m_configure_next_event();
+        signal_callback_return_param.params.request.p_next = &m_timeslot_request;
+        signal_callback_return_param.callback_action = NRF_RADIO_SIGNAL_CALLBACK_ACTION_REQUEST_AND_END;
+
+		//printf("here!\n");
+    }
+}
+
+nrf_radio_signal_callback_return_param_t * m_radio_callback(uint8_t signal_type)
+{
+    switch(signal_type)
+    {
+        case NRF_RADIO_CALLBACK_SIGNAL_TYPE_START:
+            m_on_start();
+            break;
+
+        case NRF_RADIO_CALLBACK_SIGNAL_TYPE_RADIO:
+            signal_callback_return_param.params.request.p_next = NULL;
+            signal_callback_return_param.callback_action = NRF_RADIO_SIGNAL_CALLBACK_ACTION_NONE;
+            RADIO_IRQHandler();
+            break;
+
+        case NRF_RADIO_CALLBACK_SIGNAL_TYPE_TIMER0:
+            m_on_multitimer();
+            break;
+    }
+    return (&signal_callback_return_param);
+}
+
+uint32_t gazell_sd_radio_init(void)
+{
+	printf("%s\n", __FUNCTION__);
+
+    uint32_t err_code;
+    err_code = sd_radio_session_open(m_radio_callback);
+    if (err_code != NRF_SUCCESS)
+        return err_code;
+    m_configure_next_event();
+    err_code = sd_radio_request(&m_timeslot_request);
+    if (err_code != NRF_SUCCESS) {
+        (void)sd_radio_session_close();
+        return err_code;
+    }
+    return NRF_SUCCESS;
+}
+
+
+void nrf_gzll_device_tx_success(uint32_t pipe, nrf_gzll_device_tx_info_t tx_info)
+{
+	printf("%s\n", __FUNCTION__);
+/*
+    uint32_t ack_payload_length = ACK_PAYLOAD_LENGTH;
+    if (tx_info.payload_received_in_ack)
+    {
+        if (nrf_gzll_fetch_packet_from_rx_fifo(pipe, ack_payload, &ack_payload_length))
+        {
+            ASSERT(ack_payload_length == 1);
+            m_cmd_received = true;
+        }
+    }
+	*/
+}
+
+void nrf_gzll_device_tx_failed(uint32_t pipe, nrf_gzll_device_tx_info_t tx_info)
+{
+	printf("%s\n", __FUNCTION__);
+}
+
+void nrf_gzll_host_rx_data_ready(uint32_t pipe, nrf_gzll_host_rx_info_t rx_info)
+{
+	//printf("%s, pipe: %d\n", __FUNCTION__, pipe);
+
+    uint32_t data_payload_length = NRF_GZLL_CONST_MAX_PAYLOAD_LENGTH;
+
+    if (pipe == 0)
+    {
+        packet_received_left = true;
+        left_active = 0;
+        // Pop packet and write first byte of the payload to the GPIO port.
+        nrf_gzll_fetch_packet_from_rx_fifo(pipe, data_payload_left, &data_payload_length);
+    }
+    else if (pipe == 1)
+    {
+        packet_received_right = true;
+        right_active = 0;
+        // Pop packet and write first byte of the payload to the GPIO port.
+        nrf_gzll_fetch_packet_from_rx_fifo(pipe, data_payload_right, &data_payload_length);
+    }
+
+    // not sure if required, I guess if enough packets are missed during blocking uart
+    nrf_gzll_flush_rx_fifo(pipe);
+
+    //load ACK payload into TX queue
+    ack_payload[0] =  0x55;
+    nrf_gzll_add_packet_to_tx_fifo(pipe, ack_payload, TX_PAYLOAD_LENGTH);
+
+	m_process_gazelle();
+}
+
+void nrf_gzll_disabled(void)
+{
+	printf("%s\n", __FUNCTION__);
+}
+
+bool debug_cmd_available(void)
+{
+	printf("%s\n", __FUNCTION__);
+    return m_cmd_received;
+}
+
+char get_debug_cmd(void)
+{
+    char cmd = ack_payload[0];
+    m_cmd_received = false;
+    return cmd;
+}
+
+////////////////////////////////////////
+
+
+
+
 #define ADDR_FMT "%02x:%02x:%02x:%02x:%02x:%02x"
 #define ADDR_T(a) a[5], a[4], a[3], a[2], a[1], a[0]
 
@@ -664,6 +1106,8 @@ static void on_hid_rep_char_write(ble_hids_evt_t * p_evt) {
 			err_code = ble_hids_outp_rep_get(&m_hids, report_index, OUTPUT_REPORT_MAX_LEN, 0, &report_val);
 			APP_ERROR_CHECK(err_code);
 
+			printf("%s - report value: %d\n", __FUNCTION__, report_val);
+
 			if (!m_caps_on && ((report_val & OUTPUT_REPORT_BIT_MASK_CAPS_LOCK) != 0)) {
 				//err_code = bsp_indication_set(BSP_INDICATE_ALERT_3);
 				APP_ERROR_CHECK(err_code);
@@ -676,7 +1120,7 @@ static void on_hid_rep_char_write(ble_hids_evt_t * p_evt) {
 				m_caps_on = false;
 			} else {
 				// The report received is not supported by this application. Do nothing.
-				//printf("Unknown report value: %d\n", report_val);
+				printf("Unsupported report value: %d\n", report_val);
 			}
 		}
 	}
@@ -928,12 +1372,12 @@ static void ble_evt_dispatch(ble_evt_t * p_ble_evt) {
 	ble_bas_on_ble_evt(&m_bas, p_ble_evt);
 }
 
-
+/*
 static void sys_evt_dispatch(uint32_t sys_evt) {
 	pstorage_sys_event_handler(sys_evt);
 	ble_advertising_on_sys_evt(sys_evt);
 }
-
+*/
 
 static void ble_stack_init(void) {
 	uint32_t err_code;
@@ -1181,6 +1625,9 @@ int main(void) {
 	advertising_init();
 	services_init();
 	conn_params_init();
+
+    gazell_sd_radio_init();
+    printf("Gazell initialized\r\n");
 
 	// Start execution.
 	timers_start();
