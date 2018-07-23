@@ -14,6 +14,7 @@
 ### TODO
 
 * Initial qwerty layout
-* Better pairing
+* Pairing key
 * QMK layout support
+* Switching between Bluetooth devices
 * Switching between receiver and Bluetooth modes
