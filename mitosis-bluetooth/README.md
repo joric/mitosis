@@ -2,5 +2,14 @@
 
 ## Status
 
-Bluetooth version doesn't work yet!
+### Works
 
+* Bluetooth and Gazell timesharing
+* Mitosis debouncing code
+* Communication between halves
+* Debugging via UART (pin 19)
+
+### TODO
+
+* Better pairing
+* QMK layout support
