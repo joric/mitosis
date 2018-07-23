@@ -52,34 +52,25 @@ BlueMicro is open source, official repositories are [BlueMicro_BLE] (firmware) a
 [BlueMicro_BLE]: https://github.com/jpconstantineau/BlueMicro_BLE 
 [NRF52-Board]: https://github.com/jpconstantineau/NRF52-Board
 
-## My setup
-
-I'm using ST-Link V2, BLE400 board and its built-in USB-UART.
-
-BLE400 also has built-in UART (unfortunately, ST-Link V2 doesn't have SWO pin for printf, so I had to use UART at 115200).
-
-Also it seems SWO inherently doesn't work on nRF51822's ([there is no tracing hardware in the nRF51 series](https://devzone.nordicsemi.com/f/nordic-q-a/1875/nrf51822---debug-output-via-j-link-swo)).
-
+## Programming
 
 ### ST-Link V2
 
-Connect to nRF51822 pins directly:
+I'm mostly using ST-Link V2, BLE400 board and its built-in USB-UART.
 
-![](https://i.imgur.com/yabRCdf.jpg)
+* [ST-Link V2 attached directly to nRF51822 pins](https://i.imgur.com/yabRCdf.jpg)
+* [ST-Link V2 attached to the BLE400 SWD connector](https://i.imgur.com/KuVSU8h.jpg)
 
-Or to the SWD connector:
+### BluePill
 
-![](https://i.imgur.com/KuVSU8h.jpg)
+This is basically an [$1.80](https://www.aliexpress.com/item//32583160323.html) STM32 board (STM32F103C8T6) that you can use as an ST-Link V2 replacement.
+Most likely you get 64K device (page is not writeable, etc.) so just run STM32 Flash loader GUI,
+hook up STM32F103 via UART, force select 128K device, 0x08002000, and flash blackmagic.bin from there.
 
-
-### Blue Pill
-
-There are $2 STM32F103 modules (Blue Pill) that you can use as ST-Link replacement.
-Most likely you get 64K device (page is not writeable, etc.) so just run [STM32 Flash loader demonstrator](https://www.st.com/en/development-tools/flasher-stm32.html)
-GUI, hook up STM32F103 via UART (use 5V, RX to A9, TX to A10), force select 128K device, 0x08002000, and flash blackmagic.bin from there.
-See detailed instructions: https://gojimmypi.blogspot.com/2017/07/BluePill-STM32F103-to-BlackMagic-Probe.html
-
-![](https://i.imgur.com/sLyYM27.jpg)
+* https://gojimmypi.blogspot.com/2017/07/BluePill-STM32F103-to-BlackMagic-Probe.html (Detailed instructions)
+* https://www.st.com/en/development-tools/flasher-stm32.html (STM32 Flash loader)
+* [BluePill attached to the UART adapter](https://i.imgur.com/sLyYM27.jpg) (RX - A9, TX - A10)
+* [BluePill attached to the nRF51822 chip](https://i.imgur.com/X7xIXMN.jpg) (SWCLK - A5, SWDIO - B14)
 
 Programming nRF51 is tricky, first merge s130 softdevice hex with your hex using nRF Command line tools, then use GDB.
 
@@ -91,20 +82,15 @@ arm-none-eabi-gdb.exe -ex "target extended-remote \\.\COM5" -ex "mon swdp_scan" 
 ```
 
 Then disconnect the programmer and reconnect power, or run the program with gdb prompt - "load out.hex", "run".
+No OpenOCD needed, the server is in the firmware.
 
-As you can see, no OpenOCD needed! Pins on STM32F103 are: SWCLK/SWD - A5, SDO/SWIO/SWDIO - B14.
+### Debugging
 
-![](https://i.imgur.com/X7xIXMN.jpg)
-
-## Debugging
-
-Since nRF51 and ST-Link doesn't support SWO I just hooked up a single TX pin (pin 19) for debug. It actually works!
-
-So you only need ONE pin to print messages in the terminal (I use Arduino IDE Serial Monitor) via UART.
-
-The second half is connected to power pins only.
-
-![](https://i.imgur.com/IozHbrJ.jpg)
+Unfortunately, neither nRF51822 nor ST-Link V2 have SWO pin for printf
+([there is no tracing hardware in the nRF51 series](https://devzone.nordicsemi.com/f/nordic-q-a/1875/nrf51822---debug-output-via-j-link-swo)),
+so I had to use UART for debugging.
+You only need ONE pin to print messages via UART (I set up pin 19 as TX_PIN_NUMBER on the Mitosis and use Arduino IDE Serial Monitor).
+[The second half is connected to the power pins only](https://i.imgur.com/IozHbrJ.jpg).
 
 
 ## Schematics
@@ -115,14 +101,8 @@ routed outside as well. So mitosis only have 4 extra pins available: 11, 12, 20,
 and the best case scenario for nRF51822 Core-B (reference design) is 26 or 27 keys on each side,
 52 keys total (54 if you get rid of the LED).
 
-### nRF51822 Core-B Schematics
-![](http://i.imgur.com/8aF2mbI.png)
-
-### nRF51822 Core-B Pinout
-![](https://www.waveshare.com/img/devkit/accBoard/Core51822-B/Core51822-B-pin.jpg)
-
-### Mitosis PCB
-
-![](https://i.imgur.com/apx8W8W.png)
+* [nRF51822 Core-B Schematics](http://i.imgur.com/8aF2mbI.png)
+* [nRF51822 Core-B Pinout](https://www.waveshare.com/img/devkit/accBoard/Core51822-B/Core51822-B-pin.jpg)
+* [Mitosis PCB](https://i.imgur.com/apx8W8W.png)
 
 
