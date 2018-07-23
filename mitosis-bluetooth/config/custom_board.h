@@ -33,10 +33,10 @@
 
 #define BUTTONS_NUMBER 2
 
-#define BUTTON_START   16
-#define BUTTON_1       16
-#define BUTTON_2       17
-#define BUTTON_STOP    17
+#define BUTTON_START   15
+#define BUTTON_1       15
+#define BUTTON_2       16
+#define BUTTON_STOP    16
 #define BUTTON_PULL    NRF_GPIO_PIN_PULLUP
 
 #define BUTTONS_LIST { BUTTON_1, BUTTON_2 }

@@ -28,9 +28,6 @@
 #include "ble_bas.h"
 #include "ble_dis.h"
 #include "ble_conn_params.h"
-#include "bsp.h"
-#include "sensorsim.h"
-#include "bsp_btn_ble.h"
 #include "app_scheduler.h"
 #include "softdevice_handler_appsh.h"
 #include "app_timer_appsh.h"
@@ -38,6 +35,16 @@
 #include "app_button.h"
 #include "pstorage.h"
 #include "app_trace.h"
+
+#include "app_uart.h"
+
+#ifndef TX_PIN_NUMBER
+#define TX_PIN_NUMBER  19
+#define RX_PIN_NUMBER  18
+#define CTS_PIN_NUMBER 8
+#define RTS_PIN_NUMBER 10
+#define HWFC           true
+#endif
 
 // some debug specific-code
 #ifdef DEBUG
@@ -69,31 +76,6 @@ void app_error_handler_custom(ret_code_t error_code, uint32_t line_num, const ui
 
 #define TN(id) {static char buf[32]; sprintf(buf, "0x%04x", id); return buf; }
 #define T(id) if (type == id) return #id; else
-
-char *bspEventName(int type) {
-	T(BSP_EVENT_NOTHING);
-	T(BSP_EVENT_DEFAULT);
-	T(BSP_EVENT_CLEAR_BONDING_DATA);
-	T(BSP_EVENT_CLEAR_ALERT);
-	T(BSP_EVENT_DISCONNECT);
-	T(BSP_EVENT_ADVERTISING_START);
-	T(BSP_EVENT_ADVERTISING_STOP);
-	T(BSP_EVENT_WHITELIST_OFF);
-	T(BSP_EVENT_BOND);
-	T(BSP_EVENT_RESET);
-	T(BSP_EVENT_SLEEP);
-	T(BSP_EVENT_WAKEUP);
-	T(BSP_EVENT_DFU);
-	T(BSP_EVENT_KEY_0);
-	T(BSP_EVENT_KEY_1);
-	T(BSP_EVENT_KEY_2);
-	T(BSP_EVENT_KEY_3);
-	T(BSP_EVENT_KEY_4);
-	T(BSP_EVENT_KEY_5);
-	T(BSP_EVENT_KEY_6);
-	T(BSP_EVENT_KEY_7);
-	TN(type);
-};
 
 char *gapEventName(int type) {
 	T(BLE_GAP_EVT_CONNECTED);
@@ -142,14 +124,24 @@ char *hidsEventName(int type) {
 	TN(type);
 };
 
+char *bleAdvEvtName(int type) {
+	T(BLE_ADV_EVT_IDLE);
+	T(BLE_ADV_EVT_DIRECTED);
+	T(BLE_ADV_EVT_DIRECTED_SLOW);
+	T(BLE_ADV_EVT_FAST);
+	T(BLE_ADV_EVT_SLOW);
+	T(BLE_ADV_EVT_FAST_WHITELIST);
+	T(BLE_ADV_EVT_SLOW_WHITELIST);
+	T(BLE_ADV_EVT_WHITELIST_REQUEST);
+	T(BLE_ADV_EVT_PEER_ADDR_REQUEST);
+	TN(type);
+};
+
 #define VBAT_MAX_IN_MV 3000
 
 uint8_t battery_level_get(void) {
 	// Configure ADC
-	NRF_ADC->CONFIG =
-		(ADC_CONFIG_RES_8bit << ADC_CONFIG_RES_Pos) | (ADC_CONFIG_INPSEL_SupplyOneThirdPrescaling << ADC_CONFIG_INPSEL_Pos) |
-		(ADC_CONFIG_REFSEL_VBG << ADC_CONFIG_REFSEL_Pos) | (ADC_CONFIG_PSEL_Disabled << ADC_CONFIG_PSEL_Pos) |
-		(ADC_CONFIG_EXTREFSEL_None << ADC_CONFIG_EXTREFSEL_Pos);
+	NRF_ADC->CONFIG = (ADC_CONFIG_RES_8bit << ADC_CONFIG_RES_Pos) | (ADC_CONFIG_INPSEL_SupplyOneThirdPrescaling << ADC_CONFIG_INPSEL_Pos) | (ADC_CONFIG_REFSEL_VBG << ADC_CONFIG_REFSEL_Pos) | (ADC_CONFIG_PSEL_Disabled << ADC_CONFIG_PSEL_Pos) | (ADC_CONFIG_EXTREFSEL_None << ADC_CONFIG_EXTREFSEL_Pos);
 
 	NRF_ADC->EVENTS_END = 0;
 	NRF_ADC->ENABLE = ADC_ENABLE_ENABLE_Enabled;
@@ -171,10 +163,6 @@ uint8_t battery_level_get(void) {
 	int percent = ((vbat_current_in_mv * 100) / VBAT_MAX_IN_MV);
 	return (uint8_t) (percent > 100 ? 100 : percent);
 }
-
-#if BUTTONS_NUMBER <2
-#error "Not enough resources on board"
-#endif
 
 #define IS_SRVC_CHANGED_CHARACT_PRESENT		0	/**< Include or not the service_changed characteristic. if not enabled, the server's database cannot be changed for the lifetime of the device*/
 #define CENTRAL_LINK_COUNT					0	/**< Number of central links used by the application. When changing this number remember to adjust the RAM settings*/
@@ -229,7 +217,9 @@ uint8_t battery_level_get(void) {
 #define SHIFT_KEY_CODE						0x02	/**< Key code indicating the press of the Shift Key. */
 #define MAX_KEYS_IN_ONE_REPORT				(INPUT_REPORT_KEYS_MAX_LEN - SCAN_CODE_POS)		/**< Maximum number of key presses that can be sent in one Input Report. */
 
-/*
+
+
+
 // Setup switch pins with pullups
 static void gpio_config(void)
 {
@@ -263,8 +253,84 @@ static uint32_t read_keys(void)
 {
 		return ~NRF_GPIO->IN & INPUT_MASK;
 }
-*/
 
+// Debounce time (dependent on tick frequency)
+#define DEBOUNCE 5
+#define ACTIVITY 500
+
+// Key buffers
+static uint32_t keys = 0, keys_snapshot = 0;
+static uint32_t debounce_ticks, activity_ticks;
+static volatile bool debouncing = false;
+
+#define DEBOUNCE_MEAS_INTERVAL			APP_TIMER_TICKS(5, APP_TIMER_PRESCALER)
+
+void key_handler(uint32_t k);
+
+// 1000Hz debounce sampling
+static void handler_debounce(void *p_context){
+
+    // debouncing, waits until there have been no transitions in 5ms (assuming five 1ms ticks)
+    if (debouncing)
+    {
+        // if debouncing, check if current keystates equal to the snapshot
+        if (keys_snapshot == read_keys())
+        {
+            // DEBOUNCE ticks of stable sampling needed before sending data
+            debounce_ticks++;
+            if (debounce_ticks == DEBOUNCE)
+            {
+                keys = keys_snapshot;
+               // send_data();
+				key_handler(keys);
+            }
+        }
+        else
+        {
+            // if keys change, start period again
+            debouncing = false;
+        }
+    }
+    else
+    {
+        // if the keystate is different from the last data
+        // sent to the receiver, start debouncing
+        if (keys != read_keys())
+        {
+            keys_snapshot = read_keys();
+            debouncing = true;
+            debounce_ticks = 0;
+        }
+    }
+
+    // looking for 500 ticks of no keys pressed, to go back to deep sleep
+    if (read_keys() == 0)
+    {
+        activity_ticks++;
+        if (activity_ticks > ACTIVITY)
+        {
+            //nrf_drv_rtc_disable(&rtc_maint);
+            //nrf_drv_rtc_disable(&rtc_deb);
+        }
+    }
+    else
+    {
+        activity_ticks = 0;
+    }
+
+}
+
+
+//#define APP_GPIOTE_MAX_USERS            1                                           /**< Maximum number of users of the GPIOTE handler. */
+//static app_gpiote_user_id_t           m_gpiote_user_id;
+//static void gpiote_event_handler(uint32_t event_pins_low_to_high, uint32_t event_pins_high_to_low);
+/*
+void gpiote_event_handler(uint32_t event_pins_low_to_high, uint32_t event_pins_high_to_low)
+{
+  //nrf_gpio_pin_toggle(LED_2);
+  handler_debounce(NULL);
+}
+*/
 
 typedef enum {
 	BLE_NO_ADV,						/**< No advertising running. */
@@ -281,7 +347,9 @@ static ble_bas_t m_bas;		/**< Structure used to identify the battery service. */
 static bool m_in_boot_mode = false;			/**< Current protocol mode. */
 static uint16_t m_conn_handle = BLE_CONN_HANDLE_INVALID;		/**< Handle of the current connection. */
 
-APP_TIMER_DEF(m_battery_timer_id);																											/**< Battery timer. */
+APP_TIMER_DEF(m_battery_timer_id); /**< Battery timer. */
+
+APP_TIMER_DEF(m_debounce_timer_id);
 
 static dm_application_instance_t m_app_handle;		/**< Application identifier allocated by device manager. */
 static dm_handle_t m_bonded_peer_handle;	/**< Device reference handle to the current bonded central. */
@@ -338,6 +406,10 @@ static void timers_init(void) {
 	// Create battery timer.
 	err_code = app_timer_create(&m_battery_timer_id, APP_TIMER_MODE_REPEATED, battery_level_meas_timeout_handler);
 	APP_ERROR_CHECK(err_code);
+
+	err_code = app_timer_create(&m_debounce_timer_id, APP_TIMER_MODE_REPEATED, handler_debounce);
+	APP_ERROR_CHECK(err_code);
+
 }
 
 
@@ -568,6 +640,10 @@ static void timers_start(void) {
 
 	err_code = app_timer_start(m_battery_timer_id, BATTERY_LEVEL_MEAS_INTERVAL, NULL);
 	APP_ERROR_CHECK(err_code);
+
+	err_code = app_timer_start(m_debounce_timer_id, DEBOUNCE_MEAS_INTERVAL, NULL);
+	APP_ERROR_CHECK(err_code);
+
 }
 
 
@@ -589,18 +665,18 @@ static void on_hid_rep_char_write(ble_hids_evt_t * p_evt) {
 			APP_ERROR_CHECK(err_code);
 
 			if (!m_caps_on && ((report_val & OUTPUT_REPORT_BIT_MASK_CAPS_LOCK) != 0)) {
-				err_code = bsp_indication_set(BSP_INDICATE_ALERT_3);
+				//err_code = bsp_indication_set(BSP_INDICATE_ALERT_3);
 				APP_ERROR_CHECK(err_code);
 				printf("CapsLock is turned ON\n");
 				m_caps_on = true;
 			} else if (m_caps_on && ((report_val & OUTPUT_REPORT_BIT_MASK_CAPS_LOCK) == 0)) {
-				err_code = bsp_indication_set(BSP_INDICATE_ALERT_OFF);
+				//err_code = bsp_indication_set(BSP_INDICATE_ALERT_OFF);
 				APP_ERROR_CHECK(err_code);
 				printf("CapsLock is turned OFF\n");
 				m_caps_on = false;
 			} else {
 				// The report received is not supported by this application. Do nothing.
-				printf("Unknown report value: %d\n", report_val);
+				//printf("Unknown report value: %d\n", report_val);
 			}
 		}
 	}
@@ -608,12 +684,14 @@ static void on_hid_rep_char_write(ble_hids_evt_t * p_evt) {
 
 
 static void sleep_mode_enter(void) {
-	uint32_t err_code = bsp_indication_set(BSP_INDICATE_IDLE);
-	APP_ERROR_CHECK(err_code);
+	uint32_t err_code;
+
+	//err_code = bsp_indication_set(BSP_INDICATE_IDLE);
+	//APP_ERROR_CHECK(err_code);
 
 	// Prepare wakeup buttons.
-	err_code = bsp_btn_ble_sleep_mode_prepare();
-	APP_ERROR_CHECK(err_code);
+	//err_code = bsp_btn_ble_sleep_mode_prepare();
+	//APP_ERROR_CHECK(err_code);
 
 	// Go to system-off mode (this function will not return; wakeup will cause a reset).
 	err_code = sd_power_system_off();
@@ -697,26 +775,28 @@ static void on_hids_evt(ble_hids_t * p_hids, ble_hids_evt_t * p_evt) {
 static void on_adv_evt(ble_adv_evt_t ble_adv_evt) {
 	uint32_t err_code;
 
+	printf("%s - %d(%s)\n", __FUNCTION__, ble_adv_evt, bleAdvEvtName(ble_adv_evt));
+
 	switch (ble_adv_evt) {
 		case BLE_ADV_EVT_DIRECTED:
-			err_code = bsp_indication_set(BSP_INDICATE_ADVERTISING_DIRECTED);
-			APP_ERROR_CHECK(err_code);
+			//err_code = bsp_indication_set(BSP_INDICATE_ADVERTISING_DIRECTED);
+			//APP_ERROR_CHECK(err_code);
 			break;
 		case BLE_ADV_EVT_FAST:
-			err_code = bsp_indication_set(BSP_INDICATE_ADVERTISING);
-			APP_ERROR_CHECK(err_code);
+			//err_code = bsp_indication_set(BSP_INDICATE_ADVERTISING);
+			//APP_ERROR_CHECK(err_code);
 			break;
 		case BLE_ADV_EVT_SLOW:
-			err_code = bsp_indication_set(BSP_INDICATE_ADVERTISING_SLOW);
-			APP_ERROR_CHECK(err_code);
+			//err_code = bsp_indication_set(BSP_INDICATE_ADVERTISING_SLOW);
+			//APP_ERROR_CHECK(err_code);
 			break;
 		case BLE_ADV_EVT_FAST_WHITELIST:
-			err_code = bsp_indication_set(BSP_INDICATE_ADVERTISING_WHITELIST);
-			APP_ERROR_CHECK(err_code);
+			//err_code = bsp_indication_set(BSP_INDICATE_ADVERTISING_WHITELIST);
+			//APP_ERROR_CHECK(err_code);
 			break;
 		case BLE_ADV_EVT_SLOW_WHITELIST:
-			err_code = bsp_indication_set(BSP_INDICATE_ADVERTISING_WHITELIST);
-			APP_ERROR_CHECK(err_code);
+			//err_code = bsp_indication_set(BSP_INDICATE_ADVERTISING_WHITELIST);
+			//APP_ERROR_CHECK(err_code);
 			break;
 		case BLE_ADV_EVT_IDLE:
 			sleep_mode_enter();
@@ -772,8 +852,8 @@ static void on_ble_evt(ble_evt_t * p_ble_evt) {
 	switch (p_ble_evt->header.evt_id) {
 
 		case BLE_GAP_EVT_CONNECTED:
-			err_code = bsp_indication_set(BSP_INDICATE_CONNECTED);
-			APP_ERROR_CHECK(err_code);
+			//err_code = bsp_indication_set(BSP_INDICATE_CONNECTED);
+			//APP_ERROR_CHECK(err_code);
 			m_conn_handle = p_ble_evt->evt.gap_evt.conn_handle;
 
 			{
@@ -798,8 +878,8 @@ static void on_ble_evt(ble_evt_t * p_ble_evt) {
 			// report containing the Caps lock state.
 			m_caps_on = false;
 			// disabling alert 3. signal - used for capslock ON
-			err_code = bsp_indication_set(BSP_INDICATE_ALERT_OFF);
-			APP_ERROR_CHECK(err_code);
+			//err_code = bsp_indication_set(BSP_INDICATE_ALERT_OFF);
+			//APP_ERROR_CHECK(err_code);
 			break;
 
 		case BLE_EVT_USER_MEM_REQUEST:
@@ -840,7 +920,7 @@ static void on_ble_evt(ble_evt_t * p_ble_evt) {
 
 static void ble_evt_dispatch(ble_evt_t * p_ble_evt) {
 	dm_ble_evt_handler(p_ble_evt);
-	bsp_btn_ble_on_ble_evt(p_ble_evt);
+	//bsp_btn_ble_on_ble_evt(p_ble_evt);
 	on_ble_evt(p_ble_evt);
 	ble_advertising_on_ble_evt(p_ble_evt);
 	ble_conn_params_on_ble_evt(p_ble_evt);
@@ -905,8 +985,7 @@ static void hidEmuKbdSendReport(uint8_t modifier, uint8_t keycode) {
 	buf[7] = 0;					// Keycode 6
 
 	if (m_conn_handle != BLE_CONN_HANDLE_INVALID) {
-		printf("Sending HID report: %02x %02x %02x %02x %02x %02x %02x %02x\n", buf[0], buf[1], buf[2], buf[3], buf[4], buf[5],
-			   buf[6], buf[7]);
+		printf("Sending HID report: %02x %02x %02x %02x %02x %02x %02x %02x\n", buf[0], buf[1], buf[2], buf[3], buf[4], buf[5], buf[6], buf[7]);
 		uint32_t err_code = ble_hids_inp_rep_send(&m_hids, INPUT_REPORT_KEYS_INDEX, INPUT_REPORT_KEYS_MAX_LEN, buf);
 		APP_ERROR_CHECK(err_code);
 	}
@@ -919,7 +998,7 @@ void send_winkey() {
 	hidEmuKbdSendReport(0, KEY_NONE);
 }
 
-
+#ifdef USE_BSP
 static void bsp_event_handler(bsp_event_t event) {
 	uint32_t err_code;
 
@@ -949,13 +1028,16 @@ static void bsp_event_handler(bsp_event_t event) {
 			break;
 
 		case BSP_EVENT_KEY_1:
+			printf("terminating connection\n");
+			sd_ble_gap_disconnect(m_conn_handle, BLE_HCI_REMOTE_USER_TERMINATED_CONNECTION);
+			ble_advertising_restart_without_whitelist();
 			break;
 
 		default:
 			break;
 	}
 }
-
+#endif
 
 static void advertising_init(void) {
 	uint32_t err_code;
@@ -1036,17 +1118,7 @@ static void device_manager_init(bool erase_bonds) {
 
 
 static void buttons_leds_init(bool * p_erase_bonds) {
-	bsp_event_t startup_event;
-
-	uint32_t err_code = bsp_init(BSP_INIT_LED | BSP_INIT_BUTTONS,
-								 APP_TIMER_TICKS(100, APP_TIMER_PRESCALER),
-								 bsp_event_handler);
-	APP_ERROR_CHECK(err_code);
-
-	err_code = bsp_btn_ble_init(NULL, &startup_event);
-	APP_ERROR_CHECK(err_code);
-
-	*p_erase_bonds = (startup_event == BSP_EVENT_CLEAR_BONDING_DATA);
+	*p_erase_bonds = 0;//(startup_event == BSP_EVENT_CLEAR_BONDING_DATA);
 }
 
 
@@ -1056,7 +1128,7 @@ static void power_manage(void) {
 }
 
 void uart_error_handle(app_uart_evt_t * p_event) {
-#if 0 // do not show uart errors
+#if 0							// do not show uart errors
 	if (p_event->evt_type == APP_UART_COMMUNICATION_ERROR) {
 		APP_ERROR_HANDLER(p_event->data.error_communication);
 	} else if (p_event->evt_type == APP_UART_FIFO_ERROR) {
@@ -1065,6 +1137,13 @@ void uart_error_handle(app_uart_evt_t * p_event) {
 #endif
 }
 
+void key_handler(uint32_t bits) {
+	printf("keys: %d\n", bits);
+
+	if (keys & (1 << R_S20)) {
+		send_winkey();
+	}
+}
 
 int main(void) {
 	bool erase_bonds;
@@ -1080,6 +1159,12 @@ int main(void) {
 	APP_ERROR_CHECK(err_code);
 	printf("---\nUART initialized.\n");
 #endif
+
+	gpio_config();
+
+	debouncing = false;
+	debounce_ticks = 0;
+	activity_ticks = 0;
 
 	// Initialize.
 	app_trace_init();
