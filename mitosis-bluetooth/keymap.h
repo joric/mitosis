@@ -12,6 +12,7 @@
 
 extern int biton32(int x);
 extern int layer_state;
+extern const uint16_t keymaps[][MATRIX_ROWS][MATRIX_COLS];
 
 #define	QK_LSFT 0x0200
 #define	QK_FUNCTION 0x2000
@@ -39,27 +40,6 @@ extern int layer_state;
 	{ KC_NO, k31, k32, k33, k34,      k35, k36, k37, k38, KC_NO }  \
 	{ KC_NO, k41, k42, k43, k44,      k45, k46, k47, k48, KC_NO }, \
 }
-
-/*
-#define PORTF 0
-#define PORTD 1
-
-#define red_led_off   PORTF |= (1<<5)
-#define red_led_on    PORTF &= ~(1<<5)
-#define blu_led_off   PORTF |= (1<<4)
-#define blu_led_on    PORTF &= ~(1<<4)
-#define grn_led_off   PORTD |= (1<<1)
-#define grn_led_on    PORTD &= ~(1<<1)
-
-#define set_led_off     red_led_off; grn_led_off; blu_led_off
-#define set_led_red     red_led_on;  grn_led_off; blu_led_off
-#define set_led_blue    red_led_off; grn_led_off; blu_led_on
-#define set_led_green   red_led_off; grn_led_on;  blu_led_off
-#define set_led_yellow  red_led_on;  grn_led_on;  blu_led_off
-#define set_led_magenta red_led_on;  grn_led_off; blu_led_on
-#define set_led_cyan    red_led_off; grn_led_on;  blu_led_on
-#define set_led_white   red_led_on;  grn_led_on;  blu_led_on
-*/
 
 #define set_led_off
 #define set_led_red

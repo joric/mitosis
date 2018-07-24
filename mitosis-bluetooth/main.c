@@ -542,10 +542,38 @@ int layer_state = 0;
 
 #include "keymap.h"
 
+uint16_t matrix[MATRIX_ROWS];
+
+void hidEmuKbdSendReport(uint8_t modifier, uint8_t keycode);
+
 void key_handler() {
 
-	for (int i=0; i<8; i++) {
-		printf("%d%c", data_buffer[i], i==7?'\n':' ');
+	int keycodes_sent = 0;
+
+	for (uint8_t i = 0; i < MATRIX_ROWS; i++) {
+		matrix[i] = (uint16_t) data_buffer[i*2] | (uint16_t) data_buffer[i*2+1] << 5;
+		//printf("%d%c", matrix[i], i==MATRIX_ROWS-1?'\n':' ');
+
+		if (matrix[i]) {
+			int col = 0;
+			for (int b=0; b<16; b++) {
+				if (matrix[i] & (1<<b)) {
+					col = b;
+					break;
+				}
+			}
+			(void)col;
+			uint16_t keycode = keymaps[layer_state][i][col];
+			printf("send keycode: %d\n", keycode);
+			hidEmuKbdSendReport(0, keycode);
+			nrf_delay_us(10000);
+			keycodes_sent++;
+		}
+	}
+
+	if (keycodes_sent==0) {
+		printf("released\n");
+		hidEmuKbdSendReport(0, 0);
 	}
 
 	if (keys & (1 << S20)) {
