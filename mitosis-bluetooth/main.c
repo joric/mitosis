@@ -35,42 +35,7 @@
 #include "app_button.h"
 #include "pstorage.h"
 #include "app_trace.h"
-
-#include "app_uart.h"
-
-#ifndef TX_PIN_NUMBER
-#define TX_PIN_NUMBER  19
-#define RX_PIN_NUMBER  18
-#define CTS_PIN_NUMBER 8
-#define RTS_PIN_NUMBER 10
-#define HWFC           true
-#endif
-
-// some debug specific-code
-#ifdef DEBUG
-#undef printf
-int printf(const char *fmt, ...) {
-	va_list list;
-	int i;
-	va_start(list, fmt);
-	char buf[256] = { 0 };
-	i = vsprintf(buf, fmt, list);
-	va_end(list);
-	for (char *p = buf; *p; p++)
-		app_uart_put(*p);
-	return i;
-}
-#else
-//#undef printf
-//#define printf(x,...) false
-#endif // DEBUG
-
-#undef APP_ERROR_HANDLER
-#define APP_ERROR_HANDLER(ERR_CODE) app_error_handler_custom((ERR_CODE), __LINE__, (uint8_t*) __FILE__);
-void app_error_handler_custom(ret_code_t error_code, uint32_t line_num, const uint8_t * p_file_name) {
-	printf("ERROR! code: %d line: %d file: %s\n", error_code, line_num, p_file_name);
-}
-
+#include "debug_uart.h"
 
 ////////////////////////////////////////
 
@@ -100,74 +65,71 @@ void RADIO_IRQHandler(void);
   (byte & 0x01 ? '#' : '.')
 
 
-static nrf_radio_request_t  m_timeslot_request;
-static uint32_t             m_slot_length;
-static volatile bool        m_cmd_received = false;
-static volatile bool        m_gzll_initialized = false;
+static nrf_radio_request_t m_timeslot_request;
+static uint32_t m_slot_length;
+static volatile bool m_cmd_received = false;
+static volatile bool m_gzll_initialized = false;
 
 static nrf_radio_signal_callback_return_param_t signal_callback_return_param;
 //static uint8_t ack_payload[ACK_PAYLOAD_LENGTH];
 
-void HardFault_Handler(uint32_t program_counter, uint32_t link_register)
-{
+void HardFault_Handler(uint32_t program_counter, uint32_t link_register) {
 }
 
 void m_configure_next_event(void) {
 	//printf("%s\n", __FUNCTION__);
-    m_slot_length                                  = 25000;
-    m_timeslot_request.request_type                = NRF_RADIO_REQ_TYPE_EARLIEST;
-    //m_timeslot_request.params.earliest.hfclk       = NRF_RADIO_HFCLK_CFG_XTAL_GUARANTEED;
-	m_timeslot_request.params.earliest.hfclk	 	= NRF_RADIO_HFCLK_CFG_NO_GUARANTEE;
-    m_timeslot_request.params.earliest.priority    = NRF_RADIO_PRIORITY_NORMAL;
-    m_timeslot_request.params.earliest.length_us   = m_slot_length;
-    m_timeslot_request.params.earliest.timeout_us  = 1000000;
+	m_slot_length = 25000;
+	m_timeslot_request.request_type = NRF_RADIO_REQ_TYPE_EARLIEST;
+	//m_timeslot_request.params.earliest.hfclk       = NRF_RADIO_HFCLK_CFG_XTAL_GUARANTEED;
+	m_timeslot_request.params.earliest.hfclk = NRF_RADIO_HFCLK_CFG_NO_GUARANTEE;
+	m_timeslot_request.params.earliest.priority = NRF_RADIO_PRIORITY_NORMAL;
+	m_timeslot_request.params.earliest.length_us = m_slot_length;
+	m_timeslot_request.params.earliest.timeout_us = 1000000;
 }
 
-void sys_evt_dispatch(uint32_t evt_id)
-{
-	printf("%s\n", __FUNCTION__);
+void sys_evt_dispatch(uint32_t evt_id) {
+	printf("%s - %d (%s)\n", __FUNCTION__, evt_id, nrfEvtName(evt_id));
 
-    uint32_t err_code;
+	uint32_t err_code;
 
-    switch (evt_id)
-    {
-        case NRF_EVT_RADIO_SIGNAL_CALLBACK_INVALID_RETURN:
-            ASSERT(false);
-            break;
+	switch (evt_id) {
+		case NRF_EVT_RADIO_SIGNAL_CALLBACK_INVALID_RETURN:
+			ASSERT(false);
+			break;
 
-        case NRF_EVT_RADIO_SESSION_IDLE:
-            ASSERT(false);
-            break;
+		case NRF_EVT_RADIO_SESSION_IDLE:
+			ASSERT(false);
+			break;
 
-        case NRF_EVT_RADIO_SESSION_CLOSED:
-            ASSERT(false);
-            break;
+		case NRF_EVT_RADIO_SESSION_CLOSED:
+			ASSERT(false);
+			break;
 
-        case NRF_EVT_RADIO_BLOCKED:
-            m_configure_next_event();
-            err_code = sd_radio_request(&m_timeslot_request);
-            APP_ERROR_CHECK(err_code);
-            break;
+		case NRF_EVT_RADIO_BLOCKED:
+			m_configure_next_event();
+			err_code = sd_radio_request(&m_timeslot_request);
+			APP_ERROR_CHECK(err_code);
+			break;
 
-        case NRF_EVT_RADIO_CANCELED:
-            m_configure_next_event();
-            err_code = sd_radio_request(&m_timeslot_request);
-            APP_ERROR_CHECK(err_code);
-            break;
+		case NRF_EVT_RADIO_CANCELED:
+			m_configure_next_event();
+			err_code = sd_radio_request(&m_timeslot_request);
+			APP_ERROR_CHECK(err_code);
+			break;
 
-        default:
-            break;
-    }
+		default:
+			break;
+	}
 
 	pstorage_sys_event_handler(evt_id);
 	ble_advertising_on_sys_evt(evt_id);
 }
 
-static uint8_t data_payload_left[NRF_GZLL_CONST_MAX_PAYLOAD_LENGTH];  ///< Placeholder for data payload received from host.
-static uint8_t data_payload_right[NRF_GZLL_CONST_MAX_PAYLOAD_LENGTH];  ///< Placeholder for data payload received from host.
+static uint8_t data_payload_left[NRF_GZLL_CONST_MAX_PAYLOAD_LENGTH];	///< Placeholder for data payload received from host.
+static uint8_t data_payload_right[NRF_GZLL_CONST_MAX_PAYLOAD_LENGTH];	///< Placeholder for data payload received from host.
 
 static bool packet_received_left, packet_received_right;
-static uint8_t ack_payload[TX_PAYLOAD_LENGTH];                   ///< Payload to attach to ACK sent to device.
+static uint8_t ack_payload[TX_PAYLOAD_LENGTH];	///< Payload to attach to ACK sent to device.
 static uint8_t data_buffer[10];
 uint32_t left_active = 0;
 uint32_t right_active = 0;
@@ -176,278 +138,206 @@ bool was_pressed = false;
 bool winkey_trigger = false;
 
 void m_process_gazelle() {
-        bool left = packet_received_left;
-        bool right = packet_received_right;
+	bool left = packet_received_left;
+	bool right = packet_received_right;
 
-        // detecting received packet from interupt, and unpacking
-        if (packet_received_left)
-        {
-            packet_received_left = false;
+	// detecting received packet from interupt, and unpacking
+	if (packet_received_left) {
+		packet_received_left = false;
 
-            data_buffer[0] = ((data_payload_left[0] & 1<<3) ? 1:0) << 0 |
-                             ((data_payload_left[0] & 1<<4) ? 1:0) << 1 |
-                             ((data_payload_left[0] & 1<<5) ? 1:0) << 2 |
-                             ((data_payload_left[0] & 1<<6) ? 1:0) << 3 |
-                             ((data_payload_left[0] & 1<<7) ? 1:0) << 4;
+		data_buffer[0] = ((data_payload_left[0] & 1 << 3) ? 1 : 0) << 0 | ((data_payload_left[0] & 1 << 4) ? 1 : 0) << 1 | ((data_payload_left[0] & 1 << 5) ? 1 : 0) << 2 | ((data_payload_left[0] & 1 << 6) ? 1 : 0) << 3 | ((data_payload_left[0] & 1 << 7) ? 1 : 0) << 4;
 
-            data_buffer[2] = ((data_payload_left[1] & 1<<6) ? 1:0) << 0 |
-                             ((data_payload_left[1] & 1<<7) ? 1:0) << 1 |
-                             ((data_payload_left[0] & 1<<0) ? 1:0) << 2 |
-                             ((data_payload_left[0] & 1<<1) ? 1:0) << 3 |
-                             ((data_payload_left[0] & 1<<2) ? 1:0) << 4;
+		data_buffer[2] = ((data_payload_left[1] & 1 << 6) ? 1 : 0) << 0 | ((data_payload_left[1] & 1 << 7) ? 1 : 0) << 1 | ((data_payload_left[0] & 1 << 0) ? 1 : 0) << 2 | ((data_payload_left[0] & 1 << 1) ? 1 : 0) << 3 | ((data_payload_left[0] & 1 << 2) ? 1 : 0) << 4;
 
-            data_buffer[4] = ((data_payload_left[1] & 1<<1) ? 1:0) << 0 |
-                             ((data_payload_left[1] & 1<<2) ? 1:0) << 1 |
-                             ((data_payload_left[1] & 1<<3) ? 1:0) << 2 |
-                             ((data_payload_left[1] & 1<<4) ? 1:0) << 3 |
-                             ((data_payload_left[1] & 1<<5) ? 1:0) << 4;
+		data_buffer[4] = ((data_payload_left[1] & 1 << 1) ? 1 : 0) << 0 | ((data_payload_left[1] & 1 << 2) ? 1 : 0) << 1 | ((data_payload_left[1] & 1 << 3) ? 1 : 0) << 2 | ((data_payload_left[1] & 1 << 4) ? 1 : 0) << 3 | ((data_payload_left[1] & 1 << 5) ? 1 : 0) << 4;
 
-            data_buffer[6] = ((data_payload_left[2] & 1<<5) ? 1:0) << 1 |
-                             ((data_payload_left[2] & 1<<6) ? 1:0) << 2 |
-                             ((data_payload_left[2] & 1<<7) ? 1:0) << 3 |
-                             ((data_payload_left[1] & 1<<0) ? 1:0) << 4;
+		data_buffer[6] = ((data_payload_left[2] & 1 << 5) ? 1 : 0) << 1 | ((data_payload_left[2] & 1 << 6) ? 1 : 0) << 2 | ((data_payload_left[2] & 1 << 7) ? 1 : 0) << 3 | ((data_payload_left[1] & 1 << 0) ? 1 : 0) << 4;
 
-            data_buffer[8] = ((data_payload_left[2] & 1<<1) ? 1:0) << 1 |
-                             ((data_payload_left[2] & 1<<2) ? 1:0) << 2 |
-                             ((data_payload_left[2] & 1<<3) ? 1:0) << 3 |
-                             ((data_payload_left[2] & 1<<4) ? 1:0) << 4;
-        }
+		data_buffer[8] = ((data_payload_left[2] & 1 << 1) ? 1 : 0) << 1 | ((data_payload_left[2] & 1 << 2) ? 1 : 0) << 2 | ((data_payload_left[2] & 1 << 3) ? 1 : 0) << 3 | ((data_payload_left[2] & 1 << 4) ? 1 : 0) << 4;
+	}
 
-        if (packet_received_right)
-        {
-            packet_received_right = false;
+	if (packet_received_right) {
+		packet_received_right = false;
 
-            data_buffer[1] = ((data_payload_right[0] & 1<<7) ? 1:0) << 0 |
-                             ((data_payload_right[0] & 1<<6) ? 1:0) << 1 |
-                             ((data_payload_right[0] & 1<<5) ? 1:0) << 2 |
-                             ((data_payload_right[0] & 1<<4) ? 1:0) << 3 |
-                             ((data_payload_right[0] & 1<<3) ? 1:0) << 4;
+		data_buffer[1] = ((data_payload_right[0] & 1 << 7) ? 1 : 0) << 0 | ((data_payload_right[0] & 1 << 6) ? 1 : 0) << 1 | ((data_payload_right[0] & 1 << 5) ? 1 : 0) << 2 | ((data_payload_right[0] & 1 << 4) ? 1 : 0) << 3 | ((data_payload_right[0] & 1 << 3) ? 1 : 0) << 4;
 
-            data_buffer[3] = ((data_payload_right[0] & 1<<2) ? 1:0) << 0 |
-                             ((data_payload_right[0] & 1<<1) ? 1:0) << 1 |
-                             ((data_payload_right[0] & 1<<0) ? 1:0) << 2 |
-                             ((data_payload_right[1] & 1<<7) ? 1:0) << 3 |
-                             ((data_payload_right[1] & 1<<6) ? 1:0) << 4;
+		data_buffer[3] = ((data_payload_right[0] & 1 << 2) ? 1 : 0) << 0 | ((data_payload_right[0] & 1 << 1) ? 1 : 0) << 1 | ((data_payload_right[0] & 1 << 0) ? 1 : 0) << 2 | ((data_payload_right[1] & 1 << 7) ? 1 : 0) << 3 | ((data_payload_right[1] & 1 << 6) ? 1 : 0) << 4;
 
-            data_buffer[5] = ((data_payload_right[1] & 1<<5) ? 1:0) << 0 |
-                             ((data_payload_right[1] & 1<<4) ? 1:0) << 1 |
-                             ((data_payload_right[1] & 1<<3) ? 1:0) << 2 |
-                             ((data_payload_right[1] & 1<<2) ? 1:0) << 3 |
-                             ((data_payload_right[1] & 1<<1) ? 1:0) << 4;
+		data_buffer[5] = ((data_payload_right[1] & 1 << 5) ? 1 : 0) << 0 | ((data_payload_right[1] & 1 << 4) ? 1 : 0) << 1 | ((data_payload_right[1] & 1 << 3) ? 1 : 0) << 2 | ((data_payload_right[1] & 1 << 2) ? 1 : 0) << 3 | ((data_payload_right[1] & 1 << 1) ? 1 : 0) << 4;
 
-            data_buffer[7] = ((data_payload_right[1] & 1<<0) ? 1:0) << 0 |
-                             ((data_payload_right[2] & 1<<7) ? 1:0) << 1 |
-                             ((data_payload_right[2] & 1<<6) ? 1:0) << 2 |
-                             ((data_payload_right[2] & 1<<5) ? 1:0) << 3;
+		data_buffer[7] = ((data_payload_right[1] & 1 << 0) ? 1 : 0) << 0 | ((data_payload_right[2] & 1 << 7) ? 1 : 0) << 1 | ((data_payload_right[2] & 1 << 6) ? 1 : 0) << 2 | ((data_payload_right[2] & 1 << 5) ? 1 : 0) << 3;
 
-            data_buffer[9] = ((data_payload_right[2] & 1<<4) ? 1:0) << 0 |
-                             ((data_payload_right[2] & 1<<3) ? 1:0) << 1 |
-                             ((data_payload_right[2] & 1<<2) ? 1:0) << 2 |
-                             ((data_payload_right[2] & 1<<1) ? 1:0) << 3;
-        }
+		data_buffer[9] = ((data_payload_right[2] & 1 << 4) ? 1 : 0) << 0 | ((data_payload_right[2] & 1 << 3) ? 1 : 0) << 1 | ((data_payload_right[2] & 1 << 2) ? 1 : 0) << 2 | ((data_payload_right[2] & 1 << 1) ? 1 : 0) << 3;
+	}
+	// checking for a poll request from QMK
+	//if (app_uart_get(&c) == NRF_SUCCESS && c == 's')
+	if (left || right) {
+		// sending data to QMK, and an end byte
+		//nrf_drv_uart_tx(data_buffer,10);
+		//app_uart_put(0xE0);
 
-        // checking for a poll request from QMK
-        //if (app_uart_get(&c) == NRF_SUCCESS && c == 's')
-        if (left || right)
-        {
-            // sending data to QMK, and an end byte
-            //nrf_drv_uart_tx(data_buffer,10);
-            //app_uart_put(0xE0);
+		// debugging help, for printing keystates to a serial console
 
-            // debugging help, for printing keystates to a serial console
+		//for (uint8_t i = 0; i < 10; i++) app_uart_put(data_buffer[i]);
 
-            //for (uint8_t i = 0; i < 10; i++) app_uart_put(data_buffer[i]);
-
-          if (left) {
-            printf("L " \
-                   BYTE_TO_BINARY_PATTERN " " \
-                   BYTE_TO_BINARY_PATTERN " " \
-                   BYTE_TO_BINARY_PATTERN " " \
-                   BYTE_TO_BINARY_PATTERN " " \
-                   BYTE_TO_BINARY_PATTERN "\n", \
-                   BYTE_TO_BINARY(data_buffer[0]), \
-                   BYTE_TO_BINARY(data_buffer[2]), \
-                   BYTE_TO_BINARY(data_buffer[4]), \
-                   BYTE_TO_BINARY(data_buffer[6]), \
-                   BYTE_TO_BINARY(data_buffer[8]));
-          }
-
-          if (right) {
-            printf("R " \
-                   BYTE_TO_BINARY_PATTERN " " \
-                   BYTE_TO_BINARY_PATTERN " " \
-                   BYTE_TO_BINARY_PATTERN " " \
-                   BYTE_TO_BINARY_PATTERN " " \
-                   BYTE_TO_BINARY_PATTERN "\n", \
-                   BYTE_TO_BINARY(data_buffer[1]), \
-                   BYTE_TO_BINARY(data_buffer[3]), \
-                   BYTE_TO_BINARY(data_buffer[5]), \
-                   BYTE_TO_BINARY(data_buffer[7]), \
-                   BYTE_TO_BINARY(data_buffer[9]));
-          }
-
-            /*
-            LogDebug(BYTE_TO_BINARY_PATTERN " " \
-                   BYTE_TO_BINARY_PATTERN " " \
-                   BYTE_TO_BINARY_PATTERN " " \
-                   BYTE_TO_BINARY_PATTERN " " \
-                   BYTE_TO_BINARY_PATTERN " " \
-                   BYTE_TO_BINARY_PATTERN " " \
-                   BYTE_TO_BINARY_PATTERN " " \
-                   BYTE_TO_BINARY_PATTERN " " \
-                   BYTE_TO_BINARY_PATTERN " " \
-                   BYTE_TO_BINARY_PATTERN "\n", \
-                   BYTE_TO_BINARY(data_buffer[0]), \
-                   BYTE_TO_BINARY(data_buffer[1]), \
-                   BYTE_TO_BINARY(data_buffer[2]), \
-                   BYTE_TO_BINARY(data_buffer[3]), \
-                   BYTE_TO_BINARY(data_buffer[4]), \
-                   BYTE_TO_BINARY(data_buffer[5]), \
-                   BYTE_TO_BINARY(data_buffer[6]), \
-                   BYTE_TO_BINARY(data_buffer[7]), \
-                   BYTE_TO_BINARY(data_buffer[8]), \
-                   BYTE_TO_BINARY(data_buffer[9]));
-            */
-            nrf_delay_us(100);
+		if (left) {
+			printf("L " BYTE_TO_BINARY_PATTERN " " BYTE_TO_BINARY_PATTERN " " BYTE_TO_BINARY_PATTERN " " BYTE_TO_BINARY_PATTERN " " BYTE_TO_BINARY_PATTERN "\n", BYTE_TO_BINARY(data_buffer[0]), BYTE_TO_BINARY(data_buffer[2]), BYTE_TO_BINARY(data_buffer[4]), BYTE_TO_BINARY(data_buffer[6]), BYTE_TO_BINARY(data_buffer[8]));
 		}
 
-		bool pressed = data_buffer[8] & 16;
-		if (pressed && pressed != was_pressed) {
-			winkey_trigger = true;
+		if (right) {
+			printf("R " BYTE_TO_BINARY_PATTERN " " BYTE_TO_BINARY_PATTERN " " BYTE_TO_BINARY_PATTERN " " BYTE_TO_BINARY_PATTERN " " BYTE_TO_BINARY_PATTERN "\n", BYTE_TO_BINARY(data_buffer[1]), BYTE_TO_BINARY(data_buffer[3]), BYTE_TO_BINARY(data_buffer[5]), BYTE_TO_BINARY(data_buffer[7]), BYTE_TO_BINARY(data_buffer[9]));
 		}
-		was_pressed = pressed;
+
+		/*
+		   LogDebug(BYTE_TO_BINARY_PATTERN " " \
+		   BYTE_TO_BINARY_PATTERN " " \
+		   BYTE_TO_BINARY_PATTERN " " \
+		   BYTE_TO_BINARY_PATTERN " " \
+		   BYTE_TO_BINARY_PATTERN " " \
+		   BYTE_TO_BINARY_PATTERN " " \
+		   BYTE_TO_BINARY_PATTERN " " \
+		   BYTE_TO_BINARY_PATTERN " " \
+		   BYTE_TO_BINARY_PATTERN " " \
+		   BYTE_TO_BINARY_PATTERN "\n", \
+		   BYTE_TO_BINARY(data_buffer[0]), \
+		   BYTE_TO_BINARY(data_buffer[1]), \
+		   BYTE_TO_BINARY(data_buffer[2]), \
+		   BYTE_TO_BINARY(data_buffer[3]), \
+		   BYTE_TO_BINARY(data_buffer[4]), \
+		   BYTE_TO_BINARY(data_buffer[5]), \
+		   BYTE_TO_BINARY(data_buffer[6]), \
+		   BYTE_TO_BINARY(data_buffer[7]), \
+		   BYTE_TO_BINARY(data_buffer[8]), \
+		   BYTE_TO_BINARY(data_buffer[9]));
+		 */
+		nrf_delay_us(100);
+	}
+
+	bool pressed = data_buffer[8] & 16;
+	if (pressed && pressed != was_pressed) {
+		winkey_trigger = true;
+	}
+	was_pressed = pressed;
 }
 
 
 
-static void m_on_start(void)
-{
-    bool res = false;
-    signal_callback_return_param.params.request.p_next = NULL;
-    signal_callback_return_param.callback_action = NRF_RADIO_SIGNAL_CALLBACK_ACTION_NONE;
+static void m_on_start(void) {
+	bool res = false;
+	signal_callback_return_param.params.request.p_next = NULL;
+	signal_callback_return_param.callback_action = NRF_RADIO_SIGNAL_CALLBACK_ACTION_NONE;
 
-    if (!m_gzll_initialized)
-    {
+	if (!m_gzll_initialized) {
 		/*
-        res = nrf_gzll_init(NRF_GZLL_MODE_DEVICE);
-        ASSERT(res);
-        res = nrf_gzll_set_device_channel_selection_policy(NRF_GZLL_DEVICE_CHANNEL_SELECTION_POLICY_USE_CURRENT);
-        ASSERT(res);
-        res = nrf_gzll_set_xosc_ctl(NRF_GZLL_XOSC_CTL_MANUAL);
-        ASSERT(res);
-        res = nrf_gzll_set_max_tx_attempts(0);
-        ASSERT(res);
-        res = nrf_gzll_set_base_address_0(0xE7E7E7E7);
-        ASSERT(res);
-        res = nrf_gzll_enable();
-        ASSERT(res);
-		*/
-    // Initialize Gazell
-    nrf_gzll_init(NRF_GZLL_MODE_HOST);
+		   res = nrf_gzll_init(NRF_GZLL_MODE_DEVICE);
+		   ASSERT(res);
+		   res = nrf_gzll_set_device_channel_selection_policy(NRF_GZLL_DEVICE_CHANNEL_SELECTION_POLICY_USE_CURRENT);
+		   ASSERT(res);
+		   res = nrf_gzll_set_xosc_ctl(NRF_GZLL_XOSC_CTL_MANUAL);
+		   ASSERT(res);
+		   res = nrf_gzll_set_max_tx_attempts(0);
+		   ASSERT(res);
+		   res = nrf_gzll_set_base_address_0(0xE7E7E7E7);
+		   ASSERT(res);
+		   res = nrf_gzll_enable();
+		   ASSERT(res);
+		 */
+		// Initialize Gazell
+		nrf_gzll_init(NRF_GZLL_MODE_HOST);
 
-	nrf_gzll_set_device_channel_selection_policy(NRF_GZLL_DEVICE_CHANNEL_SELECTION_POLICY_USE_CURRENT);
-	nrf_gzll_set_xosc_ctl(NRF_GZLL_XOSC_CTL_MANUAL);
-	nrf_gzll_set_max_tx_attempts(0);
+		nrf_gzll_set_device_channel_selection_policy(NRF_GZLL_DEVICE_CHANNEL_SELECTION_POLICY_USE_CURRENT);
+		nrf_gzll_set_xosc_ctl(NRF_GZLL_XOSC_CTL_MANUAL);
+		nrf_gzll_set_max_tx_attempts(0);
 
-    // Addressing
-    nrf_gzll_set_base_address_0(0x01020304);
-    nrf_gzll_set_base_address_1(0x05060708);
+		// Addressing
+		nrf_gzll_set_base_address_0(0x01020304);
+		nrf_gzll_set_base_address_1(0x05060708);
 
-    // Load data into TX queue
-    ack_payload[0] = 0x55;
-    nrf_gzll_add_packet_to_tx_fifo(0, data_payload_left, TX_PAYLOAD_LENGTH);
-    nrf_gzll_add_packet_to_tx_fifo(1, data_payload_left, TX_PAYLOAD_LENGTH);
+		// Load data into TX queue
+		ack_payload[0] = 0x55;
+		nrf_gzll_add_packet_to_tx_fifo(0, data_payload_left, TX_PAYLOAD_LENGTH);
+		nrf_gzll_add_packet_to_tx_fifo(1, data_payload_left, TX_PAYLOAD_LENGTH);
 
-    // Enable Gazell to start sending over the air
-    nrf_gzll_enable();
+		// Enable Gazell to start sending over the air
+		nrf_gzll_enable();
 
 
-        m_gzll_initialized = true;
+		m_gzll_initialized = true;
 
 		printf("%s - All OK\n", __FUNCTION__);
-    }
-    else
-    {
-        //res = nrf_gzll_init(NRF_GZLL_MODE_HOST);
+	} else {
+		//res = nrf_gzll_init(NRF_GZLL_MODE_HOST);
 		nrf_gzll_set_mode(NRF_GZLL_MODE_HOST);
-       	ASSERT(res);
+		ASSERT(res);
 		//printf("%s - something weird\n", __FUNCTION__);
-    }
+	}
 
 
 
-    NRF_TIMER0->INTENSET = TIMER_INTENSET_COMPARE0_Msk;
-    NRF_TIMER0->CC[0] = m_slot_length - 4000; // TODO: Use define instead of magic number
-    NVIC_EnableIRQ(TIMER0_IRQn);
+	NRF_TIMER0->INTENSET = TIMER_INTENSET_COMPARE0_Msk;
+	NRF_TIMER0->CC[0] = m_slot_length - 4000;	// TODO: Use define instead of magic number
+	NVIC_EnableIRQ(TIMER0_IRQn);
 
 	(void)res;
 }
 
-static void m_on_multitimer(void)
-{
+static void m_on_multitimer(void) {
 	//printf("%s\n", __FUNCTION__);
 
-    NRF_TIMER0->EVENTS_COMPARE[0] = 0;
-    if (nrf_gzll_get_mode() != NRF_GZLL_MODE_SUSPEND)
-    {
-        signal_callback_return_param.params.request.p_next = NULL;
-        signal_callback_return_param.callback_action = NRF_RADIO_SIGNAL_CALLBACK_ACTION_NONE;
-        (void)nrf_gzll_set_mode(NRF_GZLL_MODE_SUSPEND);
-        NRF_TIMER0->INTENSET = TIMER_INTENSET_COMPARE0_Msk;
-        NRF_TIMER0->CC[0] = m_slot_length - 1000;
-    }
-    else
-    {
-        ASSERT(nrf_gzll_get_mode() == NRF_GZLL_MODE_SUSPEND);
-        m_configure_next_event();
-        signal_callback_return_param.params.request.p_next = &m_timeslot_request;
-        signal_callback_return_param.callback_action = NRF_RADIO_SIGNAL_CALLBACK_ACTION_REQUEST_AND_END;
+	NRF_TIMER0->EVENTS_COMPARE[0] = 0;
+	if (nrf_gzll_get_mode() != NRF_GZLL_MODE_SUSPEND) {
+		signal_callback_return_param.params.request.p_next = NULL;
+		signal_callback_return_param.callback_action = NRF_RADIO_SIGNAL_CALLBACK_ACTION_NONE;
+		(void)nrf_gzll_set_mode(NRF_GZLL_MODE_SUSPEND);
+		NRF_TIMER0->INTENSET = TIMER_INTENSET_COMPARE0_Msk;
+		NRF_TIMER0->CC[0] = m_slot_length - 1000;
+	} else {
+		ASSERT(nrf_gzll_get_mode() == NRF_GZLL_MODE_SUSPEND);
+		m_configure_next_event();
+		signal_callback_return_param.params.request.p_next = &m_timeslot_request;
+		signal_callback_return_param.callback_action = NRF_RADIO_SIGNAL_CALLBACK_ACTION_REQUEST_AND_END;
 
 		//printf("here!\n");
-    }
+	}
 }
 
-nrf_radio_signal_callback_return_param_t * m_radio_callback(uint8_t signal_type)
-{
-    switch(signal_type)
-    {
-        case NRF_RADIO_CALLBACK_SIGNAL_TYPE_START:
-            m_on_start();
-            break;
+nrf_radio_signal_callback_return_param_t *m_radio_callback(uint8_t signal_type) {
+	switch (signal_type) {
+		case NRF_RADIO_CALLBACK_SIGNAL_TYPE_START:
+			m_on_start();
+			break;
 
-        case NRF_RADIO_CALLBACK_SIGNAL_TYPE_RADIO:
-            signal_callback_return_param.params.request.p_next = NULL;
-            signal_callback_return_param.callback_action = NRF_RADIO_SIGNAL_CALLBACK_ACTION_NONE;
-            RADIO_IRQHandler();
-            break;
+		case NRF_RADIO_CALLBACK_SIGNAL_TYPE_RADIO:
+			signal_callback_return_param.params.request.p_next = NULL;
+			signal_callback_return_param.callback_action = NRF_RADIO_SIGNAL_CALLBACK_ACTION_NONE;
+			RADIO_IRQHandler();
+			break;
 
-        case NRF_RADIO_CALLBACK_SIGNAL_TYPE_TIMER0:
-            m_on_multitimer();
-            break;
-    }
-    return (&signal_callback_return_param);
+		case NRF_RADIO_CALLBACK_SIGNAL_TYPE_TIMER0:
+			m_on_multitimer();
+			break;
+	}
+	return (&signal_callback_return_param);
 }
 
-uint32_t gazell_sd_radio_init(void)
-{
+uint32_t gazell_sd_radio_init(void) {
 	printf("%s\n", __FUNCTION__);
 
-    uint32_t err_code;
-    err_code = sd_radio_session_open(m_radio_callback);
-    if (err_code != NRF_SUCCESS)
-        return err_code;
-    m_configure_next_event();
-    err_code = sd_radio_request(&m_timeslot_request);
-    if (err_code != NRF_SUCCESS) {
-        (void)sd_radio_session_close();
-        return err_code;
-    }
-    return NRF_SUCCESS;
+	uint32_t err_code;
+	err_code = sd_radio_session_open(m_radio_callback);
+	if (err_code != NRF_SUCCESS)
+		return err_code;
+	m_configure_next_event();
+	err_code = sd_radio_request(&m_timeslot_request);
+	if (err_code != NRF_SUCCESS) {
+		(void)sd_radio_session_close();
+		return err_code;
+	}
+	return NRF_SUCCESS;
 }
 
 
-void nrf_gzll_device_tx_success(uint32_t pipe, nrf_gzll_device_tx_info_t tx_info)
-{
+void nrf_gzll_device_tx_success(uint32_t pipe, nrf_gzll_device_tx_info_t tx_info) {
 	printf("%s\n", __FUNCTION__);
 /*
     uint32_t ack_payload_length = ACK_PAYLOAD_LENGTH;
@@ -462,130 +352,56 @@ void nrf_gzll_device_tx_success(uint32_t pipe, nrf_gzll_device_tx_info_t tx_info
 	*/
 }
 
-void nrf_gzll_device_tx_failed(uint32_t pipe, nrf_gzll_device_tx_info_t tx_info)
-{
+void nrf_gzll_device_tx_failed(uint32_t pipe, nrf_gzll_device_tx_info_t tx_info) {
 	printf("%s\n", __FUNCTION__);
 }
 
-void nrf_gzll_host_rx_data_ready(uint32_t pipe, nrf_gzll_host_rx_info_t rx_info)
-{
+void nrf_gzll_host_rx_data_ready(uint32_t pipe, nrf_gzll_host_rx_info_t rx_info) {
 	//printf("%s, pipe: %d\n", __FUNCTION__, pipe);
 
-    uint32_t data_payload_length = NRF_GZLL_CONST_MAX_PAYLOAD_LENGTH;
+	uint32_t data_payload_length = NRF_GZLL_CONST_MAX_PAYLOAD_LENGTH;
 
-    if (pipe == 0)
-    {
-        packet_received_left = true;
-        left_active = 0;
-        // Pop packet and write first byte of the payload to the GPIO port.
-        nrf_gzll_fetch_packet_from_rx_fifo(pipe, data_payload_left, &data_payload_length);
-    }
-    else if (pipe == 1)
-    {
-        packet_received_right = true;
-        right_active = 0;
-        // Pop packet and write first byte of the payload to the GPIO port.
-        nrf_gzll_fetch_packet_from_rx_fifo(pipe, data_payload_right, &data_payload_length);
-    }
+	if (pipe == 0) {
+		packet_received_left = true;
+		left_active = 0;
+		// Pop packet and write first byte of the payload to the GPIO port.
+		nrf_gzll_fetch_packet_from_rx_fifo(pipe, data_payload_left, &data_payload_length);
+	} else if (pipe == 1) {
+		packet_received_right = true;
+		right_active = 0;
+		// Pop packet and write first byte of the payload to the GPIO port.
+		nrf_gzll_fetch_packet_from_rx_fifo(pipe, data_payload_right, &data_payload_length);
+	}
+	// not sure if required, I guess if enough packets are missed during blocking uart
+	nrf_gzll_flush_rx_fifo(pipe);
 
-    // not sure if required, I guess if enough packets are missed during blocking uart
-    nrf_gzll_flush_rx_fifo(pipe);
-
-    //load ACK payload into TX queue
-    ack_payload[0] =  0x55;
-    nrf_gzll_add_packet_to_tx_fifo(pipe, ack_payload, TX_PAYLOAD_LENGTH);
+	//load ACK payload into TX queue
+	ack_payload[0] = 0x55;
+	nrf_gzll_add_packet_to_tx_fifo(pipe, ack_payload, TX_PAYLOAD_LENGTH);
 
 	m_process_gazelle();
 }
 
-void nrf_gzll_disabled(void)
-{
+void nrf_gzll_disabled(void) {
 	printf("%s\n", __FUNCTION__);
 }
 
-bool debug_cmd_available(void)
-{
+bool debug_cmd_available(void) {
 	printf("%s\n", __FUNCTION__);
-    return m_cmd_received;
+	return m_cmd_received;
 }
 
-char get_debug_cmd(void)
-{
-    char cmd = ack_payload[0];
-    m_cmd_received = false;
-    return cmd;
+char get_debug_cmd(void) {
+	char cmd = ack_payload[0];
+	m_cmd_received = false;
+	return cmd;
 }
 
 ////////////////////////////////////////
 
-
-
-
 #define ADDR_FMT "%02x:%02x:%02x:%02x:%02x:%02x"
 #define ADDR_T(a) a[5], a[4], a[3], a[2], a[1], a[0]
 
-#define TN(id) {static char buf[32]; sprintf(buf, "0x%04x", id); return buf; }
-#define T(id) if (type == id) return #id; else
-
-char *gapEventName(int type) {
-	T(BLE_GAP_EVT_CONNECTED);
-	T(BLE_GAP_EVT_DISCONNECTED);
-	T(BLE_GAP_EVT_CONN_PARAM_UPDATE);
-	T(BLE_GAP_EVT_SEC_PARAMS_REQUEST);
-	T(BLE_GAP_EVT_SEC_INFO_REQUEST);
-	T(BLE_GAP_EVT_PASSKEY_DISPLAY);
-	T(BLE_GAP_EVT_AUTH_KEY_REQUEST);
-	T(BLE_GAP_EVT_AUTH_STATUS);
-	T(BLE_GAP_EVT_CONN_SEC_UPDATE);
-	T(BLE_GAP_EVT_TIMEOUT);
-	T(BLE_GAP_EVT_RSSI_CHANGED);
-
-	T(BLE_GATTC_EVT_PRIM_SRVC_DISC_RSP);
-	T(BLE_GATTC_EVT_REL_DISC_RSP);
-	T(BLE_GATTC_EVT_CHAR_DISC_RSP);
-	T(BLE_GATTC_EVT_DESC_DISC_RSP);
-	T(BLE_GATTC_EVT_ATTR_INFO_DISC_RSP);
-	T(BLE_GATTC_EVT_CHAR_VAL_BY_UUID_READ_RSP);
-	T(BLE_GATTC_EVT_READ_RSP);
-	T(BLE_GATTC_EVT_CHAR_VALS_READ_RSP);
-	T(BLE_GATTC_EVT_WRITE_RSP);
-	T(BLE_GATTC_EVT_HVX);
-	T(BLE_GATTC_EVT_TIMEOUT);
-
-	T(BLE_GATTS_EVT_WRITE);
-	T(BLE_GATTS_EVT_RW_AUTHORIZE_REQUEST);
-	T(BLE_GATTS_EVT_SYS_ATTR_MISSING);
-	T(BLE_GATTS_EVT_HVC);
-	T(BLE_GATTS_EVT_SC_CONFIRM);
-	T(BLE_GATTS_EVT_TIMEOUT);
-
-	TN(type);
-};
-
-char *hidsEventName(int type) {
-	T(BLE_HIDS_EVT_HOST_SUSP);
-	T(BLE_HIDS_EVT_HOST_EXIT_SUSP);
-	T(BLE_HIDS_EVT_NOTIF_ENABLED);
-	T(BLE_HIDS_EVT_NOTIF_DISABLED);
-	T(BLE_HIDS_EVT_REP_CHAR_WRITE);
-	T(BLE_HIDS_EVT_BOOT_MODE_ENTERED);
-	T(BLE_HIDS_EVT_REPORT_MODE_ENTERED);
-	T(BLE_HIDS_EVT_REPORT_READ);
-	TN(type);
-};
-
-char *bleAdvEvtName(int type) {
-	T(BLE_ADV_EVT_IDLE);
-	T(BLE_ADV_EVT_DIRECTED);
-	T(BLE_ADV_EVT_DIRECTED_SLOW);
-	T(BLE_ADV_EVT_FAST);
-	T(BLE_ADV_EVT_SLOW);
-	T(BLE_ADV_EVT_FAST_WHITELIST);
-	T(BLE_ADV_EVT_SLOW_WHITELIST);
-	T(BLE_ADV_EVT_WHITELIST_REQUEST);
-	T(BLE_ADV_EVT_PEER_ADDR_REQUEST);
-	TN(type);
-};
 
 #define VBAT_MAX_IN_MV 3000
 
@@ -617,8 +433,6 @@ uint8_t battery_level_get(void) {
 #define IS_SRVC_CHANGED_CHARACT_PRESENT		0	/**< Include or not the service_changed characteristic. if not enabled, the server's database cannot be changed for the lifetime of the device*/
 #define CENTRAL_LINK_COUNT					0	/**< Number of central links used by the application. When changing this number remember to adjust the RAM settings*/
 #define PERIPHERAL_LINK_COUNT				1	/**< Number of peripheral links used by the application. When changing this number remember to adjust the RAM settings*/
-#define UART_TX_BUF_SIZE					256	/**< UART TX buffer size. */
-#define UART_RX_BUF_SIZE					256	/**< UART RX buffer size. */
 #define KEY_PRESS_BUTTON_ID					0	/**< Button used as Keyboard key press. */
 #define SHIFT_BUTTON_ID						1	/**< Button used as 'SHIFT' Key. */
 #define DEVICE_NAME							"Mitosis-BT"	/**< Name of device. Will be included in the advertising data. */
@@ -671,37 +485,35 @@ uint8_t battery_level_get(void) {
 
 
 // Setup switch pins with pullups
-static void gpio_config(void)
-{
-		nrf_gpio_cfg_sense_input(S01, NRF_GPIO_PIN_PULLUP, NRF_GPIO_PIN_SENSE_LOW);
-		nrf_gpio_cfg_sense_input(S02, NRF_GPIO_PIN_PULLUP, NRF_GPIO_PIN_SENSE_LOW);
-		nrf_gpio_cfg_sense_input(S03, NRF_GPIO_PIN_PULLUP, NRF_GPIO_PIN_SENSE_LOW);
-		nrf_gpio_cfg_sense_input(S04, NRF_GPIO_PIN_PULLUP, NRF_GPIO_PIN_SENSE_LOW);
-		nrf_gpio_cfg_sense_input(S05, NRF_GPIO_PIN_PULLUP, NRF_GPIO_PIN_SENSE_LOW);
-		nrf_gpio_cfg_sense_input(S06, NRF_GPIO_PIN_PULLUP, NRF_GPIO_PIN_SENSE_LOW);
-		nrf_gpio_cfg_sense_input(S07, NRF_GPIO_PIN_PULLUP, NRF_GPIO_PIN_SENSE_LOW);
-		nrf_gpio_cfg_sense_input(S08, NRF_GPIO_PIN_PULLUP, NRF_GPIO_PIN_SENSE_LOW);
-		nrf_gpio_cfg_sense_input(S09, NRF_GPIO_PIN_PULLUP, NRF_GPIO_PIN_SENSE_LOW);
-		nrf_gpio_cfg_sense_input(S10, NRF_GPIO_PIN_PULLUP, NRF_GPIO_PIN_SENSE_LOW);
-		nrf_gpio_cfg_sense_input(S11, NRF_GPIO_PIN_PULLUP, NRF_GPIO_PIN_SENSE_LOW);
-		nrf_gpio_cfg_sense_input(S12, NRF_GPIO_PIN_PULLUP, NRF_GPIO_PIN_SENSE_LOW);
-		nrf_gpio_cfg_sense_input(S13, NRF_GPIO_PIN_PULLUP, NRF_GPIO_PIN_SENSE_LOW);
-		nrf_gpio_cfg_sense_input(S14, NRF_GPIO_PIN_PULLUP, NRF_GPIO_PIN_SENSE_LOW);
-		nrf_gpio_cfg_sense_input(S15, NRF_GPIO_PIN_PULLUP, NRF_GPIO_PIN_SENSE_LOW);
-		nrf_gpio_cfg_sense_input(S16, NRF_GPIO_PIN_PULLUP, NRF_GPIO_PIN_SENSE_LOW);
-		nrf_gpio_cfg_sense_input(S17, NRF_GPIO_PIN_PULLUP, NRF_GPIO_PIN_SENSE_LOW);
-		nrf_gpio_cfg_sense_input(S18, NRF_GPIO_PIN_PULLUP, NRF_GPIO_PIN_SENSE_LOW);
-		nrf_gpio_cfg_sense_input(S19, NRF_GPIO_PIN_PULLUP, NRF_GPIO_PIN_SENSE_LOW);
-		nrf_gpio_cfg_sense_input(S20, NRF_GPIO_PIN_PULLUP, NRF_GPIO_PIN_SENSE_LOW);
-		nrf_gpio_cfg_sense_input(S21, NRF_GPIO_PIN_PULLUP, NRF_GPIO_PIN_SENSE_LOW);
-		nrf_gpio_cfg_sense_input(S22, NRF_GPIO_PIN_PULLUP, NRF_GPIO_PIN_SENSE_LOW);
-		nrf_gpio_cfg_sense_input(S23, NRF_GPIO_PIN_PULLUP, NRF_GPIO_PIN_SENSE_LOW);
+static void gpio_config(void) {
+	nrf_gpio_cfg_sense_input(S01, NRF_GPIO_PIN_PULLUP, NRF_GPIO_PIN_SENSE_LOW);
+	nrf_gpio_cfg_sense_input(S02, NRF_GPIO_PIN_PULLUP, NRF_GPIO_PIN_SENSE_LOW);
+	nrf_gpio_cfg_sense_input(S03, NRF_GPIO_PIN_PULLUP, NRF_GPIO_PIN_SENSE_LOW);
+	nrf_gpio_cfg_sense_input(S04, NRF_GPIO_PIN_PULLUP, NRF_GPIO_PIN_SENSE_LOW);
+	nrf_gpio_cfg_sense_input(S05, NRF_GPIO_PIN_PULLUP, NRF_GPIO_PIN_SENSE_LOW);
+	nrf_gpio_cfg_sense_input(S06, NRF_GPIO_PIN_PULLUP, NRF_GPIO_PIN_SENSE_LOW);
+	nrf_gpio_cfg_sense_input(S07, NRF_GPIO_PIN_PULLUP, NRF_GPIO_PIN_SENSE_LOW);
+	nrf_gpio_cfg_sense_input(S08, NRF_GPIO_PIN_PULLUP, NRF_GPIO_PIN_SENSE_LOW);
+	nrf_gpio_cfg_sense_input(S09, NRF_GPIO_PIN_PULLUP, NRF_GPIO_PIN_SENSE_LOW);
+	nrf_gpio_cfg_sense_input(S10, NRF_GPIO_PIN_PULLUP, NRF_GPIO_PIN_SENSE_LOW);
+	nrf_gpio_cfg_sense_input(S11, NRF_GPIO_PIN_PULLUP, NRF_GPIO_PIN_SENSE_LOW);
+	nrf_gpio_cfg_sense_input(S12, NRF_GPIO_PIN_PULLUP, NRF_GPIO_PIN_SENSE_LOW);
+	nrf_gpio_cfg_sense_input(S13, NRF_GPIO_PIN_PULLUP, NRF_GPIO_PIN_SENSE_LOW);
+	nrf_gpio_cfg_sense_input(S14, NRF_GPIO_PIN_PULLUP, NRF_GPIO_PIN_SENSE_LOW);
+	nrf_gpio_cfg_sense_input(S15, NRF_GPIO_PIN_PULLUP, NRF_GPIO_PIN_SENSE_LOW);
+	nrf_gpio_cfg_sense_input(S16, NRF_GPIO_PIN_PULLUP, NRF_GPIO_PIN_SENSE_LOW);
+	nrf_gpio_cfg_sense_input(S17, NRF_GPIO_PIN_PULLUP, NRF_GPIO_PIN_SENSE_LOW);
+	nrf_gpio_cfg_sense_input(S18, NRF_GPIO_PIN_PULLUP, NRF_GPIO_PIN_SENSE_LOW);
+	nrf_gpio_cfg_sense_input(S19, NRF_GPIO_PIN_PULLUP, NRF_GPIO_PIN_SENSE_LOW);
+	nrf_gpio_cfg_sense_input(S20, NRF_GPIO_PIN_PULLUP, NRF_GPIO_PIN_SENSE_LOW);
+	nrf_gpio_cfg_sense_input(S21, NRF_GPIO_PIN_PULLUP, NRF_GPIO_PIN_SENSE_LOW);
+	nrf_gpio_cfg_sense_input(S22, NRF_GPIO_PIN_PULLUP, NRF_GPIO_PIN_SENSE_LOW);
+	nrf_gpio_cfg_sense_input(S23, NRF_GPIO_PIN_PULLUP, NRF_GPIO_PIN_SENSE_LOW);
 }
 
 // Return the key states, masked with valid key pins
-static uint32_t read_keys(void)
-{
-		return ~NRF_GPIO->IN & INPUT_MASK;
+static uint32_t read_keys(void) {
+	return ~NRF_GPIO->IN & INPUT_MASK;
 }
 
 // Debounce time (dependent on tick frequency)
@@ -719,61 +531,48 @@ void key_handler(uint32_t k);
 void send_winkey();
 
 // 1000Hz debounce sampling
-static void handler_debounce(void *p_context){
+static void handler_debounce(void *p_context) {
 
 	if (winkey_trigger) {
 		printf("winkey trigger!\n");
 		send_winkey();
 		winkey_trigger = false;
 	}
-
-    // debouncing, waits until there have been no transitions in 5ms (assuming five 1ms ticks)
-    if (debouncing)
-    {
-        // if debouncing, check if current keystates equal to the snapshot
-        if (keys_snapshot == read_keys())
-        {
-            // DEBOUNCE ticks of stable sampling needed before sending data
-            debounce_ticks++;
-            if (debounce_ticks == DEBOUNCE)
-            {
-                keys = keys_snapshot;
-               // send_data();
+	// debouncing, waits until there have been no transitions in 5ms (assuming five 1ms ticks)
+	if (debouncing) {
+		// if debouncing, check if current keystates equal to the snapshot
+		if (keys_snapshot == read_keys()) {
+			// DEBOUNCE ticks of stable sampling needed before sending data
+			debounce_ticks++;
+			if (debounce_ticks == DEBOUNCE) {
+				keys = keys_snapshot;
+				// send_data();
 				key_handler(keys);
-            }
-        }
-        else
-        {
-            // if keys change, start period again
-            debouncing = false;
-        }
-    }
-    else
-    {
-        // if the keystate is different from the last data
-        // sent to the receiver, start debouncing
-        if (keys != read_keys())
-        {
-            keys_snapshot = read_keys();
-            debouncing = true;
-            debounce_ticks = 0;
-        }
-    }
+			}
+		} else {
+			// if keys change, start period again
+			debouncing = false;
+		}
+	} else {
+		// if the keystate is different from the last data
+		// sent to the receiver, start debouncing
+		if (keys != read_keys()) {
+			keys_snapshot = read_keys();
+			debouncing = true;
+			debounce_ticks = 0;
+		}
+	}
 
-    // looking for 500 ticks of no keys pressed, to go back to deep sleep
-    if (read_keys() == 0)
-    {
-        activity_ticks++;
-        if (activity_ticks > ACTIVITY)
-        {
-            //nrf_drv_rtc_disable(&rtc_maint);
-            //nrf_drv_rtc_disable(&rtc_deb);
-        }
-    }
-    else
-    {
-        activity_ticks = 0;
-    }
+	// looking for 500 ticks of no keys pressed, to go back to deep sleep
+	if (read_keys() == 0) {
+		activity_ticks++;
+		if (activity_ticks > ACTIVITY) {
+			//nrf_drv_rtc_disable(&rtc_maint);
+			//nrf_drv_rtc_disable(&rtc_deb);
+		}
+	} else {
+		activity_ticks = 0;
+	}
 
 }
 
@@ -809,7 +608,7 @@ APP_TIMER_DEF(m_battery_timer_id); /**< Battery timer. */
 APP_TIMER_DEF(m_debounce_timer_id);
 
 static dm_application_instance_t m_app_handle;		/**< Application identifier allocated by device manager. */
-static dm_handle_t m_bonded_peer_handle;	/**< Device reference handle to the current bonded central. */
+static dm_handle_t m_bonded_peer_handle;	/**< Device reference handle to the current 	 central. */
 static bool m_caps_on = false;				/**< Variable to indicate if Caps Lock is turned on. */
 
 static ble_uuid_t m_adv_uuids[] = { {BLE_UUID_HUMAN_INTERFACE_DEVICE_SERVICE, BLE_UUID_TYPE_BLE} };
@@ -1311,16 +1110,12 @@ static void on_ble_evt(ble_evt_t * p_ble_evt) {
 	switch (p_ble_evt->header.evt_id) {
 
 		case BLE_GAP_EVT_CONNECTED:
-			//err_code = bsp_indication_set(BSP_INDICATE_CONNECTED);
-			//APP_ERROR_CHECK(err_code);
+		{
 			m_conn_handle = p_ble_evt->evt.gap_evt.conn_handle;
-
-			{
-				ble_gap_addr_t *p_addr = &p_ble_evt->evt.gap_evt.params.connected.peer_addr;
-				printf("Connected to " ADDR_FMT "\n", ADDR_T(p_addr->addr));
-			}
-
+			ble_gap_addr_t *p_addr = &p_ble_evt->evt.gap_evt.params.connected.peer_addr;
+			printf("Connected to " ADDR_FMT "\n", ADDR_T(p_addr->addr));
 			break;
+		}
 
 		case BLE_EVT_TX_COMPLETE:
 			// Send next key event
@@ -1330,15 +1125,22 @@ static void on_ble_evt(ble_evt_t * p_ble_evt) {
 		case BLE_GAP_EVT_DISCONNECTED:
 			// Dequeue all keys without transmission.
 			//(void)buffer_dequeue(false);
-
 			m_conn_handle = BLE_CONN_HANDLE_INVALID;
-
-			// Reset m_caps_on variable. Upon reconnect, the HID host will re-send the Output
-			// report containing the Caps lock state.
 			m_caps_on = false;
-			// disabling alert 3. signal - used for capslock ON
-			//err_code = bsp_indication_set(BSP_INDICATE_ALERT_OFF);
-			//APP_ERROR_CHECK(err_code);
+			break;
+
+        case BLE_GAP_EVT_TIMEOUT:
+            if (p_ble_evt->evt.gap_evt.params.timeout.src == BLE_GAP_TIMEOUT_SRC_ADVERTISING)
+            {
+                // Go to system-off mode (this function will not return; wakeup will cause a reset)
+                err_code = sd_power_system_off();
+                APP_ERROR_CHECK(err_code);
+            }
+            break;
+
+        case BLE_GAP_EVT_SEC_PARAMS_REQUEST:
+            //err_code = sd_ble_gap_sec_params_reply(m_conn_handle, BLE_GAP_SEC_STATUS_PAIRING_NOT_SUPP, NULL, NULL); // no bonding
+            //APP_ERROR_CHECK(err_code);
 			break;
 
 		case BLE_EVT_USER_MEM_REQUEST:
@@ -1370,11 +1172,11 @@ static void on_ble_evt(ble_evt_t * p_ble_evt) {
 			APP_ERROR_CHECK(err_code);
 			break;
 
-    	case BLE_GATTS_EVT_SYS_ATTR_MISSING:
-        	// No system attributes have been stored.
-        	err_code = sd_ble_gatts_sys_attr_set(m_conn_handle, NULL, 0, 0);
-        	APP_ERROR_CHECK(err_code);
-        break; // BLE_GATTS_EVT_SYS_ATTR_MISSING
+		case BLE_GATTS_EVT_SYS_ATTR_MISSING:
+			// No system attributes have been stored.
+			err_code = sd_ble_gatts_sys_attr_set(m_conn_handle, NULL, 0, 0);
+			APP_ERROR_CHECK(err_code);
+			break;				// BLE_GATTS_EVT_SYS_ATTR_MISSING
 
 		default:
 			// No implementation needed.
@@ -1477,7 +1279,7 @@ static void advertising_init(void) {
 	advdata.flags = adv_flags;
 	advdata.uuids_complete.uuid_cnt = sizeof(m_adv_uuids) / sizeof(m_adv_uuids[0]);
 	advdata.uuids_complete.p_uuids = m_adv_uuids;
-
+/*
 	ble_adv_modes_config_t options = {
 		BLE_ADV_WHITELIST_ENABLED,
 		BLE_ADV_DIRECTED_ENABLED,
@@ -1486,6 +1288,15 @@ static void advertising_init(void) {
 		APP_ADV_FAST_TIMEOUT,
 		BLE_ADV_SLOW_ENABLED, APP_ADV_SLOW_INTERVAL,
 		APP_ADV_SLOW_TIMEOUT
+	};
+*/
+	ble_adv_modes_config_t options = {
+		//BLE_ADV_WHITELIST_ENABLED,
+		BLE_ADV_WHITELIST_DISABLED,
+		BLE_ADV_DIRECTED_DISABLED,
+		BLE_ADV_DIRECTED_SLOW_DISABLED, 0, 0,
+		BLE_ADV_FAST_ENABLED, APP_ADV_FAST_INTERVAL, APP_ADV_FAST_TIMEOUT,
+		BLE_ADV_SLOW_ENABLED, APP_ADV_SLOW_INTERVAL, APP_ADV_SLOW_TIMEOUT
 	};
 
 	err_code = ble_advertising_init(&advdata, NULL, &options, on_adv_evt, ble_advertising_error_handler);
@@ -1551,16 +1362,6 @@ static void power_manage(void) {
 	APP_ERROR_CHECK(err_code);
 }
 
-void uart_error_handle(app_uart_evt_t * p_event) {
-#if 0							// do not show uart errors
-	if (p_event->evt_type == APP_UART_COMMUNICATION_ERROR) {
-		APP_ERROR_HANDLER(p_event->data.error_communication);
-	} else if (p_event->evt_type == APP_UART_FIFO_ERROR) {
-		APP_ERROR_HANDLER(p_event->data.error_code);
-	}
-#endif
-}
-
 void key_handler(uint32_t bits) {
 	printf("keys: %d\n", bits);
 
@@ -1571,7 +1372,10 @@ void key_handler(uint32_t bits) {
 	if (keys & (1 << S16)) {
 		printf("terminating connection button pressed\n");
 		sd_ble_gap_disconnect(m_conn_handle, BLE_HCI_REMOTE_USER_TERMINATED_CONNECTION);
-		ble_advertising_restart_without_whitelist();
+		dm_device_delete(&m_bonded_peer_handle);
+		m_conn_handle = BLE_CONN_HANDLE_INVALID;
+		ble_advertising_start(BLE_ADV_MODE_FAST);
+		//sd_power_system_off();
 	}
 }
 
@@ -1579,25 +1383,16 @@ int main(void) {
 	bool erase_bonds;
 	uint32_t err_code;
 
-#ifdef DEBUG
-	// added UART for debugging
-	const app_uart_comm_params_t comm_params = { RX_PIN_NUMBER, TX_PIN_NUMBER, RTS_PIN_NUMBER, CTS_PIN_NUMBER,
-		APP_UART_FLOW_CONTROL_DISABLED, false,
-		UART_BAUDRATE_BAUDRATE_Baud115200
-	};
-	APP_UART_FIFO_INIT(&comm_params, UART_RX_BUF_SIZE, UART_TX_BUF_SIZE, uart_error_handle, APP_IRQ_PRIORITY_LOW, err_code);
-	APP_ERROR_CHECK(err_code);
-	printf("---\nUART initialized.\n");
-#endif
+	debug_init();
 
 	gpio_config();
 
-    nrf_gpio_cfg_output(LED_PIN);
-	for (int i=0; i<3; i++) {
-	    nrf_gpio_pin_set(LED_PIN);
-	    nrf_delay_ms(250);
-	    nrf_gpio_pin_clear(LED_PIN);
-	    nrf_delay_ms(250);
+	nrf_gpio_cfg_output(LED_PIN);
+	for (int i = 0; i < 3; i++) {
+		nrf_gpio_pin_set(LED_PIN);
+		nrf_delay_ms(250);
+		nrf_gpio_pin_clear(LED_PIN);
+		nrf_delay_ms(250);
 	}
 
 	debouncing = false;
@@ -1620,8 +1415,8 @@ int main(void) {
 	services_init();
 	conn_params_init();
 
-    gazell_sd_radio_init();
-    printf("Gazell initialized\r\n");
+	gazell_sd_radio_init();
+	printf("Gazell initialized\r\n");
 
 	// Start execution.
 	timers_start();
