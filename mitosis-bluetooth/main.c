@@ -80,8 +80,8 @@ void m_configure_next_event(void) {
 	//printf("%s\n", __FUNCTION__);
 	m_slot_length = 25000;
 	m_timeslot_request.request_type = NRF_RADIO_REQ_TYPE_EARLIEST;
-	//m_timeslot_request.params.earliest.hfclk       = NRF_RADIO_HFCLK_CFG_XTAL_GUARANTEED;
-	m_timeslot_request.params.earliest.hfclk = NRF_RADIO_HFCLK_CFG_NO_GUARANTEE;
+	m_timeslot_request.params.earliest.hfclk       = NRF_RADIO_HFCLK_CFG_XTAL_GUARANTEED;
+	//m_timeslot_request.params.earliest.hfclk = NRF_RADIO_HFCLK_CFG_NO_GUARANTEE;
 	m_timeslot_request.params.earliest.priority = NRF_RADIO_PRIORITY_NORMAL;
 	m_timeslot_request.params.earliest.length_us = m_slot_length;
 	m_timeslot_request.params.earliest.timeout_us = 1000000;
@@ -1123,11 +1123,20 @@ static void on_ble_evt(ble_evt_t * p_ble_evt) {
 			break;
 
 		case BLE_GAP_EVT_DISCONNECTED:
+		{
 			// Dequeue all keys without transmission.
 			//(void)buffer_dequeue(false);
+			uint8_t reason = p_ble_evt->evt.gap_evt.params.disconnected.reason;
+			printf("Disconnected, reason: %s (%d)\n", hciStatusName(reason), reason);
 			m_conn_handle = BLE_CONN_HANDLE_INVALID;
 			m_caps_on = false;
+
+			dm_device_delete(&m_bonded_peer_handle);
+			m_conn_handle = BLE_CONN_HANDLE_INVALID;
+			ble_advertising_start(BLE_ADV_MODE_FAST);
+
 			break;
+		}
 
         case BLE_GAP_EVT_TIMEOUT:
             if (p_ble_evt->evt.gap_evt.params.timeout.src == BLE_GAP_TIMEOUT_SRC_ADVERTISING)
