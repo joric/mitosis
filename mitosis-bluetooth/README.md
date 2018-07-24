@@ -17,4 +17,8 @@
 * Pairing key
 * QMK layout support
 * Switching between Bluetooth devices
-* Switching between receiver and Bluetooth modes
+* Switching between RF and Bluetooth modes
+
+## References
+
+* https://github.com/joric/mitosis/tree/devel
