@@ -273,6 +273,7 @@ and the best case scenario for nRF51822 Core-B (reference design) is 26 or 27 ke
 
 * [Wireless + Split + QMK = Mitosis (Reddit)](https://www.reddit.com/r/MechanicalKeyboards/comments/66588f/wireless_split_qmk_mitosis/)
 * [A collection of Mitosis Kicad ports from Altium (GitHub)](https://github.com/joric/mitosis-hardware/tree/joric_kicad)
+* [Bluetooth Mitosis branch (in development)](https://github.com/joric/mitosis/tree/devel/mitosis-bluetooth)
 
 [EasyEDA]: https://easyeda.com
 [OshPark]: https://oshpark.com
