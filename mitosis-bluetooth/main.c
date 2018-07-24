@@ -185,10 +185,12 @@ void m_process_gazelle() {
 
 		//for (uint8_t i = 0; i < 10; i++) app_uart_put(data_buffer[i]);
 
+		/*
 		keys_recv = data_payload_left[0] | (data_payload_left[1]<<8) | (data_payload_left[2]<<16);
 		if (keys_recv != keys_recv_snapshot)
 			key_handler();
 		keys_recv_snapshot = keys_recv;
+		*/
 
 		/*
 		if (left) {
@@ -566,7 +568,6 @@ void key_handler() {
 			uint16_t keycode = keymaps[layer_state][i][col];
 			printf("send keycode: %d\n", keycode);
 			hidEmuKbdSendReport(0, keycode);
-			nrf_delay_us(10000);
 			keycodes_sent++;
 		}
 	}
@@ -636,6 +637,13 @@ static void handler_debounce(void *p_context) {
 		send_winkey();
 		winkey_trigger = false;
 	}
+
+	keys_recv = data_payload_left[0] | (data_payload_left[1]<<8) | (data_payload_left[2]<<16);
+	if (keys_recv != keys_recv_snapshot)
+			key_handler();
+	keys_recv_snapshot = keys_recv;
+
+
 	// debouncing, waits until there have been no transitions in 5ms (assuming five 1ms ticks)
 	if (debouncing) {
 		// if debouncing, check if current keystates equal to the snapshot
