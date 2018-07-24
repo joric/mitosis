@@ -48,6 +48,15 @@
 #include "app_error.h"
 #include "app_util_platform.h"
 
+static ble_hids_t m_hids;	/**< Structure used to identify the HID service. */
+static ble_bas_t m_bas;		/**< Structure used to identify the battery service. */
+static bool m_in_boot_mode = false;			/**< Current protocol mode. */
+static uint16_t m_conn_handle = BLE_CONN_HANDLE_INVALID;		/**< Handle of the current connection. */
+static dm_application_instance_t m_app_handle;		/**< Application identifier allocated by device manager. */
+static dm_handle_t m_bonded_peer_handle;	/**< Device reference handle to the current 	 central. */
+static bool m_caps_on = false;				/**< Variable to indicate if Caps Lock is turned on. */
+
+
 //void notification_cb(nrf_impl_notification_t notification);
 /*lint -e526 "Symbol RADIO_IRQHandler not defined" */
 void RADIO_IRQHandler(void);
@@ -65,6 +74,8 @@ void RADIO_IRQHandler(void);
   (byte & 0x01 ? '#' : '.')
 
 
+bool rf_mode = false; // receiver mode
+
 static nrf_radio_request_t m_timeslot_request;
 static uint32_t m_slot_length;
 static volatile bool m_cmd_received = false;
@@ -78,13 +89,14 @@ void HardFault_Handler(uint32_t program_counter, uint32_t link_register) {
 
 void m_configure_next_event(void) {
 	//printf("%s\n", __FUNCTION__);
-	m_slot_length = 25000;
+	m_slot_length = 10000;
 	m_timeslot_request.request_type = NRF_RADIO_REQ_TYPE_EARLIEST;
-	m_timeslot_request.params.earliest.hfclk       = NRF_RADIO_HFCLK_CFG_XTAL_GUARANTEED;
-	//m_timeslot_request.params.earliest.hfclk = NRF_RADIO_HFCLK_CFG_NO_GUARANTEE;
+	//m_timeslot_request.request_type = NRF_RADIO_REQ_TYPE_NORMAL;
+	//m_timeslot_request.params.earliest.hfclk       = NRF_RADIO_HFCLK_CFG_XTAL_GUARANTEED;
+	m_timeslot_request.params.earliest.hfclk = NRF_RADIO_HFCLK_CFG_NO_GUARANTEE;
 	m_timeslot_request.params.earliest.priority = NRF_RADIO_PRIORITY_NORMAL;
 	m_timeslot_request.params.earliest.length_us = m_slot_length;
-	m_timeslot_request.params.earliest.timeout_us = 1000000;
+	m_timeslot_request.params.earliest.timeout_us = 100000;
 }
 
 void sys_evt_dispatch(uint32_t evt_id) {
@@ -125,6 +137,10 @@ void sys_evt_dispatch(uint32_t evt_id) {
 	ble_advertising_on_sys_evt(evt_id);
 }
 
+bool was_pressed = false;
+bool winkey_trigger = false;
+void send_winkey();
+
 static uint8_t data_payload_left[NRF_GZLL_CONST_MAX_PAYLOAD_LENGTH];	///< Placeholder for data payload received from host.
 static uint8_t data_payload_right[NRF_GZLL_CONST_MAX_PAYLOAD_LENGTH];	///< Placeholder for data payload received from host.
 
@@ -133,9 +149,8 @@ static uint8_t ack_payload[TX_PAYLOAD_LENGTH];	///< Payload to attach to ACK sen
 static uint8_t data_buffer[10];
 uint32_t left_active = 0;
 uint32_t right_active = 0;
-
-bool was_pressed = false;
-bool winkey_trigger = false;
+void key_handler();
+static uint32_t keys_recv = 0, keys_recv_snapshot = 0;
 
 void m_process_gazelle() {
 	bool left = packet_received_left;
@@ -144,29 +159,19 @@ void m_process_gazelle() {
 	// detecting received packet from interupt, and unpacking
 	if (packet_received_left) {
 		packet_received_left = false;
-
 		data_buffer[0] = ((data_payload_left[0] & 1 << 3) ? 1 : 0) << 0 | ((data_payload_left[0] & 1 << 4) ? 1 : 0) << 1 | ((data_payload_left[0] & 1 << 5) ? 1 : 0) << 2 | ((data_payload_left[0] & 1 << 6) ? 1 : 0) << 3 | ((data_payload_left[0] & 1 << 7) ? 1 : 0) << 4;
-
 		data_buffer[2] = ((data_payload_left[1] & 1 << 6) ? 1 : 0) << 0 | ((data_payload_left[1] & 1 << 7) ? 1 : 0) << 1 | ((data_payload_left[0] & 1 << 0) ? 1 : 0) << 2 | ((data_payload_left[0] & 1 << 1) ? 1 : 0) << 3 | ((data_payload_left[0] & 1 << 2) ? 1 : 0) << 4;
-
 		data_buffer[4] = ((data_payload_left[1] & 1 << 1) ? 1 : 0) << 0 | ((data_payload_left[1] & 1 << 2) ? 1 : 0) << 1 | ((data_payload_left[1] & 1 << 3) ? 1 : 0) << 2 | ((data_payload_left[1] & 1 << 4) ? 1 : 0) << 3 | ((data_payload_left[1] & 1 << 5) ? 1 : 0) << 4;
-
 		data_buffer[6] = ((data_payload_left[2] & 1 << 5) ? 1 : 0) << 1 | ((data_payload_left[2] & 1 << 6) ? 1 : 0) << 2 | ((data_payload_left[2] & 1 << 7) ? 1 : 0) << 3 | ((data_payload_left[1] & 1 << 0) ? 1 : 0) << 4;
-
 		data_buffer[8] = ((data_payload_left[2] & 1 << 1) ? 1 : 0) << 1 | ((data_payload_left[2] & 1 << 2) ? 1 : 0) << 2 | ((data_payload_left[2] & 1 << 3) ? 1 : 0) << 3 | ((data_payload_left[2] & 1 << 4) ? 1 : 0) << 4;
 	}
 
 	if (packet_received_right) {
 		packet_received_right = false;
-
 		data_buffer[1] = ((data_payload_right[0] & 1 << 7) ? 1 : 0) << 0 | ((data_payload_right[0] & 1 << 6) ? 1 : 0) << 1 | ((data_payload_right[0] & 1 << 5) ? 1 : 0) << 2 | ((data_payload_right[0] & 1 << 4) ? 1 : 0) << 3 | ((data_payload_right[0] & 1 << 3) ? 1 : 0) << 4;
-
 		data_buffer[3] = ((data_payload_right[0] & 1 << 2) ? 1 : 0) << 0 | ((data_payload_right[0] & 1 << 1) ? 1 : 0) << 1 | ((data_payload_right[0] & 1 << 0) ? 1 : 0) << 2 | ((data_payload_right[1] & 1 << 7) ? 1 : 0) << 3 | ((data_payload_right[1] & 1 << 6) ? 1 : 0) << 4;
-
 		data_buffer[5] = ((data_payload_right[1] & 1 << 5) ? 1 : 0) << 0 | ((data_payload_right[1] & 1 << 4) ? 1 : 0) << 1 | ((data_payload_right[1] & 1 << 3) ? 1 : 0) << 2 | ((data_payload_right[1] & 1 << 2) ? 1 : 0) << 3 | ((data_payload_right[1] & 1 << 1) ? 1 : 0) << 4;
-
 		data_buffer[7] = ((data_payload_right[1] & 1 << 0) ? 1 : 0) << 0 | ((data_payload_right[2] & 1 << 7) ? 1 : 0) << 1 | ((data_payload_right[2] & 1 << 6) ? 1 : 0) << 2 | ((data_payload_right[2] & 1 << 5) ? 1 : 0) << 3;
-
 		data_buffer[9] = ((data_payload_right[2] & 1 << 4) ? 1 : 0) << 0 | ((data_payload_right[2] & 1 << 3) ? 1 : 0) << 1 | ((data_payload_right[2] & 1 << 2) ? 1 : 0) << 2 | ((data_payload_right[2] & 1 << 1) ? 1 : 0) << 3;
 	}
 	// checking for a poll request from QMK
@@ -180,6 +185,12 @@ void m_process_gazelle() {
 
 		//for (uint8_t i = 0; i < 10; i++) app_uart_put(data_buffer[i]);
 
+		keys_recv = data_payload_left[0] | (data_payload_left[1]<<8) | (data_payload_left[2]<<16);
+		if (keys_recv != keys_recv_snapshot)
+			key_handler();
+		keys_recv_snapshot = keys_recv;
+
+		/*
 		if (left) {
 			printf("L " BYTE_TO_BINARY_PATTERN " " BYTE_TO_BINARY_PATTERN " " BYTE_TO_BINARY_PATTERN " " BYTE_TO_BINARY_PATTERN " " BYTE_TO_BINARY_PATTERN "\n", BYTE_TO_BINARY(data_buffer[0]), BYTE_TO_BINARY(data_buffer[2]), BYTE_TO_BINARY(data_buffer[4]), BYTE_TO_BINARY(data_buffer[6]), BYTE_TO_BINARY(data_buffer[8]));
 		}
@@ -187,6 +198,7 @@ void m_process_gazelle() {
 		if (right) {
 			printf("R " BYTE_TO_BINARY_PATTERN " " BYTE_TO_BINARY_PATTERN " " BYTE_TO_BINARY_PATTERN " " BYTE_TO_BINARY_PATTERN " " BYTE_TO_BINARY_PATTERN "\n", BYTE_TO_BINARY(data_buffer[1]), BYTE_TO_BINARY(data_buffer[3]), BYTE_TO_BINARY(data_buffer[5]), BYTE_TO_BINARY(data_buffer[7]), BYTE_TO_BINARY(data_buffer[9]));
 		}
+		*/
 
 		/*
 		   LogDebug(BYTE_TO_BINARY_PATTERN " " \
@@ -482,8 +494,6 @@ uint8_t battery_level_get(void) {
 #define MAX_KEYS_IN_ONE_REPORT				(INPUT_REPORT_KEYS_MAX_LEN - SCAN_CODE_POS)		/**< Maximum number of key presses that can be sent in one Input Report. */
 
 
-
-
 // Setup switch pins with pullups
 static void gpio_config(void) {
 	nrf_gpio_cfg_sense_input(S01, NRF_GPIO_PIN_PULLUP, NRF_GPIO_PIN_SENSE_LOW);
@@ -527,8 +537,68 @@ static volatile bool debouncing = false;
 
 #define DEBOUNCE_MEAS_INTERVAL			APP_TIMER_TICKS(5, APP_TIMER_PRESCALER)
 
-void key_handler(uint32_t k);
-void send_winkey();
+int biton32(int x) { return x; }
+int layer_state = 0;
+
+#include "keymap.h"
+
+void key_handler() {
+
+	for (int i=0; i<8; i++) {
+		printf("%d%c", data_buffer[i], i==7?'\n':' ');
+	}
+
+	if (keys & (1 << S20)) {
+		send_winkey();
+	}
+
+	if (keys & (1 << S16)) {
+		/*
+		printf("terminating connection button pressed\n");
+		sd_ble_gap_disconnect(m_conn_handle, BLE_HCI_REMOTE_USER_TERMINATED_CONNECTION);
+		dm_device_delete(&m_bonded_peer_handle);
+		m_conn_handle = BLE_CONN_HANDLE_INVALID;
+		ble_advertising_start(BLE_ADV_MODE_FAST);
+		//sd_power_system_off();
+		*/
+	}
+
+
+}
+
+static void send_data(bool send) {
+	static uint8_t * data_payload = data_buffer;
+
+    data_payload[0] = ((keys & 1<<S01) ? 1:0) << 7 | \
+                      ((keys & 1<<S02) ? 1:0) << 6 | \
+                      ((keys & 1<<S03) ? 1:0) << 5 | \
+                      ((keys & 1<<S04) ? 1:0) << 4 | \
+                      ((keys & 1<<S05) ? 1:0) << 3 | \
+                      ((keys & 1<<S06) ? 1:0) << 2 | \
+                      ((keys & 1<<S07) ? 1:0) << 1 | \
+                      ((keys & 1<<S08) ? 1:0) << 0;
+
+    data_payload[1] = ((keys & 1<<S09) ? 1:0) << 7 | \
+                      ((keys & 1<<S10) ? 1:0) << 6 | \
+                      ((keys & 1<<S11) ? 1:0) << 5 | \
+                      ((keys & 1<<S12) ? 1:0) << 4 | \
+                      ((keys & 1<<S13) ? 1:0) << 3 | \
+                      ((keys & 1<<S14) ? 1:0) << 2 | \
+                      ((keys & 1<<S15) ? 1:0) << 1 | \
+                      ((keys & 1<<S16) ? 1:0) << 0;
+
+    data_payload[2] = ((keys & 1<<S17) ? 1:0) << 7 | \
+                      ((keys & 1<<S18) ? 1:0) << 6 | \
+                      ((keys & 1<<S19) ? 1:0) << 5 | \
+                      ((keys & 1<<S20) ? 1:0) << 4 | \
+                      ((keys & 1<<S21) ? 1:0) << 3 | \
+                      ((keys & 1<<S22) ? 1:0) << 2 | \
+                      ((keys & 1<<S23) ? 1:0) << 1 | \
+                      0 << 0;
+
+	if (send)
+    	nrf_gzll_add_packet_to_tx_fifo(PIPE_NUMBER, data_payload, TX_PAYLOAD_LENGTH);
+}
 
 // 1000Hz debounce sampling
 static void handler_debounce(void *p_context) {
@@ -546,8 +616,8 @@ static void handler_debounce(void *p_context) {
 			debounce_ticks++;
 			if (debounce_ticks == DEBOUNCE) {
 				keys = keys_snapshot;
-				// send_data();
-				key_handler(keys);
+				send_data(rf_mode);
+				key_handler();
 			}
 		} else {
 			// if keys change, start period again
@@ -597,19 +667,8 @@ typedef enum {
 	BLE_SLEEP,						/**< Go to system-off. */
 } ble_advertising_mode_t;
 
-
-static ble_hids_t m_hids;	/**< Structure used to identify the HID service. */
-static ble_bas_t m_bas;		/**< Structure used to identify the battery service. */
-static bool m_in_boot_mode = false;			/**< Current protocol mode. */
-static uint16_t m_conn_handle = BLE_CONN_HANDLE_INVALID;		/**< Handle of the current connection. */
-
 APP_TIMER_DEF(m_battery_timer_id); /**< Battery timer. */
-
 APP_TIMER_DEF(m_debounce_timer_id);
-
-static dm_application_instance_t m_app_handle;		/**< Application identifier allocated by device manager. */
-static dm_handle_t m_bonded_peer_handle;	/**< Device reference handle to the current 	 central. */
-static bool m_caps_on = false;				/**< Variable to indicate if Caps Lock is turned on. */
 
 static ble_uuid_t m_adv_uuids[] = { {BLE_UUID_HUMAN_INTERFACE_DEVICE_SERVICE, BLE_UUID_TYPE_BLE} };
 
@@ -1369,23 +1428,6 @@ static void buttons_leds_init(bool * p_erase_bonds) {
 static void power_manage(void) {
 	uint32_t err_code = sd_app_evt_wait();
 	APP_ERROR_CHECK(err_code);
-}
-
-void key_handler(uint32_t bits) {
-	printf("keys: %d\n", bits);
-
-	if (keys & (1 << S20)) {
-		send_winkey();
-	}
-
-	if (keys & (1 << S16)) {
-		printf("terminating connection button pressed\n");
-		sd_ble_gap_disconnect(m_conn_handle, BLE_HCI_REMOTE_USER_TERMINATED_CONNECTION);
-		dm_device_delete(&m_bonded_peer_handle);
-		m_conn_handle = BLE_CONN_HANDLE_INVALID;
-		ble_advertising_start(BLE_ADV_MODE_FAST);
-		//sd_power_system_off();
-	}
 }
 
 int main(void) {

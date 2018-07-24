@@ -1049,6 +1049,9 @@
       <name>$PROJ_DIR$\..\..\..\app_timer_qdec.c</name>
     </file>
     <file>
+      <name>$PROJ_DIR$\..\..\..\keymap.c</name>
+    </file>
+    <file>
       <name>$PROJ_DIR$\..\..\..\main.c</name>
     </file>
   </group>

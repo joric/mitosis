@@ -1,3 +1,5 @@
+#include "keymap.h"
+
 #define COMPILE_REVERSED
 
 #define HAND_SENSE 12
