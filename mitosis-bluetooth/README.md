@@ -10,14 +10,14 @@
 * Battery level reporting via Bluetooth
 * Debugging via UART (pin 19)
 * Winkey support for both halves
+* Initial qwerty layout
 
 ### TODO
 
-* Initial qwerty layout
 * Pairing key
-* QMK layout support
 * Switching between Bluetooth devices
 * Switching between RF and Bluetooth modes
+* Full QMK layout support
 
 ## References
 
