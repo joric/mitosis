@@ -2,10 +2,15 @@
 
 #ifndef TX_PIN_NUMBER
 
-#define TX_PIN_NUMBER  19
-#define RX_PIN_NUMBER  18
-#define CTS_PIN_NUMBER 8
-#define RTS_PIN_NUMBER 10
+// there are 3 pins that are not broken out on the Mitosis: 11, 12, 20, plus LED pin (17 or 23)
+// pins 11 and 12 are the leftmost bottom on the module, pin 20 is the rightmost bottom
+// we also can hook up to switches, e.g. pin 19 (bottom right switch) but it would be occupied
+// RX, CTS, RTS pins are unused, you can set them to any value (except TX pin to avoid feedback)
+
+#define TX_PIN_NUMBER  11
+#define RX_PIN_NUMBER  20
+#define CTS_PIN_NUMBER 20
+#define RTS_PIN_NUMBER 20
 #define HWFC true
 
 #define UART_TX_BUF_SIZE 256
@@ -13,7 +18,31 @@
 
 #endif
 
-// some debug specific-code
+void uart_error_handle (app_uart_evt_t * p_event) {
+#if 0 // unused
+	if (p_event->evt_type == APP_UART_COMMUNICATION_ERROR) {
+		APP_ERROR_HANDLER (p_event->data.error_communication);
+	}
+	else if (p_event->evt_type == APP_UART_FIFO_ERROR) {
+		APP_ERROR_HANDLER (p_event->data.error_code);
+	}
+#endif
+}
+
+void debug_init () {
+#ifdef DEBUG
+	uint32_t err_code;
+	const app_uart_comm_params_t comm_params = { RX_PIN_NUMBER, TX_PIN_NUMBER, RTS_PIN_NUMBER, CTS_PIN_NUMBER,
+		APP_UART_FLOW_CONTROL_DISABLED, false,
+		UART_BAUDRATE_BAUDRATE_Baud115200
+	};
+	APP_UART_FIFO_INIT (&comm_params, UART_RX_BUF_SIZE, UART_TX_BUF_SIZE, uart_error_handle, APP_IRQ_PRIORITY_LOW, err_code);
+	APP_ERROR_CHECK (err_code);
+	printf ("---\nUART initialized.\n");
+#endif
+}
+
+
 #ifdef DEBUG
 #undef printf
 int printf (const char *fmt, ...) {
@@ -28,9 +57,9 @@ int printf (const char *fmt, ...) {
 	return i;
 }
 #else
-//#undef printf
-//#define printf(x,...) false
-#endif // DEBUG
+	//#undef printf
+	//#define printf(x,...) false
+#endif
 
 #undef APP_ERROR_HANDLER
 #define APP_ERROR_HANDLER(ERR_CODE) app_error_handler_custom((ERR_CODE), __LINE__, (uint8_t*) __FILE__);
@@ -143,26 +172,4 @@ char * hciStatusName(int type) {
 	T(BLE_HCI_CONN_TERMINATED_DUE_TO_MIC_FAILURE);
 	T(BLE_HCI_CONN_FAILED_TO_BE_ESTABLISHED);
 	TN(type);
-}
-
-void uart_error_handle (app_uart_evt_t * p_event) {
-#if 0
-	if (p_event->evt_type == APP_UART_COMMUNICATION_ERROR) {
-		APP_ERROR_HANDLER (p_event->data.error_communication);
-	}
-	else if (p_event->evt_type == APP_UART_FIFO_ERROR) {
-		APP_ERROR_HANDLER (p_event->data.error_code);
-	}
-#endif
-}
-
-void debug_init () {
-	uint32_t err_code;
-	const app_uart_comm_params_t comm_params = { RX_PIN_NUMBER, TX_PIN_NUMBER, RTS_PIN_NUMBER, CTS_PIN_NUMBER,
-		APP_UART_FLOW_CONTROL_DISABLED, false,
-		UART_BAUDRATE_BAUDRATE_Baud115200
-	};
-	APP_UART_FIFO_INIT (&comm_params, UART_RX_BUF_SIZE, UART_TX_BUF_SIZE, uart_error_handle, APP_IRQ_PRIORITY_LOW, err_code);
-	APP_ERROR_CHECK (err_code);
-	printf ("---\nUART initialized.\n");
 }

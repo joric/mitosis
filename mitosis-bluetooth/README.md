@@ -8,16 +8,16 @@
 * Bluetooth and Gazell timesharing
 * Master and slave mode (left half doesn't need firmware update at all)
 * Battery level reporting via Bluetooth
-* Debugging via UART (pin 19)
+* Debugging via UART (pin 11)
 * Winkey support for both halves
-* Initial qwerty layout
+* Initial qwerty layout support
 
 ### TODO
 
-* Pairing key
-* Switching between Bluetooth devices
+* QMK layout support
+* Pairing key shortcut
 * Switching between RF and Bluetooth modes
-* Full QMK layout support
+* Switching between Bluetooth devices
 
 ## References
 
