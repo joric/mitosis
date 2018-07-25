@@ -16,7 +16,6 @@
 * Pairing key shortcut
 * Switching between RF and Bluetooth modes
 * Switching between Bluetooth devices
-* Full QMK layout support
 
 ## Example debug info
 
