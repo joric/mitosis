@@ -32,6 +32,7 @@ You only need to flash the right half! Don't forget to flash softdevice s130 fir
 ## Debugging
 
 You can hook up a single UART RX pin (115200 baud) via [pin 19](https://i.imgur.com/apx8W8W.png) (key S23 or key S16 for a non-reversed PCB).
+You will also need common GND and VCC to make it work. Oddly enough it doesn't interfere with the keyboard matrix at all.
 
 ### Example debug info
 
