@@ -19,7 +19,7 @@ You only need to flash the right half! Don't forget to flash softdevice s130 fir
 * Bluetooth and Gazell timesharing
 * Master and slave mode (left half doesn't need firmware update at all)
 * Battery level reporting via Bluetooth
-* Debugging via UART (pin 19)
+* Debugging via UART on pin 19 or key S23 (key S16 on a non-reversed PCB)
 * Basic QMK layout support
 
 ### TODO
