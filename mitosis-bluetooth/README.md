@@ -13,7 +13,7 @@
 
 ### TODO
 
-* Pairing key shortcut
+* Add pairing key shortcut and fix pairing bugs
 * Switching between RF and Bluetooth modes
 * Switching between Bluetooth devices
 
