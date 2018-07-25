@@ -65,7 +65,8 @@ void RADIO_IRQHandler(void);
 #define TX_PAYLOAD_LENGTH   3
 #define ACK_PAYLOAD_LENGTH  1
 
-bool rf_mode = false; // receiver mode
+#define MODE_BLUETOOTH 0
+static int m_keyboard_mode = 0;	// 0 - bt, 1 - receiver
 
 static nrf_radio_request_t m_timeslot_request;
 static uint32_t m_slot_length;
@@ -262,15 +263,13 @@ uint32_t gazell_sd_radio_init(void) {
 void nrf_gzll_device_tx_success(uint32_t pipe, nrf_gzll_device_tx_info_t tx_info) {
 	printf("%s\n", __FUNCTION__);
 #if 0
-    uint32_t ack_payload_length = ACK_PAYLOAD_LENGTH;
-    if (tx_info.payload_received_in_ack)
-    {
-        if (nrf_gzll_fetch_packet_from_rx_fifo(pipe, ack_payload, &ack_payload_length))
-        {
-            ASSERT(ack_payload_length == 1);
-            m_cmd_received = true;
-        }
-    }
+	uint32_t ack_payload_length = ACK_PAYLOAD_LENGTH;
+	if (tx_info.payload_received_in_ack) {
+		if (nrf_gzll_fetch_packet_from_rx_fifo(pipe, ack_payload, &ack_payload_length)) {
+			ASSERT(ack_payload_length == 1);
+			m_cmd_received = true;
+		}
+	}
 #endif
 }
 
@@ -347,11 +346,11 @@ uint8_t battery_level_get(void) {
 	NRF_ADC->TASKS_STOP = 1;
 
 	int percent = ((vbat_current_in_mv * 100) / VBAT_MAX_IN_MV);
-	if (percent>100)
+	if (percent > 100)
 		percent = 100;
 
 	printf("Sending battery report: %d%% (%dmV of %dmV) \n", percent, vbat_current_in_mv, VBAT_MAX_IN_MV);
-	return (uint8_t)percent;
+	return (uint8_t) percent;
 }
 
 #define IS_SRVC_CHANGED_CHARACT_PRESENT		0	/**< Include or not the service_changed characteristic. if not enabled, the server's database cannot be changed for the lifetime of the device*/
@@ -449,7 +448,10 @@ static volatile bool debouncing = false;
 
 #define DEBOUNCE_MEAS_INTERVAL			APP_TIMER_TICKS(5, APP_TIMER_PRESCALER)
 
-int biton32(int x) { return x; }
+int biton32(int x) {
+	return x;
+}
+
 int layer_state = 0;
 
 #include "keymap.h"
@@ -463,33 +465,29 @@ void key_handler() {
 	int keycodes_sent = 0;
 
 	for (uint8_t i = 0; i < MATRIX_ROWS; i++) {
-		matrix[i] = (uint16_t) data_buffer[i*2] | (uint16_t) data_buffer[i*2+1] << 5;
+		matrix[i] = (uint16_t) data_buffer[i * 2] | (uint16_t) data_buffer[i * 2 + 1] << 5;
 		//printf("%d%c", matrix[i], i==MATRIX_ROWS-1?'\n':' ');
 
 		if (matrix[i]) {
 			int col = 0;
-			for (int b=0; b<16; b++) {
-				if (matrix[i] & (1<<b)) {
+			for (int b = 0; b < 16; b++) {
+				if (matrix[i] & (1 << b)) {
 					col = b;
 					break;
 				}
 			}
-			(void)col;
 
 			uint16_t keycode = keymaps[m_layer][i][col];
 
-			switch (keycode) {
-				case KC_LCTRL:	m_modifier |= 1; keycode = 0; break;
-				case KC_LSHIFT:	m_modifier |= 2; keycode = 0; break;
-				case KC_LALT:	m_modifier |= 4; keycode = 0; break;
-				case KC_LGUI:	m_modifier |= 8; keycode = 0; break;
-				case KC_RCTRL:	m_modifier |= 16; keycode = 0; break;
-				case KC_RSHIFT:	m_modifier |= 32; keycode = 0; break;
-				case KC_RALT:	m_modifier |= 64; keycode = 0; break;
-				case KC_RGUI:	m_modifier |= 128; keycode = 0; break;
-				default: break;
-			}
+			int modifiers[] = {KC_LCTRL, KC_LSHIFT, KC_LALT, KC_LGUI, KC_RCTRL, KC_RSHIFT, KC_RALT, KC_RGUI};
 
+			for (int b=0; b<8; b++) {
+				if (keycode == modifiers[b]) {
+					m_modifier |= (1 << b);
+					keycode = 0;
+					break;
+				}
+			}
 
 			if (keycode & QK_LAYER_TAP) {
 				m_layer = (keycode >> 8) & 0xf;
@@ -501,7 +499,7 @@ void key_handler() {
 		}
 	}
 
-	if (keycodes_sent==0) {
+	if (keycodes_sent == 0) {
 		//printf("released\n");
 		m_modifier = 0;
 		m_layer = 0;
@@ -514,56 +512,36 @@ void key_handler() {
 
 	if (keys & (1 << S16)) {
 		/*
-		printf("terminating connection button pressed\n");
-		sd_ble_gap_disconnect(m_conn_handle, BLE_HCI_REMOTE_USER_TERMINATED_CONNECTION);
-		dm_device_delete(&m_bonded_peer_handle);
-		m_conn_handle = BLE_CONN_HANDLE_INVALID;
-		ble_advertising_start(BLE_ADV_MODE_FAST);
-		//sd_power_system_off();
-		*/
+		   printf("terminating connection button pressed\n");
+		   sd_ble_gap_disconnect(m_conn_handle, BLE_HCI_REMOTE_USER_TERMINATED_CONNECTION);
+		   dm_device_delete(&m_bonded_peer_handle);
+		   m_conn_handle = BLE_CONN_HANDLE_INVALID;
+		   ble_advertising_start(BLE_ADV_MODE_FAST);
+		   //sd_power_system_off();
+		 */
 	}
 }
 
-static void send_data(bool send) {
+static void send_data(int keyboard_mode) {
 
-	static uint8_t * data_payload = data_payload_right;
+	static uint8_t *data_payload = data_payload_right;
 
-    data_payload[0] = ((keys & 1<<S01) ? 1:0) << 7 | \
-                      ((keys & 1<<S02) ? 1:0) << 6 | \
-                      ((keys & 1<<S03) ? 1:0) << 5 | \
-                      ((keys & 1<<S04) ? 1:0) << 4 | \
-                      ((keys & 1<<S05) ? 1:0) << 3 | \
-                      ((keys & 1<<S06) ? 1:0) << 2 | \
-                      ((keys & 1<<S07) ? 1:0) << 1 | \
-                      ((keys & 1<<S08) ? 1:0) << 0;
+	data_payload[0] = ((keys & 1 << S01) ? 1 : 0) << 7 | ((keys & 1 << S02) ? 1 : 0) << 6 | ((keys & 1 << S03) ? 1 : 0) << 5 | ((keys & 1 << S04) ? 1 : 0) << 4 | ((keys & 1 << S05) ? 1 : 0) << 3 | ((keys & 1 << S06) ? 1 : 0) << 2 | ((keys & 1 << S07) ? 1 : 0) << 1 | ((keys & 1 << S08) ? 1 : 0) << 0;
 
-    data_payload[1] = ((keys & 1<<S09) ? 1:0) << 7 | \
-                      ((keys & 1<<S10) ? 1:0) << 6 | \
-                      ((keys & 1<<S11) ? 1:0) << 5 | \
-                      ((keys & 1<<S12) ? 1:0) << 4 | \
-                      ((keys & 1<<S13) ? 1:0) << 3 | \
-                      ((keys & 1<<S14) ? 1:0) << 2 | \
-                      ((keys & 1<<S15) ? 1:0) << 1 | \
-                      ((keys & 1<<S16) ? 1:0) << 0;
+	data_payload[1] = ((keys & 1 << S09) ? 1 : 0) << 7 | ((keys & 1 << S10) ? 1 : 0) << 6 | ((keys & 1 << S11) ? 1 : 0) << 5 | ((keys & 1 << S12) ? 1 : 0) << 4 | ((keys & 1 << S13) ? 1 : 0) << 3 | ((keys & 1 << S14) ? 1 : 0) << 2 | ((keys & 1 << S15) ? 1 : 0) << 1 | ((keys & 1 << S16) ? 1 : 0) << 0;
 
-    data_payload[2] = ((keys & 1<<S17) ? 1:0) << 7 | \
-                      ((keys & 1<<S18) ? 1:0) << 6 | \
-                      ((keys & 1<<S19) ? 1:0) << 5 | \
-                      ((keys & 1<<S20) ? 1:0) << 4 | \
-                      ((keys & 1<<S21) ? 1:0) << 3 | \
-                      ((keys & 1<<S22) ? 1:0) << 2 | \
-                      ((keys & 1<<S23) ? 1:0) << 1 | \
-                      0 << 0;
+	data_payload[2] = ((keys & 1 << S17) ? 1 : 0) << 7 | ((keys & 1 << S18) ? 1 : 0) << 6 | ((keys & 1 << S19) ? 1 : 0) << 5 | ((keys & 1 << S20) ? 1 : 0) << 4 | ((keys & 1 << S21) ? 1 : 0) << 3 | ((keys & 1 << S22) ? 1 : 0) << 2 | ((keys & 1 << S23) ? 1 : 0) << 1 | 0 << 0;
 
-	if (send)
+	if (keyboard_mode != MODE_BLUETOOTH)
 		nrf_gzll_add_packet_to_tx_fifo(PIPE_NUMBER, data_payload, TX_PAYLOAD_LENGTH);
-
 
 	data_buffer[1] = ((data_payload_right[0] & 1 << 7) ? 1 : 0) << 0 | ((data_payload_right[0] & 1 << 6) ? 1 : 0) << 1 | ((data_payload_right[0] & 1 << 5) ? 1 : 0) << 2 | ((data_payload_right[0] & 1 << 4) ? 1 : 0) << 3 | ((data_payload_right[0] & 1 << 3) ? 1 : 0) << 4;
 	data_buffer[3] = ((data_payload_right[0] & 1 << 2) ? 1 : 0) << 0 | ((data_payload_right[0] & 1 << 1) ? 1 : 0) << 1 | ((data_payload_right[0] & 1 << 0) ? 1 : 0) << 2 | ((data_payload_right[1] & 1 << 7) ? 1 : 0) << 3 | ((data_payload_right[1] & 1 << 6) ? 1 : 0) << 4;
 	data_buffer[5] = ((data_payload_right[1] & 1 << 5) ? 1 : 0) << 0 | ((data_payload_right[1] & 1 << 4) ? 1 : 0) << 1 | ((data_payload_right[1] & 1 << 3) ? 1 : 0) << 2 | ((data_payload_right[1] & 1 << 2) ? 1 : 0) << 3 | ((data_payload_right[1] & 1 << 1) ? 1 : 0) << 4;
 	data_buffer[7] = ((data_payload_right[1] & 1 << 0) ? 1 : 0) << 0 | ((data_payload_right[2] & 1 << 7) ? 1 : 0) << 1 | ((data_payload_right[2] & 1 << 6) ? 1 : 0) << 2 | ((data_payload_right[2] & 1 << 5) ? 1 : 0) << 3;
 	data_buffer[9] = ((data_payload_right[2] & 1 << 4) ? 1 : 0) << 0 | ((data_payload_right[2] & 1 << 3) ? 1 : 0) << 1 | ((data_payload_right[2] & 1 << 2) ? 1 : 0) << 2 | ((data_payload_right[2] & 1 << 1) ? 1 : 0) << 3;
+
+	key_handler();
 }
 
 // 1000Hz debounce sampling
@@ -575,11 +553,10 @@ static void handler_debounce(void *p_context) {
 		winkey_trigger = false;
 	}
 
-	keys_recv = data_payload_left[0] | (data_payload_left[1]<<8) | (data_payload_left[2]<<16);
+	keys_recv = data_payload_left[0] | (data_payload_left[1] << 8) | (data_payload_left[2] << 16);
 	if (keys_recv != keys_recv_snapshot)
-			key_handler();
+		key_handler();
 	keys_recv_snapshot = keys_recv;
-
 
 	// debouncing, waits until there have been no transitions in 5ms (assuming five 1ms ticks)
 	if (debouncing) {
@@ -589,8 +566,7 @@ static void handler_debounce(void *p_context) {
 			debounce_ticks++;
 			if (debounce_ticks == DEBOUNCE) {
 				keys = keys_snapshot;
-				send_data(rf_mode);
-				key_handler();
+				send_data(m_keyboard_mode);
 			}
 		} else {
 			// if keys change, start period again
@@ -1139,18 +1115,17 @@ static void on_ble_evt(ble_evt_t * p_ble_evt) {
 			break;
 		}
 
-        case BLE_GAP_EVT_TIMEOUT:
-            if (p_ble_evt->evt.gap_evt.params.timeout.src == BLE_GAP_TIMEOUT_SRC_ADVERTISING)
-            {
-                // Go to system-off mode (this function will not return; wakeup will cause a reset)
-                err_code = sd_power_system_off();
-                APP_ERROR_CHECK(err_code);
-            }
-            break;
+		case BLE_GAP_EVT_TIMEOUT:
+			if (p_ble_evt->evt.gap_evt.params.timeout.src == BLE_GAP_TIMEOUT_SRC_ADVERTISING) {
+				// Go to system-off mode (this function will not return; wakeup will cause a reset)
+				err_code = sd_power_system_off();
+				APP_ERROR_CHECK(err_code);
+			}
+			break;
 
-        case BLE_GAP_EVT_SEC_PARAMS_REQUEST:
-            //err_code = sd_ble_gap_sec_params_reply(m_conn_handle, BLE_GAP_SEC_STATUS_PAIRING_NOT_SUPP, NULL, NULL); // no bonding
-            //APP_ERROR_CHECK(err_code);
+		case BLE_GAP_EVT_SEC_PARAMS_REQUEST:
+			//err_code = sd_ble_gap_sec_params_reply(m_conn_handle, BLE_GAP_SEC_STATUS_PAIRING_NOT_SUPP, NULL, NULL); // no bonding
+			//APP_ERROR_CHECK(err_code);
 			break;
 
 		case BLE_EVT_USER_MEM_REQUEST:
