@@ -4,7 +4,7 @@
 
 [![](http://img.youtube.com/vi/Qv22OyWb81g/0.jpg)](https://youtu.be/Qv22OyWb81g)
 
-## Precompiled firwmare
+## Firmware
 
 I use a single plate (reversed) Mitosis version (modules soldered to the top of the PCB).
 To make standard version, comment out `#define COMPILE_REVERSED` in `config/mitosis.h`
