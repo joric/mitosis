@@ -57,5 +57,6 @@ Sending HID report: 00 00 00 00 00 00 00 00
 ## References
 
 * [My fork of the Mitosis repository (bonus documentation included)](https://github.com/joric/mitosis/tree/devel)
+* [Mitosis PCB pinout in a single picture (please use)](https://i.imgur.com/apx8W8W.png)
 * [Mitosis-BT (Reddit thread)](https://redd.it/91s4pu)
 
