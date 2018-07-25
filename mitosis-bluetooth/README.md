@@ -56,6 +56,6 @@ Sending HID report: 00 00 00 00 00 00 00 00
 
 ## References
 
-* https://github.com/joric/mitosis/tree/devel
-* https://redd.it/91s4pu
+* [My fork of the Mitosis repository (bonus documentation included)](https://github.com/joric/mitosis/tree/devel)
+* [Mitosis-BT (Reddit thread)](https://redd.it/91s4pu)
 
