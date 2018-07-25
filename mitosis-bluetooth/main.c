@@ -227,11 +227,13 @@ void m_process_gazelle() {
 		nrf_delay_us(100);
 	}
 
+	/*
 	bool pressed = data_buffer[8] & 16;
 	if (pressed && pressed != was_pressed) {
 		winkey_trigger = true;
 	}
 	was_pressed = pressed;
+	*/
 }
 
 
@@ -567,7 +569,13 @@ void key_handler() {
 			(void)col;
 			uint16_t keycode = keymaps[layer_state][i][col];
 			printf("send keycode: %d\n", keycode);
-			hidEmuKbdSendReport(0, keycode);
+
+			if (keycode==KC_LGUI || keycode==KC_RGUI) {
+				hidEmuKbdSendReport(0x80, 0);
+			} else {
+				hidEmuKbdSendReport(0, keycode);
+			}
+
 			keycodes_sent++;
 		}
 	}
@@ -578,7 +586,7 @@ void key_handler() {
 	}
 
 	if (keys & (1 << S20)) {
-		send_winkey();
+		//winkey_trigger = true;
 	}
 
 	if (keys & (1 << S16)) {
@@ -596,7 +604,8 @@ void key_handler() {
 }
 
 static void send_data(bool send) {
-	static uint8_t * data_payload = data_buffer;
+
+	static uint8_t * data_payload = data_payload_right;
 
     data_payload[0] = ((keys & 1<<S01) ? 1:0) << 7 | \
                       ((keys & 1<<S02) ? 1:0) << 6 | \
@@ -626,7 +635,14 @@ static void send_data(bool send) {
                       0 << 0;
 
 	if (send)
-    	nrf_gzll_add_packet_to_tx_fifo(PIPE_NUMBER, data_payload, TX_PAYLOAD_LENGTH);
+		nrf_gzll_add_packet_to_tx_fifo(PIPE_NUMBER, data_payload, TX_PAYLOAD_LENGTH);
+
+
+	data_buffer[1] = ((data_payload_right[0] & 1 << 7) ? 1 : 0) << 0 | ((data_payload_right[0] & 1 << 6) ? 1 : 0) << 1 | ((data_payload_right[0] & 1 << 5) ? 1 : 0) << 2 | ((data_payload_right[0] & 1 << 4) ? 1 : 0) << 3 | ((data_payload_right[0] & 1 << 3) ? 1 : 0) << 4;
+	data_buffer[3] = ((data_payload_right[0] & 1 << 2) ? 1 : 0) << 0 | ((data_payload_right[0] & 1 << 1) ? 1 : 0) << 1 | ((data_payload_right[0] & 1 << 0) ? 1 : 0) << 2 | ((data_payload_right[1] & 1 << 7) ? 1 : 0) << 3 | ((data_payload_right[1] & 1 << 6) ? 1 : 0) << 4;
+	data_buffer[5] = ((data_payload_right[1] & 1 << 5) ? 1 : 0) << 0 | ((data_payload_right[1] & 1 << 4) ? 1 : 0) << 1 | ((data_payload_right[1] & 1 << 3) ? 1 : 0) << 2 | ((data_payload_right[1] & 1 << 2) ? 1 : 0) << 3 | ((data_payload_right[1] & 1 << 1) ? 1 : 0) << 4;
+	data_buffer[7] = ((data_payload_right[1] & 1 << 0) ? 1 : 0) << 0 | ((data_payload_right[2] & 1 << 7) ? 1 : 0) << 1 | ((data_payload_right[2] & 1 << 6) ? 1 : 0) << 2 | ((data_payload_right[2] & 1 << 5) ? 1 : 0) << 3;
+	data_buffer[9] = ((data_payload_right[2] & 1 << 4) ? 1 : 0) << 0 | ((data_payload_right[2] & 1 << 3) ? 1 : 0) << 1 | ((data_payload_right[2] & 1 << 2) ? 1 : 0) << 2 | ((data_payload_right[2] & 1 << 1) ? 1 : 0) << 3;
 }
 
 // 1000Hz debounce sampling
@@ -634,7 +650,7 @@ static void handler_debounce(void *p_context) {
 
 	if (winkey_trigger) {
 		printf("winkey trigger!\n");
-		send_winkey();
+		//send_winkey();
 		winkey_trigger = false;
 	}
 

@@ -2,12 +2,12 @@
 
 #ifndef TX_PIN_NUMBER
 
-// there are 3 pins that are not broken out on the Mitosis: 11, 12, 20, plus LED pin (17 or 23)
+// there are 3 pins that are not broken out on the Mitosis: 11, 12, 20, plus LED pin (pin 17)
 // pins 11 and 12 are the leftmost bottom on the module, pin 20 is the rightmost bottom
 // we also can hook up to switches, e.g. pin 19 (bottom right switch) but it would be occupied
 // RX, CTS, RTS pins are unused, you can set them to any value (except TX pin to avoid feedback)
 
-#define TX_PIN_NUMBER  11
+#define TX_PIN_NUMBER  19
 #define RX_PIN_NUMBER  20
 #define CTS_PIN_NUMBER 20
 #define RTS_PIN_NUMBER 20
@@ -60,12 +60,6 @@ int printf (const char *fmt, ...) {
 	//#undef printf
 	//#define printf(x,...) false
 #endif
-
-#undef APP_ERROR_HANDLER
-#define APP_ERROR_HANDLER(ERR_CODE) app_error_handler_custom((ERR_CODE), __LINE__, (uint8_t*) __FILE__);
-void app_error_handler_custom (ret_code_t error_code, uint32_t line_num, const uint8_t * p_file_name) {
-	printf ("ERROR! code: %d line: %d file: %s\n", error_code, line_num, p_file_name);
-}
 
 #define TN(id) {static char buf[32]; sprintf(buf, "0x%04x", id); return buf; }
 #define T(id) if (type == id) return #id; else
@@ -173,3 +167,11 @@ char * hciStatusName(int type) {
 	T(BLE_HCI_CONN_FAILED_TO_BE_ESTABLISHED);
 	TN(type);
 }
+
+
+#undef APP_ERROR_HANDLER
+#define APP_ERROR_HANDLER(ERR_CODE) app_error_handler_custom((ERR_CODE), __LINE__, (uint8_t*) __FILE__);
+void app_error_handler_custom (ret_code_t error_code, uint32_t line_num, const uint8_t * p_file_name) {
+	printf ("ERROR! code: %d status: %s line: %d file: %s\n", error_code, hciStatusName(error_code), line_num, p_file_name);
+}
+
