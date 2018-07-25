@@ -57,23 +57,12 @@ static dm_handle_t m_bonded_peer_handle;	/**< Device reference handle to the cur
 static bool m_caps_on = false;				/**< Variable to indicate if Caps Lock is turned on. */
 uint8_t m_modifier = 0;
 
-
 //void notification_cb(nrf_impl_notification_t notification);
 /*lint -e526 "Symbol RADIO_IRQHandler not defined" */
 void RADIO_IRQHandler(void);
 
 #define TX_PAYLOAD_LENGTH   3
 #define ACK_PAYLOAD_LENGTH  1
-
-// Binary printing
-#define BYTE_TO_BINARY_PATTERN "%c%c%c%c%c"
-#define BYTE_TO_BINARY(byte)  \
-  (byte & 0x10 ? '#' : '.'), \
-  (byte & 0x08 ? '#' : '.'), \
-  (byte & 0x04 ? '#' : '.'), \
-  (byte & 0x02 ? '#' : '.'), \
-  (byte & 0x01 ? '#' : '.')
-
 
 bool rf_mode = false; // receiver mode
 
