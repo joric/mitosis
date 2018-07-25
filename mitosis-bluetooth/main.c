@@ -1146,7 +1146,7 @@ static void on_hids_evt(ble_hids_t * p_hids, ble_hids_evt_t * p_evt) {
 static void on_adv_evt(ble_adv_evt_t ble_adv_evt) {
 	uint32_t err_code;
 
-	printf("%s - %d(%s)\n", __FUNCTION__, ble_adv_evt, bleAdvEvtName(ble_adv_evt));
+	printf("%s - %d (%s)\n", __FUNCTION__, ble_adv_evt, bleAdvEvtName(ble_adv_evt));
 
 	switch (ble_adv_evt) {
 		case BLE_ADV_EVT_DIRECTED:
