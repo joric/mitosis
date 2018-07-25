@@ -89,7 +89,6 @@ void HardFault_Handler(uint32_t program_counter, uint32_t link_register) {
 }
 
 void m_configure_next_event(void) {
-	//printf("%s\n", __FUNCTION__);
 	m_slot_length = 10000;
 	m_timeslot_request.request_type = NRF_RADIO_REQ_TYPE_EARLIEST;
 	//m_timeslot_request.request_type = NRF_RADIO_REQ_TYPE_NORMAL;
@@ -154,8 +153,6 @@ void key_handler();
 static uint32_t keys_recv = 0, keys_recv_snapshot = 0;
 
 void m_process_gazelle() {
-	bool left = packet_received_left;
-	bool right = packet_received_right;
 
 	// detecting received packet from interupt, and unpacking
 	if (packet_received_left) {
@@ -175,66 +172,6 @@ void m_process_gazelle() {
 		data_buffer[7] = ((data_payload_right[1] & 1 << 0) ? 1 : 0) << 0 | ((data_payload_right[2] & 1 << 7) ? 1 : 0) << 1 | ((data_payload_right[2] & 1 << 6) ? 1 : 0) << 2 | ((data_payload_right[2] & 1 << 5) ? 1 : 0) << 3;
 		data_buffer[9] = ((data_payload_right[2] & 1 << 4) ? 1 : 0) << 0 | ((data_payload_right[2] & 1 << 3) ? 1 : 0) << 1 | ((data_payload_right[2] & 1 << 2) ? 1 : 0) << 2 | ((data_payload_right[2] & 1 << 1) ? 1 : 0) << 3;
 	}
-	// checking for a poll request from QMK
-	//if (app_uart_get(&c) == NRF_SUCCESS && c == 's')
-	if (left || right) {
-		// sending data to QMK, and an end byte
-		//nrf_drv_uart_tx(data_buffer,10);
-		//app_uart_put(0xE0);
-
-		// debugging help, for printing keystates to a serial console
-
-		//for (uint8_t i = 0; i < 10; i++) app_uart_put(data_buffer[i]);
-
-		/*
-		keys_recv = data_payload_left[0] | (data_payload_left[1]<<8) | (data_payload_left[2]<<16);
-		if (keys_recv != keys_recv_snapshot)
-			key_handler();
-		keys_recv_snapshot = keys_recv;
-		*/
-
-		/*
-		if (left) {
-			printf("L " BYTE_TO_BINARY_PATTERN " " BYTE_TO_BINARY_PATTERN " " BYTE_TO_BINARY_PATTERN " " BYTE_TO_BINARY_PATTERN " " BYTE_TO_BINARY_PATTERN "\n", BYTE_TO_BINARY(data_buffer[0]), BYTE_TO_BINARY(data_buffer[2]), BYTE_TO_BINARY(data_buffer[4]), BYTE_TO_BINARY(data_buffer[6]), BYTE_TO_BINARY(data_buffer[8]));
-		}
-
-		if (right) {
-			printf("R " BYTE_TO_BINARY_PATTERN " " BYTE_TO_BINARY_PATTERN " " BYTE_TO_BINARY_PATTERN " " BYTE_TO_BINARY_PATTERN " " BYTE_TO_BINARY_PATTERN "\n", BYTE_TO_BINARY(data_buffer[1]), BYTE_TO_BINARY(data_buffer[3]), BYTE_TO_BINARY(data_buffer[5]), BYTE_TO_BINARY(data_buffer[7]), BYTE_TO_BINARY(data_buffer[9]));
-		}
-		*/
-
-		/*
-		   LogDebug(BYTE_TO_BINARY_PATTERN " " \
-		   BYTE_TO_BINARY_PATTERN " " \
-		   BYTE_TO_BINARY_PATTERN " " \
-		   BYTE_TO_BINARY_PATTERN " " \
-		   BYTE_TO_BINARY_PATTERN " " \
-		   BYTE_TO_BINARY_PATTERN " " \
-		   BYTE_TO_BINARY_PATTERN " " \
-		   BYTE_TO_BINARY_PATTERN " " \
-		   BYTE_TO_BINARY_PATTERN " " \
-		   BYTE_TO_BINARY_PATTERN "\n", \
-		   BYTE_TO_BINARY(data_buffer[0]), \
-		   BYTE_TO_BINARY(data_buffer[1]), \
-		   BYTE_TO_BINARY(data_buffer[2]), \
-		   BYTE_TO_BINARY(data_buffer[3]), \
-		   BYTE_TO_BINARY(data_buffer[4]), \
-		   BYTE_TO_BINARY(data_buffer[5]), \
-		   BYTE_TO_BINARY(data_buffer[6]), \
-		   BYTE_TO_BINARY(data_buffer[7]), \
-		   BYTE_TO_BINARY(data_buffer[8]), \
-		   BYTE_TO_BINARY(data_buffer[9]));
-		 */
-		nrf_delay_us(100);
-	}
-
-	/*
-	bool pressed = data_buffer[8] & 16;
-	if (pressed && pressed != was_pressed) {
-		winkey_trigger = true;
-	}
-	was_pressed = pressed;
-	*/
 }
 
 
@@ -245,20 +182,6 @@ static void m_on_start(void) {
 	signal_callback_return_param.callback_action = NRF_RADIO_SIGNAL_CALLBACK_ACTION_NONE;
 
 	if (!m_gzll_initialized) {
-		/*
-		   res = nrf_gzll_init(NRF_GZLL_MODE_DEVICE);
-		   ASSERT(res);
-		   res = nrf_gzll_set_device_channel_selection_policy(NRF_GZLL_DEVICE_CHANNEL_SELECTION_POLICY_USE_CURRENT);
-		   ASSERT(res);
-		   res = nrf_gzll_set_xosc_ctl(NRF_GZLL_XOSC_CTL_MANUAL);
-		   ASSERT(res);
-		   res = nrf_gzll_set_max_tx_attempts(0);
-		   ASSERT(res);
-		   res = nrf_gzll_set_base_address_0(0xE7E7E7E7);
-		   ASSERT(res);
-		   res = nrf_gzll_enable();
-		   ASSERT(res);
-		 */
 		// Initialize Gazell
 		nrf_gzll_init(NRF_GZLL_MODE_HOST);
 
@@ -278,15 +201,10 @@ static void m_on_start(void) {
 		// Enable Gazell to start sending over the air
 		nrf_gzll_enable();
 
-
 		m_gzll_initialized = true;
-
-		printf("%s - All OK\n", __FUNCTION__);
 	} else {
-		//res = nrf_gzll_init(NRF_GZLL_MODE_HOST);
-		nrf_gzll_set_mode(NRF_GZLL_MODE_HOST);
+		res = nrf_gzll_set_mode(NRF_GZLL_MODE_HOST);
 		ASSERT(res);
-		//printf("%s - something weird\n", __FUNCTION__);
 	}
 
 
@@ -299,7 +217,6 @@ static void m_on_start(void) {
 }
 
 static void m_on_multitimer(void) {
-	//printf("%s\n", __FUNCTION__);
 
 	NRF_TIMER0->EVENTS_COMPARE[0] = 0;
 	if (nrf_gzll_get_mode() != NRF_GZLL_MODE_SUSPEND) {
@@ -313,8 +230,6 @@ static void m_on_multitimer(void) {
 		m_configure_next_event();
 		signal_callback_return_param.params.request.p_next = &m_timeslot_request;
 		signal_callback_return_param.callback_action = NRF_RADIO_SIGNAL_CALLBACK_ACTION_REQUEST_AND_END;
-
-		//printf("here!\n");
 	}
 }
 
@@ -356,7 +271,7 @@ uint32_t gazell_sd_radio_init(void) {
 
 void nrf_gzll_device_tx_success(uint32_t pipe, nrf_gzll_device_tx_info_t tx_info) {
 	printf("%s\n", __FUNCTION__);
-/*
+#if 0
     uint32_t ack_payload_length = ACK_PAYLOAD_LENGTH;
     if (tx_info.payload_received_in_ack)
     {
@@ -366,7 +281,7 @@ void nrf_gzll_device_tx_success(uint32_t pipe, nrf_gzll_device_tx_info_t tx_info
             m_cmd_received = true;
         }
     }
-	*/
+#endif
 }
 
 void nrf_gzll_device_tx_failed(uint32_t pipe, nrf_gzll_device_tx_info_t tx_info) {
@@ -710,18 +625,6 @@ static void handler_debounce(void *p_context) {
 
 }
 
-
-//#define APP_GPIOTE_MAX_USERS            1                                           /**< Maximum number of users of the GPIOTE handler. */
-//static app_gpiote_user_id_t           m_gpiote_user_id;
-//static void gpiote_event_handler(uint32_t event_pins_low_to_high, uint32_t event_pins_high_to_low);
-/*
-void gpiote_event_handler(uint32_t event_pins_low_to_high, uint32_t event_pins_high_to_low)
-{
-  //nrf_gpio_pin_toggle(LED_2);
-  handler_debounce(NULL);
-}
-*/
-
 typedef enum {
 	BLE_NO_ADV,						/**< No advertising running. */
 	BLE_DIRECTED_ADV,			/**< Direct advertising to the latest central. */
@@ -757,9 +660,7 @@ static void battery_level_update(void) {
 	uint32_t err_code;
 	uint8_t battery_level;
 
-	battery_level = battery_level_get();	//(uint8_t)sensorsim_measure(&m_battery_sim_state, &m_battery_sim_cfg);
-
-	//printf("%s - battery_level: %d\n", __FUNCTION__, battery_level);  // kind of noisy (reduce timer rate?)
+	battery_level = battery_level_get();
 
 	err_code = ble_bas_battery_level_update(&m_bas, battery_level);
 	if ((err_code != NRF_SUCCESS) && (err_code != NRF_ERROR_INVALID_STATE)
@@ -1067,13 +968,6 @@ static void on_hid_rep_char_write(ble_hids_evt_t * p_evt) {
 static void sleep_mode_enter(void) {
 	uint32_t err_code;
 
-	//err_code = bsp_indication_set(BSP_INDICATE_IDLE);
-	//APP_ERROR_CHECK(err_code);
-
-	// Prepare wakeup buttons.
-	//err_code = bsp_btn_ble_sleep_mode_prepare();
-	//APP_ERROR_CHECK(err_code);
-
 	// Go to system-off mode (this function will not return; wakeup will cause a reset).
 	err_code = sd_power_system_off();
 	APP_ERROR_CHECK(err_code);
@@ -1160,24 +1054,14 @@ static void on_adv_evt(ble_adv_evt_t ble_adv_evt) {
 
 	switch (ble_adv_evt) {
 		case BLE_ADV_EVT_DIRECTED:
-			//err_code = bsp_indication_set(BSP_INDICATE_ADVERTISING_DIRECTED);
-			//APP_ERROR_CHECK(err_code);
 			break;
 		case BLE_ADV_EVT_FAST:
-			//err_code = bsp_indication_set(BSP_INDICATE_ADVERTISING);
-			//APP_ERROR_CHECK(err_code);
 			break;
 		case BLE_ADV_EVT_SLOW:
-			//err_code = bsp_indication_set(BSP_INDICATE_ADVERTISING_SLOW);
-			//APP_ERROR_CHECK(err_code);
 			break;
 		case BLE_ADV_EVT_FAST_WHITELIST:
-			//err_code = bsp_indication_set(BSP_INDICATE_ADVERTISING_WHITELIST);
-			//APP_ERROR_CHECK(err_code);
 			break;
 		case BLE_ADV_EVT_SLOW_WHITELIST:
-			//err_code = bsp_indication_set(BSP_INDICATE_ADVERTISING_WHITELIST);
-			//APP_ERROR_CHECK(err_code);
 			break;
 		case BLE_ADV_EVT_IDLE:
 			sleep_mode_enter();
@@ -1327,13 +1211,6 @@ static void ble_evt_dispatch(ble_evt_t * p_ble_evt) {
 	ble_bas_on_ble_evt(&m_bas, p_ble_evt);
 }
 
-/*
-static void sys_evt_dispatch(uint32_t sys_evt) {
-	pstorage_sys_event_handler(sys_evt);
-	ble_advertising_on_sys_evt(sys_evt);
-}
-*/
-
 static void ble_stack_init(void) {
 	uint32_t err_code;
 
@@ -1411,19 +1288,8 @@ static void advertising_init(void) {
 	advdata.flags = adv_flags;
 	advdata.uuids_complete.uuid_cnt = sizeof(m_adv_uuids) / sizeof(m_adv_uuids[0]);
 	advdata.uuids_complete.p_uuids = m_adv_uuids;
-/*
+
 	ble_adv_modes_config_t options = {
-		BLE_ADV_WHITELIST_ENABLED,
-		BLE_ADV_DIRECTED_ENABLED,
-		BLE_ADV_DIRECTED_SLOW_DISABLED, 0, 0,
-		BLE_ADV_FAST_ENABLED, APP_ADV_FAST_INTERVAL,
-		APP_ADV_FAST_TIMEOUT,
-		BLE_ADV_SLOW_ENABLED, APP_ADV_SLOW_INTERVAL,
-		APP_ADV_SLOW_TIMEOUT
-	};
-*/
-	ble_adv_modes_config_t options = {
-		//BLE_ADV_WHITELIST_ENABLED,
 		BLE_ADV_WHITELIST_DISABLED,
 		BLE_ADV_DIRECTED_DISABLED,
 		BLE_ADV_DIRECTED_SLOW_DISABLED, 0, 0,
@@ -1543,19 +1409,11 @@ int main(void) {
 	APP_ERROR_CHECK(err_code);
 
 	printf("Endpoint: " ADDR_FMT "\n", ADDR_T(addr.addr));
-
 	printf("Entering main loop.\n");
 
 	// Enter main loop.
 	for (;;) {
 		app_sched_execute();
 		power_manage();
-
-		uint8_t c;
-		if (app_uart_get(&c) == NRF_SUCCESS && c >= 32 && c <= 127) {
-			printf("got from UART: %c\n", c);
-			if (c == 'w')
-				send_winkey();
-		}
 	}
 }
