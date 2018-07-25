@@ -9,7 +9,7 @@
 I use a single plate (reversed) Mitosis version (modules soldered to the top of the PCB).
 To make standard version, comment out `#define COMPILE_REVERSED` in `config/mitosis.h`
 You may also use precompiled firmware from the [precompiled_iar](../precompiled_iar) folder.
-Don't forget to flash softdevice s130 first (see [upload_bt.cmd](upload_bt.cmd) about uploading via OpenOCD and ST-Link V2 on Windows).
+You only need to flash the right half! Don't forget to flash softdevice s130 first (refer to [upload_bt.cmd](upload_bt.cmd) on Windows).
 
 ## Status
 
