@@ -13,7 +13,8 @@
 
 ### TODO
 
-* Add pairing key shortcut and fix pairing bugs
+* HID buffering and better latency
+* Pairing key shortcut
 * Switching between RF and Bluetooth modes
 * Switching between Bluetooth devices
 
