@@ -13,8 +13,8 @@
 
 ### TODO
 
-* HID buffering and better latency
-* Pairing key shortcut
+* HID buffering and improved latency
+* Better pairing and a pairing key shortcut
 * Switching between RF and Bluetooth modes
 * Switching between Bluetooth devices
 
