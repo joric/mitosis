@@ -31,7 +31,7 @@ You only need to flash the right half! Don't forget to flash softdevice s130 fir
 
 ## Debugging
 
-You can hook up a single UART RX pin (115200 baud) via pin 19 (key S23 or key S16 for a non-reversed PCB).
+You can hook up a single UART RX pin (115200 baud) via [pin 19](https://i.imgur.com/apx8W8W.png) (key S23 or key S16 for a non-reversed PCB).
 
 ### Example debug info
 
@@ -61,6 +61,5 @@ Sending HID report: 00 00 00 00 00 00 00 00
 ## References
 
 * [My fork of the Mitosis repository (bonus documentation included)](https://github.com/joric/mitosis/tree/devel)
-* [Mitosis PCB pinout in a single picture (please use)](https://i.imgur.com/apx8W8W.png)
 * [Mitosis-BT (Reddit thread)](https://redd.it/91s4pu)
 
