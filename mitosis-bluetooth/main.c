@@ -56,6 +56,7 @@ static dm_application_instance_t m_app_handle;		/**< Application identifier allo
 static dm_handle_t m_bonded_peer_handle;	/**< Device reference handle to the current 	 central. */
 static bool m_caps_on = false;				/**< Variable to indicate if Caps Lock is turned on. */
 uint8_t m_modifier = 0;
+uint8_t m_layer = 0;
 
 //void notification_cb(nrf_impl_notification_t notification);
 /*lint -e526 "Symbol RADIO_IRQHandler not defined" */
@@ -474,8 +475,13 @@ void key_handler() {
 				}
 			}
 			(void)col;
-			uint16_t keycode = keymaps[layer_state][i][col];
-			//printf("send keycode: %d\n", keycode);
+
+			uint16_t keycode = keymaps[m_layer][i][col];
+
+			if (keycode & QK_LAYER_TAP) {
+				m_layer = (keycode >> 8) & 0xf;
+				keycode = 0;
+			}
 
 			switch (keycode) {
 				case KC_LCTRL:	m_modifier |= 1; keycode = 0; break;
@@ -489,7 +495,9 @@ void key_handler() {
 				default: break;
 			}
 
-			hidEmuKbdSendReport(m_modifier, keycode);
+			if (keycode) {
+				hidEmuKbdSendReport(m_modifier, keycode);
+			}
 
 			keycodes_sent++;
 		}
@@ -498,6 +506,7 @@ void key_handler() {
 	if (keycodes_sent==0) {
 		//printf("released\n");
 		m_modifier = 0;
+		m_layer = 0;
 		hidEmuKbdSendReport(m_modifier, 0);
 	}
 
@@ -515,8 +524,6 @@ void key_handler() {
 		//sd_power_system_off();
 		*/
 	}
-
-
 }
 
 static void send_data(bool send) {
