@@ -55,6 +55,7 @@ static uint16_t m_conn_handle = BLE_CONN_HANDLE_INVALID;		/**< Handle of the cur
 static dm_application_instance_t m_app_handle;		/**< Application identifier allocated by device manager. */
 static dm_handle_t m_bonded_peer_handle;	/**< Device reference handle to the current 	 central. */
 static bool m_caps_on = false;				/**< Variable to indicate if Caps Lock is turned on. */
+uint8_t m_modifier = 0;
 
 
 //void notification_cb(nrf_impl_notification_t notification);
@@ -572,11 +573,19 @@ void key_handler() {
 			uint16_t keycode = keymaps[layer_state][i][col];
 			//printf("send keycode: %d\n", keycode);
 
-			if (keycode==KC_LGUI || keycode==KC_RGUI) {
-				hidEmuKbdSendReport(0x80, 0);
-			} else {
-				hidEmuKbdSendReport(0, keycode);
+			switch (keycode) {
+				case KC_LCTRL:	m_modifier |= 1; keycode = 0; break;
+				case KC_LSHIFT:	m_modifier |= 2; keycode = 0; break;
+				case KC_LALT:	m_modifier |= 4; keycode = 0; break;
+				case KC_LGUI:	m_modifier |= 8; keycode = 0; break;
+				case KC_RCTRL:	m_modifier |= 16; keycode = 0; break;
+				case KC_RSHIFT:	m_modifier |= 32; keycode = 0; break;
+				case KC_RALT:	m_modifier |= 64; keycode = 0; break;
+				case KC_RGUI:	m_modifier |= 128; keycode = 0; break;
+				default: break;
 			}
+
+			hidEmuKbdSendReport(m_modifier, keycode);
 
 			keycodes_sent++;
 		}
@@ -584,7 +593,8 @@ void key_handler() {
 
 	if (keycodes_sent==0) {
 		//printf("released\n");
-		hidEmuKbdSendReport(0, 0);
+		m_modifier = 0;
+		hidEmuKbdSendReport(m_modifier, 0);
 	}
 
 	if (keys & (1 << S20)) {
