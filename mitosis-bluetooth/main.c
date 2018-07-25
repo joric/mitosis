@@ -437,13 +437,15 @@ uint8_t battery_level_get(void) {
 	uint8_t adc_max = 255;
 	uint16_t vbat_current_in_mv = (NRF_ADC->RESULT * 3 * vbg_in_mv) / adc_max;
 
-	printf("battery: %dmV\n", vbat_current_in_mv);
-
 	NRF_ADC->EVENTS_END = 0;
 	NRF_ADC->TASKS_STOP = 1;
 
 	int percent = ((vbat_current_in_mv * 100) / VBAT_MAX_IN_MV);
-	return (uint8_t) (percent > 100 ? 100 : percent);
+	if (percent>100)
+		percent = 100;
+
+	printf("Sending battery report: %d%% (%dmV of %dmV) \n", percent, vbat_current_in_mv, VBAT_MAX_IN_MV);
+	return (uint8_t)percent;
 }
 
 #define IS_SRVC_CHANGED_CHARACT_PRESENT		0	/**< Include or not the service_changed characteristic. if not enabled, the server's database cannot be changed for the lifetime of the device*/
