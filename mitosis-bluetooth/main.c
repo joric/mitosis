@@ -478,11 +478,6 @@ void key_handler() {
 
 			uint16_t keycode = keymaps[m_layer][i][col];
 
-			if (keycode & QK_LAYER_TAP) {
-				m_layer = (keycode >> 8) & 0xf;
-				keycode = 0;
-			}
-
 			switch (keycode) {
 				case KC_LCTRL:	m_modifier |= 1; keycode = 0; break;
 				case KC_LSHIFT:	m_modifier |= 2; keycode = 0; break;
@@ -495,7 +490,10 @@ void key_handler() {
 				default: break;
 			}
 
-			if (keycode) {
+
+			if (keycode & QK_LAYER_TAP) {
+				m_layer = (keycode >> 8) & 0xf;
+			} else {
 				hidEmuKbdSendReport(m_modifier, keycode);
 			}
 
