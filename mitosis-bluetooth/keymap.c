@@ -33,13 +33,15 @@ enum mitosis_keycodes
 
 
 const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
-[_BL] = { /* Malt Layout, customised for reduced columns (ex: quote and shift locations) */
-  {KC_Q,    KC_W,    KC_E,    KC_R,     KC_T,           KC_Y,    KC_U,    KC_I,    KC_O,    KC_P    },
-  {KC_A,    KC_S,    KC_D,    KC_F,     KC_G,           KC_H,    KC_J,    KC_K,    KC_L,    KC_SCLN },
-  {KC_Z,    KC_X,    KC_C,    KC_V,     KC_B,           KC_N,    KC_M,    KC_COMMA,KC_DOT,  KC_SLSH },
-  {XXXXXXX, KC_GRV,  KC_ESC,  KC_TAB,   KC_BSPC,        KC_DEL,  KC_LALT, KC_LEFT, KC_RGHT, XXXXXXX },
-  {XXXXXXX, KC_QUOT, KC_LGUI, DUAL_L,   KC_LCTL,        KC_LSFT, DUAL_R,  KC_UP,   KC_DOWN, XXXXXXX }
+
+[_BL] = { /* test mitosis-mjt-like qwerty layout */
+  {KC_Q,       KC_W,    KC_E,    KC_R,    KC_T,           KC_Y,    KC_U,    KC_I,    KC_O,        KC_P    },
+  {KC_A,       KC_S,    KC_D,    KC_F,    KC_G,           KC_H,    KC_J,    KC_K,    KC_L,        KC_SCLN },
+  {KC_Z,       KC_X,    KC_C,    KC_V,    KC_B,           KC_N,    KC_M,    KC_COMM, KC_DOT,      KC_SLSH },
+  {XXXXXXX,    KC_LCTL, KC_ESC,  KC_TAB,  KC_QUOT,        KC_LEFT, KC_DOWN, KC_UP,   KC_RIGHT,    XXXXXXX },
+  {XXXXXXX,    KC_LGUI, KC_LALT, KC_SPC,  KC_LSFT,        DUAL_L,  KC_BSPC, DUAL_R,  KC_RGUI,     XXXXXXX }
 },
+
 
 
 [_RAISE] = { /* Shifted Layer, layered so that tri_layer can be used, or selectively
