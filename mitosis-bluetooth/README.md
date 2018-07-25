@@ -19,7 +19,7 @@ You only need to flash the right half! Don't forget to flash softdevice s130 fir
 * Bluetooth and Gazell timesharing
 * Master and slave mode (left half doesn't need firmware update at all)
 * Battery level reporting via Bluetooth
-* Debugging via UART (115200 baud) on pin 19 key S23 (key S16 for non-reversed PCB)
+* Debugging via UART
 * Basic QMK layout support
 
 ### TODO
@@ -29,7 +29,11 @@ You only need to flash the right half! Don't forget to flash softdevice s130 fir
 * Switching between RF and Bluetooth modes
 * Switching between Bluetooth devices
 
-## Example debug info
+## Debugging
+
+You can hook up a single UART RX pin (115200 baud) via pin 19 (key S23 or key S16 for a non-reversed PCB).
+
+### Example debug info
 
 ```
 UART initialized.
