@@ -11,6 +11,9 @@ To make standard version, comment out `#define COMPILE_REVERSED` in `config/mito
 You may also use precompiled firmware from the [precompiled_iar](../precompiled_iar) folder.
 You only need to flash the right half! Don't forget to flash softdevice s130 first (refer to [upload_bt.cmd](upload_bt.cmd) on Windows).
 
+You can also use $1.80 STM32 board instead of ST-Link v2 for firmware uploading. Read more about it here:
+https://github.com/joric/mitosis/tree/devel#bluepill
+
 ## Status
 
 ### Works
