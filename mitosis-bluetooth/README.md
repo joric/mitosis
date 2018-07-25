@@ -4,8 +4,11 @@
 
 [![](http://img.youtube.com/vi/Qv22OyWb81g/0.jpg)](https://youtu.be/Qv22OyWb81g)
 
-I use a single plate Mitosis version (modules soldered to the top of the PCB).
+## Firmware
+
+I use a single plate (reversed) Mitosis version (modules soldered to the top of the PCB).
 To make standard version, comment out `#define COMPILE_REVERSED` in `config/mitosis.h`
+You may also use precompiled firmware from the [precompiled_iar](../precompiled_iar) folder.
 
 ## Status
 
