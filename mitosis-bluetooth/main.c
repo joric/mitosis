@@ -568,7 +568,7 @@ void key_handler() {
 			}
 			(void)col;
 			uint16_t keycode = keymaps[layer_state][i][col];
-			printf("send keycode: %d\n", keycode);
+			//printf("send keycode: %d\n", keycode);
 
 			if (keycode==KC_LGUI || keycode==KC_RGUI) {
 				hidEmuKbdSendReport(0x80, 0);
@@ -581,7 +581,7 @@ void key_handler() {
 	}
 
 	if (keycodes_sent==0) {
-		printf("released\n");
+		//printf("released\n");
 		hidEmuKbdSendReport(0, 0);
 	}
 
