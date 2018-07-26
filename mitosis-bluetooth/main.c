@@ -454,10 +454,6 @@ int biton32(int x) {
 	return x;
 }
 
-int layer_state = 0;
-
-#include "keymap.h"
-
 uint16_t matrix[MATRIX_ROWS];
 
 uint8_t get_modifier(uint16_t key) {
@@ -467,8 +463,6 @@ uint8_t get_modifier(uint16_t key) {
 			return 1 << b;
 	return 0;
 }
-
-int counter = 0;
 
 void key_handler() {
 	const int MAX_KEYS = 6;
