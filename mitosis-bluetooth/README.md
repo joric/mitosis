@@ -6,7 +6,7 @@
 
 ## Mitosis-BT Firmware
 
-* [mitosis-bt.hex](../precompiled_iar/mitosis-bt.hex) (Mitosis-BT master, MJT-like layout, for the right half)
+* [mitosis-bt.hex](https://raw.githubusercontent.com/joric/mitosis/devel/precompiled_iar/mitosis-bt.hex) (Mitosis-BT master, MJT-like layout, for the right half)
 
 ### Uploading
 
