@@ -54,9 +54,6 @@ static bool m_in_boot_mode = false;			/**< Current protocol mode. */
 static uint16_t m_conn_handle = BLE_CONN_HANDLE_INVALID;		/**< Handle of the current connection. */
 static dm_application_instance_t m_app_handle;		/**< Application identifier allocated by device manager. */
 static dm_handle_t m_bonded_peer_handle;	/**< Device reference handle to the current 	 central. */
-static bool m_caps_on = false;				/**< Variable to indicate if Caps Lock is turned on. */
-uint8_t m_modifier = 0;
-uint8_t m_layer = 0;
 
 //void notification_cb(nrf_impl_notification_t notification);
 /*lint -e526 "Symbol RADIO_IRQHandler not defined" */
@@ -129,7 +126,6 @@ void sys_evt_dispatch(uint32_t evt_id) {
 }
 
 bool was_pressed = false;
-bool winkey_trigger = false;
 void send_winkey();
 
 static uint8_t data_payload_left[NRF_GZLL_CONST_MAX_PAYLOAD_LENGTH];	///< Placeholder for data payload received from host.
@@ -137,11 +133,12 @@ static uint8_t data_payload_right[NRF_GZLL_CONST_MAX_PAYLOAD_LENGTH];	///< Place
 
 static bool packet_received_left, packet_received_right;
 static uint8_t ack_payload[TX_PAYLOAD_LENGTH];	///< Payload to attach to ACK sent to device.
-static uint8_t data_buffer[10];
 uint32_t left_active = 0;
 uint32_t right_active = 0;
 void key_handler();
 static uint32_t keys_recv = 0, keys_recv_snapshot = 0;
+
+static uint8_t data_buffer[10];
 
 void m_process_gazelle() {
 
@@ -164,7 +161,6 @@ void m_process_gazelle() {
 		data_buffer[9] = ((data_payload_right[2] & 1 << 4) ? 1 : 0) << 0 | ((data_payload_right[2] & 1 << 3) ? 1 : 0) << 1 | ((data_payload_right[2] & 1 << 2) ? 1 : 0) << 2 | ((data_payload_right[2] & 1 << 1) ? 1 : 0) << 3;
 	}
 }
-
 
 
 static void m_on_start(void) {
@@ -405,6 +401,69 @@ uint8_t battery_level_get(void) {
 #define MAX_KEYS_IN_ONE_REPORT				(INPUT_REPORT_KEYS_MAX_LEN - SCAN_CODE_POS)		/**< Maximum number of key presses that can be sent in one Input Report. */
 
 
+
+void hidEmuKbdSendReport(uint8_t modifier, uint8_t keycode);
+
+int biton32(int x) {
+	return x;
+}
+
+uint8_t m_layer = 0;
+static bool m_caps_on = false;
+uint16_t matrix[MATRIX_ROWS];
+
+uint8_t get_modifier(uint16_t key) {
+	const int modifiers[] = {KC_LCTRL, KC_LSHIFT, KC_LALT, KC_LGUI, KC_RCTRL, KC_RSHIFT, KC_RALT, KC_RGUI};
+	for (int b = 0; b < 8; b++)
+		if (key == modifiers[b])
+			return 1 << b;
+	return 0;
+}
+
+void key_handler() {
+	const int MAX_KEYS = 6;
+	uint8_t buf[8];
+	int modifiers = 0;
+	int keys_pressed = 0;
+	int keys_sent = 0;
+	memset(buf, 0, sizeof(buf));
+
+	for (uint8_t row = 0; row < MATRIX_ROWS; row++) {
+		matrix[row] = (uint16_t) data_buffer[row * 2] | (uint16_t) data_buffer[row * 2 + 1] << 5;
+		if (matrix[row]) {
+			for (int col = 0; col < 16; col++) {
+				if (matrix[row] & (1 << col)) {
+					keys_pressed++;
+					uint16_t key = keymaps[m_layer][row][col];
+					if (key == KC_TRNS)
+						key = keymaps[0][row][col];
+					uint8_t modifier = get_modifier(key);
+					if (modifier) {
+						modifiers |= modifier;
+					} else if (key & QK_LAYER_TAP) {
+						m_layer = (key >> 8) & 0xf;
+					} else if (keys_sent<MAX_KEYS && key!=KC_TRNS) {
+						buf[2 + keys_sent++] = key;
+					}
+				}
+			}
+		}
+	}
+
+	if (!keys_pressed)
+		m_layer = 0;
+
+	buf[0] = modifiers;
+	buf[1] = 0; // reserved
+
+	if (m_conn_handle != BLE_CONN_HANDLE_INVALID) {
+		printf("Sending HID report: %02x %02x %02x %02x %02x %02x %02x %02x\n", buf[0], buf[1], buf[2], buf[3], buf[4], buf[5], buf[6], buf[7]);
+		uint32_t err_code = ble_hids_inp_rep_send(&m_hids, INPUT_REPORT_KEYS_INDEX, INPUT_REPORT_KEYS_MAX_LEN, buf);
+		APP_ERROR_CHECK(err_code);
+	}
+}
+
+
 // Setup switch pins with pullups
 static void gpio_config(void) {
 	nrf_gpio_cfg_sense_input(S01, NRF_GPIO_PIN_PULLUP, NRF_GPIO_PIN_SENSE_LOW);
@@ -440,89 +499,12 @@ static uint32_t read_keys(void) {
 // Debounce time (dependent on tick frequency)
 #define DEBOUNCE 5
 #define ACTIVITY 500
+#define DEBOUNCE_MEAS_INTERVAL			APP_TIMER_TICKS(5, APP_TIMER_PRESCALER)
 
 // Key buffers
 static uint32_t keys = 0, keys_snapshot = 0;
 static uint32_t debounce_ticks, activity_ticks;
 static volatile bool debouncing = false;
-
-void hidEmuKbdSendReport(uint8_t modifier, uint8_t keycode);
-
-#define DEBOUNCE_MEAS_INTERVAL			APP_TIMER_TICKS(5, APP_TIMER_PRESCALER)
-
-int biton32(int x) {
-	return x;
-}
-
-uint16_t matrix[MATRIX_ROWS];
-
-uint8_t get_modifier(uint16_t key) {
-	const int modifiers[] = {KC_LCTRL, KC_LSHIFT, KC_LALT, KC_LGUI, KC_RCTRL, KC_RSHIFT, KC_RALT, KC_RGUI};
-	for (int b = 0; b < 8; b++)
-		if (key == modifiers[b])
-			return 1 << b;
-	return 0;
-}
-
-void key_handler() {
-	const int MAX_KEYS = 6;
-	uint8_t buf[8];
-	int modifiers = 0;
-	int keys_pressed = 0;
-	int keys_sent = 0;
-	memset(buf, 0, sizeof(buf));
-
-	for (uint8_t row = 0; row < MATRIX_ROWS; row++) {
-		matrix[row] = (uint16_t) data_buffer[row * 2] | (uint16_t) data_buffer[row * 2 + 1] << 5;
-		if (matrix[row]) {
-			for (int col = 0; col < 16; col++) {
-				if (matrix[row] & (1 << col)) {
-					keys_pressed++;
-					uint16_t key = keymaps[m_layer][row][col];
-					if (key == KC_TRNS)
-						key = keymaps[0][row][col];
-					uint8_t modifier = get_modifier(key);
-					if (modifier) {
-						printf("modifier pressed!\n");
-						modifiers |= modifier;
-					} else if (key & QK_LAYER_TAP) {
-						m_layer = (key >> 8) & 0xf;
-					} else if (keys_sent<MAX_KEYS && key!=KC_TRNS) {
-						buf[2 + keys_sent++] = key;
-					}
-				}
-			}
-		}
-	}
-
-	if (!keys_pressed)
-		m_layer = 0;
-
-	buf[0] = modifiers;
-	buf[1] = 0; // reserved
-
-	if (m_conn_handle != BLE_CONN_HANDLE_INVALID) {
-		printf("Sending HID report: %02x %02x %02x %02x %02x %02x %02x %02x\n", buf[0], buf[1], buf[2], buf[3], buf[4], buf[5], buf[6], buf[7]);
-		uint32_t err_code = ble_hids_inp_rep_send(&m_hids, INPUT_REPORT_KEYS_INDEX, INPUT_REPORT_KEYS_MAX_LEN, buf);
-		APP_ERROR_CHECK(err_code);
-	}
-
-	if (keys & (1 << S20)) {
-		//winkey_trigger = true;
-	}
-
-	if (keys & (1 << S16)) {
-		/*
-		   printf("terminating connection button pressed\n");
-		   sd_ble_gap_disconnect(m_conn_handle, BLE_HCI_REMOTE_USER_TERMINATED_CONNECTION);
-		   dm_device_delete(&m_bonded_peer_handle);
-		   m_conn_handle = BLE_CONN_HANDLE_INVALID;
-		   ble_advertising_start(BLE_ADV_MODE_FAST);
-		   //sd_power_system_off();
-		 */
-	}
-}
-
 
 static void send_data(int keyboard_mode) {
 
@@ -546,12 +528,6 @@ static void send_data(int keyboard_mode) {
 
 // 1000Hz debounce sampling
 static void handler_debounce(void *p_context) {
-
-	if (winkey_trigger) {
-		printf("winkey trigger!\n");
-		//send_winkey();
-		winkey_trigger = false;
-	}
 
 	keys_recv = data_payload_left[0] | (data_payload_left[1] << 8) | (data_payload_left[2] << 16);
 	if (keys_recv != keys_recv_snapshot)
