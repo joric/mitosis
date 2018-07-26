@@ -7,12 +7,14 @@
 ## Firmware
 
 I use a single plate (reversed) Mitosis version (modules soldered to the top of the PCB).
-To make standard version, comment out `#define COMPILE_REVERSED` in `config/mitosis.h`
+To make standard version, remove `COMPILE_REVERSED` from the preprocessor directives.
 You may also use precompiled firmware from the [precompiled_iar](../precompiled_iar) folder.
-You only need to flash the right half! Don't forget to flash softdevice s130 first (refer to [upload_bt.cmd](upload_bt.cmd) on Windows).
+You only need to flash the right half! Don't forget to flash softdevice s130 first (refer to [program.cmd](program.cmd) on Windows).
 
-You can also use [$1.80 STM32 board](https://i.imgur.com/Ikt8yZz.jpg) instead of ST-Link v2 for firmware uploading. Read more about it here:
-https://github.com/joric/mitosis/tree/devel#bluepill
+You can also use $1.80 STM32 board ([SWCLK - A5, SWDIO - B14](https://i.imgur.com/Ikt8yZz.jpg)) instead of ST-Link v2 for firmware uploading.
+This is actually much better because it also has built in UART (pin A3) on the second COM port
+so you don't need to occupy another USB for debugging.
+Read more about it here: https://github.com/joric/mitosis/tree/devel#bluepill
 
 ## Status
 
@@ -34,7 +36,7 @@ https://github.com/joric/mitosis/tree/devel#bluepill
 
 ## Debugging
 
-You can hook up a single UART RX pin (115200 baud) via [pin 19](https://i.imgur.com/apx8W8W.png) (key S23 or key S15 for a non-reversed PCB).
+You can hook up a single UART RX pin (115200 baud) via [pin 19 or pin 21](https://i.imgur.com/apx8W8W.png) (key S23 or key S15 for a non-reversed PCB).
 You will also need common GND and VCC to make it work. Oddly enough it works along with the keyboard matrix so you can use any pin you want,
 just don't use the same pin for TX and RX to avoid feedback.
 

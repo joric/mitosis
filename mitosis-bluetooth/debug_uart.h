@@ -7,7 +7,7 @@
 // we also can hook up to switches, e.g. pin 19 (bottom right switch) but it would be occupied
 // RX, CTS, RTS pins are unused, you can set them to any value (except TX pin to avoid feedback)
 
-#define TX_PIN_NUMBER  19
+#define TX_PIN_NUMBER  21
 #define RX_PIN_NUMBER  20
 #define CTS_PIN_NUMBER 20
 #define RTS_PIN_NUMBER 20

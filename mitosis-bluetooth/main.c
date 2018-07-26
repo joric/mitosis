@@ -446,6 +446,8 @@ static uint32_t keys = 0, keys_snapshot = 0;
 static uint32_t debounce_ticks, activity_ticks;
 static volatile bool debouncing = false;
 
+void hidEmuKbdSendReport(uint8_t modifier, uint8_t keycode);
+
 #define DEBOUNCE_MEAS_INTERVAL			APP_TIMER_TICKS(5, APP_TIMER_PRESCALER)
 
 int biton32(int x) {
@@ -458,52 +460,56 @@ int layer_state = 0;
 
 uint16_t matrix[MATRIX_ROWS];
 
-void hidEmuKbdSendReport(uint8_t modifier, uint8_t keycode);
+uint8_t get_modifier(uint16_t key) {
+	const int modifiers[] = {KC_LCTRL, KC_LSHIFT, KC_LALT, KC_LGUI, KC_RCTRL, KC_RSHIFT, KC_RALT, KC_RGUI};
+	for (int b = 0; b < 8; b++)
+		if (key == modifiers[b])
+			return 1 << b;
+	return 0;
+}
+
+int counter = 0;
 
 void key_handler() {
+	const int MAX_KEYS = 6;
+	uint8_t buf[8];
+	int modifiers = 0;
+	int keys_pressed = 0;
+	int keys_sent = 0;
+	memset(buf, 0, sizeof(buf));
+	bool send = true;
 
-	int keycodes_sent = 0;
-
-	for (uint8_t i = 0; i < MATRIX_ROWS; i++) {
-		matrix[i] = (uint16_t) data_buffer[i * 2] | (uint16_t) data_buffer[i * 2 + 1] << 5;
-		//printf("%d%c", matrix[i], i==MATRIX_ROWS-1?'\n':' ');
-
-		if (matrix[i]) {
-			int col = 0;
-			for (int b = 0; b < 16; b++) {
-				if (matrix[i] & (1 << b)) {
-					col = b;
-					break;
+	for (uint8_t row = 0; row < MATRIX_ROWS; row++) {
+		matrix[row] = (uint16_t) data_buffer[row * 2] | (uint16_t) data_buffer[row * 2 + 1] << 5;
+		if (matrix[row]) {
+			for (int col = 0; col < 16; col++) {
+				if (matrix[row] & (1 << col)) {
+					keys_pressed++;
+					uint16_t key = keymaps[m_layer][row][col];
+					uint8_t modifier = get_modifier(key);
+					if (modifier) {
+						modifiers |= modifier;
+					} else if (key & QK_LAYER_TAP) {
+						m_layer = (key >> 8) & 0xf;
+						send = false;
+					} else if (keys_sent<MAX_KEYS && key!=KC_TRNS) {
+						buf[2 + keys_sent++] = key;
+					}
 				}
 			}
-
-			uint16_t keycode = keymaps[m_layer][i][col];
-
-			int modifiers[] = {KC_LCTRL, KC_LSHIFT, KC_LALT, KC_LGUI, KC_RCTRL, KC_RSHIFT, KC_RALT, KC_RGUI};
-
-			for (int b=0; b<8; b++) {
-				if (keycode == modifiers[b]) {
-					m_modifier |= (1 << b);
-					keycode = 0;
-					break;
-				}
-			}
-
-			if (keycode & QK_LAYER_TAP) {
-				m_layer = (keycode >> 8) & 0xf;
-			} else {
-				hidEmuKbdSendReport(m_modifier, keycode);
-			}
-
-			keycodes_sent++;
 		}
 	}
 
-	if (keycodes_sent == 0) {
-		//printf("released\n");
-		m_modifier = 0;
+	if (!keys_pressed)
 		m_layer = 0;
-		hidEmuKbdSendReport(m_modifier, 0);
+
+	buf[0] = modifiers;
+	buf[1] = 0; // reserved
+
+	if (send && m_conn_handle != BLE_CONN_HANDLE_INVALID) {
+		printf("Sending HID report: %02x %02x %02x %02x %02x %02x %02x %02x\n", buf[0], buf[1], buf[2], buf[3], buf[4], buf[5], buf[6], buf[7]);
+		uint32_t err_code = ble_hids_inp_rep_send(&m_hids, INPUT_REPORT_KEYS_INDEX, INPUT_REPORT_KEYS_MAX_LEN, buf);
+		APP_ERROR_CHECK(err_code);
 	}
 
 	if (keys & (1 << S20)) {
@@ -522,14 +528,13 @@ void key_handler() {
 	}
 }
 
+
 static void send_data(int keyboard_mode) {
 
 	static uint8_t *data_payload = data_payload_right;
 
 	data_payload[0] = ((keys & 1 << S01) ? 1 : 0) << 7 | ((keys & 1 << S02) ? 1 : 0) << 6 | ((keys & 1 << S03) ? 1 : 0) << 5 | ((keys & 1 << S04) ? 1 : 0) << 4 | ((keys & 1 << S05) ? 1 : 0) << 3 | ((keys & 1 << S06) ? 1 : 0) << 2 | ((keys & 1 << S07) ? 1 : 0) << 1 | ((keys & 1 << S08) ? 1 : 0) << 0;
-
 	data_payload[1] = ((keys & 1 << S09) ? 1 : 0) << 7 | ((keys & 1 << S10) ? 1 : 0) << 6 | ((keys & 1 << S11) ? 1 : 0) << 5 | ((keys & 1 << S12) ? 1 : 0) << 4 | ((keys & 1 << S13) ? 1 : 0) << 3 | ((keys & 1 << S14) ? 1 : 0) << 2 | ((keys & 1 << S15) ? 1 : 0) << 1 | ((keys & 1 << S16) ? 1 : 0) << 0;
-
 	data_payload[2] = ((keys & 1 << S17) ? 1 : 0) << 7 | ((keys & 1 << S18) ? 1 : 0) << 6 | ((keys & 1 << S19) ? 1 : 0) << 5 | ((keys & 1 << S20) ? 1 : 0) << 4 | ((keys & 1 << S21) ? 1 : 0) << 3 | ((keys & 1 << S22) ? 1 : 0) << 2 | ((keys & 1 << S23) ? 1 : 0) << 1 | 0 << 0;
 
 	if (keyboard_mode != MODE_BLUETOOTH)
