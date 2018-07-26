@@ -471,7 +471,6 @@ void key_handler() {
 	int keys_pressed = 0;
 	int keys_sent = 0;
 	memset(buf, 0, sizeof(buf));
-	bool send = true;
 
 	for (uint8_t row = 0; row < MATRIX_ROWS; row++) {
 		matrix[row] = (uint16_t) data_buffer[row * 2] | (uint16_t) data_buffer[row * 2 + 1] << 5;
@@ -480,12 +479,14 @@ void key_handler() {
 				if (matrix[row] & (1 << col)) {
 					keys_pressed++;
 					uint16_t key = keymaps[m_layer][row][col];
+					if (key == KC_TRNS)
+						key = keymaps[0][row][col];
 					uint8_t modifier = get_modifier(key);
 					if (modifier) {
+						printf("modifier pressed!\n");
 						modifiers |= modifier;
 					} else if (key & QK_LAYER_TAP) {
 						m_layer = (key >> 8) & 0xf;
-						send = false;
 					} else if (keys_sent<MAX_KEYS && key!=KC_TRNS) {
 						buf[2 + keys_sent++] = key;
 					}
@@ -500,7 +501,7 @@ void key_handler() {
 	buf[0] = modifiers;
 	buf[1] = 0; // reserved
 
-	if (send && m_conn_handle != BLE_CONN_HANDLE_INVALID) {
+	if (m_conn_handle != BLE_CONN_HANDLE_INVALID) {
 		printf("Sending HID report: %02x %02x %02x %02x %02x %02x %02x %02x\n", buf[0], buf[1], buf[2], buf[3], buf[4], buf[5], buf[6], buf[7]);
 		uint32_t err_code = ble_hids_inp_rep_send(&m_hids, INPUT_REPORT_KEYS_INDEX, INPUT_REPORT_KEYS_MAX_LEN, buf);
 		APP_ERROR_CHECK(err_code);
