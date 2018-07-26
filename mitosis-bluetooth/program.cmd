@@ -1,6 +1,8 @@
 @echo off
 
-if exist debug.txt goto bluepill
+set option=bluepill
+
+goto %option%
 
 :stlink
 
