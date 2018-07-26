@@ -4,13 +4,11 @@
 
 [![](http://img.youtube.com/vi/Qv22OyWb81g/0.jpg)](https://youtu.be/Qv22OyWb81g)
 
-## Mitosis-BT Firmware
-
-### Precompiled Firmware
+## Precompiled Firmware
 
 * [mitosis-bt.hex](https://raw.githubusercontent.com/joric/mitosis/devel/precompiled_iar/mitosis-bt.hex) (Mitosis-BT master, MJT-like layout, for the right half)
 
-### Uploading
+## Uploading
 
 You only need to flash the right half! Don't forget to flash softdevice s130 first
 (refer to [program.cmd](program.cmd) on Windows).
@@ -19,14 +17,14 @@ This is actually much better because it also has built in UART ([pin A3](https:/
 so you don't need to occupy another USB port for debugging.
 Read more about it here: https://github.com/joric/mitosis/tree/devel#bluepill
 
-### Building
+## Building
 
 Open mitosis-bluetooth.eww, select Release, hit Make, that's it.
 I'm using a single plate (reversed) for the Debug build (modules soldered to the top of the PCB).
 To make standard version, remove `COMPILE_REVERSED` from the preprocessor directives.
 You may also use firmware from the [precompiled_iar](../precompiled_iar) folder.
 
-### Debugging
+## Debugging
 
 You can hook up a single UART RX pin at 115200 baud ([currently pin 21, key S15 or S23](https://i.imgur.com/apx8W8W.png)).
 You will also need common GND and VCC to make it work. It doesn't really interfere much with the keyboard matrix so you can use any pin you want,
@@ -52,7 +50,7 @@ just don't use the same pin for TX and RX to avoid feedback.
 
 Please contribute!
 
-### Default layout (Mitosis-BT)
+## Default layout (Mitosis-BT)
 
 * [Keyboard Layout Editor](http://www.keyboard-layout-editor.com/#/gists/3f5dd1c848bb9a7a723161ad5e0c8e39)
 * [Interactive 3d version](https://joric.github.io/keycaps/#/gists/3f5dd1c848bb9a7a723161ad5e0c8e39)
