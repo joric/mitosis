@@ -57,7 +57,7 @@ Please contribute!
 * [Keyboard Layout Editor](http://www.keyboard-layout-editor.com/#/gists/3f5dd1c848bb9a7a723161ad5e0c8e39)
 * [Interactive 3d version](https://joric.github.io/keycaps/#/gists/3f5dd1c848bb9a7a723161ad5e0c8e39)
 
-![](https://kle-render.herokuapp.com/api/3f5dd1c848bb9a7a723161ad5e0c8e39)
+[![](https://kle-render.herokuapp.com/api/3f5dd1c848bb9a7a723161ad5e0c8e39)](https://kle-render.herokuapp.com/api/3f5dd1c848bb9a7a723161ad5e0c8e39)
 
 ## References
 
