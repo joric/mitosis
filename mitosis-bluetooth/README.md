@@ -6,6 +6,8 @@
 
 ## Mitosis-BT Firmware
 
+### Precompiled Firmware
+
 * [mitosis-bt.hex](https://raw.githubusercontent.com/joric/mitosis/devel/precompiled_iar/mitosis-bt.hex) (Mitosis-BT master, MJT-like layout, for the right half)
 
 ### Uploading
@@ -26,8 +28,8 @@ You may also use firmware from the [precompiled_iar](../precompiled_iar) folder.
 
 ### Debugging
 
-You can hook up a single UART RX pin (115200 baud) via [pin 19 or pin 21](https://i.imgur.com/apx8W8W.png) (key S23 or key S15 for a non-reversed PCB).
-You will also need common GND and VCC to make it work. Oddly enough it works along with the keyboard matrix so you can use any pin you want,
+You can hook up a single UART RX pin at 115200 baud ([currently pin 21, key S15 or S23](https://i.imgur.com/apx8W8W.png)).
+You will also need common GND and VCC to make it work. It doesn't really interfere much with the keyboard matrix so you can use any pin you want,
 just don't use the same pin for TX and RX to avoid feedback.
 
 ## Status
@@ -50,7 +52,7 @@ just don't use the same pin for TX and RX to avoid feedback.
 
 Please contribute!
 
-### Default layout
+### Default layout (Mitosis-BT)
 
 * [Keyboard Layout Editor](http://www.keyboard-layout-editor.com/#/gists/3f5dd1c848bb9a7a723161ad5e0c8e39)
 * [Interactive 3d version](https://joric.github.io/keycaps/#/gists/3f5dd1c848bb9a7a723161ad5e0c8e39)
