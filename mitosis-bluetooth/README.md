@@ -16,6 +16,10 @@ This is actually much better because it also has built in UART (pin A3) on the s
 so you [don't need to](https://i.imgur.com/ub1gT4U.jpg) occupy another USB port for debugging.
 Read more about it here: https://github.com/joric/mitosis/tree/devel#bluepill
 
+### Default layout (MJT-like)
+
+[![](https://kle-render.herokuapp.com/api/3f5dd1c848bb9a7a723161ad5e0c8e39)](http://www.keyboard-layout-editor.com/#/gists/3f5dd1c848bb9a7a723161ad5e0c8e39)
+
 ## Status
 
 ### Works
