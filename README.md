@@ -189,14 +189,14 @@ make mitosis-default
 
 ## Mitosis Clones
 
-* [Interphase](https://github.com/Durburz/interphase) (66 keys, keyboard matrix with diodes, voltage regulator and AAA battery, KiCad project) ([Reddit](https://redd.it/7ggeww))
-* [Meiosis](https://redd.it/7uasay), [Telophase](https://redd.it/7ruihw), [Helicase](https://redd.it/7zfj19) and [Centrometre](https://redd.it/8qkib4) (from [/u/SouthPawEngineer](https://www.reddit.com/u/SouthPawEngineer), no source files available) ([Site](https://southpawdesign.net))
-* [Chimera](https://github.com/GlenPickle/Chimera) (Chimera Ergo, Chimera Ortho, Chimera Ergo Mini, Chimera Ergo 42 - no schematics, just gerbers)
-* [Kissboard](https://github.com/fhtagnn/kissboard) ([AdNW](http://adnw.de)-inspired layout, PCB's are not tested) ([Reddit](https://redd.it/8bauoz)) ([Album](https://imgur.com/a/A95FF))
-* [Dichotomy](https://redd.it/7g54l8) (48-key Mitosis clone with digital encoders, no sources available) ([Youtube](https://youtu.be/5jmmYbgtOgI)) ([Kickstarter](https://www.kickstarter.com/projects/1090732691/dichotomy-keyboard-and-mouse)) 
-* [Trident](https://github.com/YCF/Trident) (Wireless Let's Split by [/u/imFengz](https://www.reddit.com/u/imFengz), module and battery placed between the switches) ([Reddit](https://redd.it/6um7eg)) ([Image](https://i.imgur.com/mCTgwu5.png))
-* [Orthrus](https://github.com/bezmi/orthrus) (great 52-key Atreus/Mitosis crossover by [/u/bezmi](https://www.reddit.com/u/bezmi), KiCad project) ([Reddit](https://redd.it/8txry7)) 
-* [Comet](https://github.com/satt99/comet46-hardware) (Comet46 - split 40% wireless keyboard) by [/u/SaT99](https://www.reddit.com/user/SaT999) ([Gallery](https://imgur.com/a/vs1W5qB)) ([Firmware](https://github.com/satt99/comet46-firmware)) ([Reddit](https://redd.it/8ykwjj))
+* [Interphase](https://github.com/Durburz/interphase) by [/u/Durburz_](https://www.reddit.com/user/Durburz_) (66 keys, diode matrix, voltage regulator, AAA battery) ([Reddit](https://redd.it/7ggeww))
+* [Meiosis](https://redd.it/7uasay), [Telophase](https://redd.it/7ruihw), [Helicase](https://redd.it/7zfj19) and [Centrometre](https://redd.it/8qkib4) by [/u/SouthPawEngineer](https://www.reddit.com/u/SouthPawEngineer) (no source files available) ([Site](https://southpawdesign.net))
+* [Chimera](https://github.com/GlenPickle/Chimera) by [/u/GlenPickle](https://www.reddit.com/user/GlenPickle) (also Chimera Ergo, Chimera Ortho, Chimera Ergo Mini and Chimera Ergo 42)
+* [Kissboard](https://github.com/fhtagnn/kissboard) by [/u/fhtagnn](https://www.reddit.com/user/fhtagnn) ([AdNW](http://adnw.de)-inspired layout, PCB's are not tested) ([Reddit](https://redd.it/8bauoz)) ([Album](https://imgur.com/a/A95FF))
+* [Dichotomy](https://redd.it/7g54l8) by [/u/Snipeye](https://www.reddit.com/user/Snipeye) (48-key Mitosis clone with digital encoders, no sources available) ([Youtube](https://youtu.be/5jmmYbgtOgI)) ([Kickstarter](https://www.kickstarter.com/projects/1090732691/dichotomy-keyboard-and-mouse)) 
+* [Trident](https://github.com/YCF/Trident) by [/u/imFengz](https://www.reddit.com/u/imFengz) (Wireless Let's Split, module and battery placed between the switches) ([Reddit](https://redd.it/6um7eg)) ([Image](https://i.imgur.com/mCTgwu5.png))
+* [Orthrus](https://github.com/bezmi/orthrus) by [/u/bezmi](https://www.reddit.com/u/bezmi) (great 52-key Atreus/Mitosis crossover, KiCad project) ([Reddit](https://redd.it/8txry7)) 
+* [Comet](https://github.com/satt99/comet46-hardware) by [/u/SaT99](https://www.reddit.com/user/SaT999) (Comet46 - split 40% wireless keyboard) ([Gallery](https://imgur.com/a/vs1W5qB)) ([Firmware](https://github.com/satt99/comet46-firmware)) ([Reddit](https://redd.it/8ykwjj))
 
 ## Bluetooth Version
 
