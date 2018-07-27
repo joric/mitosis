@@ -20,11 +20,9 @@ You only need to flash the right half!
 Don't forget to flash softdevice s130 first (refer to [program.cmd](program.cmd) for Windows).
 You can also use [$1.80](https://www.aliexpress.com/item//32583160323.html) STM32 board
 ([SWCLK - A5, SWDIO - B14](https://i.imgur.com/Ikt8yZz.jpg)) instead of ST-Link v2 for firmware uploading.
-This is actually much better because it also has built in UART ([pin A3](https://i.imgur.com/ub1gT4U.jpg))
+This is actually much better because it also has built in UART ([pin A3](https://i.imgur.com/6jPsgzv.jpg))
 on the second virtual COM port so you don't need to occupy another USB port for debugging. Read more
 about it here: https://github.com/joric/mitosis/tree/devel#bluepill
-
-![](https://i.imgur.com/6jPsgzv.jpg)
 
 ## Building
 
