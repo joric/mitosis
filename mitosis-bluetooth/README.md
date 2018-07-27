@@ -22,8 +22,8 @@ You can also use [$1.80](https://www.aliexpress.com/item//32583160323.html) STM3
 upgrade it with UART adapter ([RX - A9, TX - A10](https://i.imgur.com/sLyYM27.jpg))
 into a [Blackmagic](https://gojimmypi.blogspot.com/2017/07/BluePill-STM32F103-to-BlackMagic-Probe.html) board,
 and use it as ST-Link replacement ([SWCLK - A5, SWDIO - B14](https://i.imgur.com/Ikt8yZz.jpg)).
-It is actually much better because it also has built in UART ([pin A3](https://i.imgur.com/6jPsgzv.jpg))
-on the second virtual COM port so you don't need to occupy another USB port.
+It is actually much better because it also has a built in UART ([pin A3](https://i.imgur.com/6jPsgzv.jpg))
+on the second virtual COM port so you don't need to occupy another USB.
 See https://github.com/joric/mitosis/tree/devel#bluepill
 
 ## Building
