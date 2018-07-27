@@ -1,4 +1,4 @@
-# Mitosis-BT
+# Mitosis-Bluetooth
 
 Bluetooth firmware for the Mitosis keyboard (BLE and Gazell timesharing via timeslot API)
 
@@ -8,7 +8,7 @@ Bluetooth firmware for the Mitosis keyboard (BLE and Gazell timesharing via time
 
 ## Precompiled Firmware
 
-* [mitosis-bt.hex](https://raw.githubusercontent.com/joric/mitosis/devel/precompiled_iar/mitosis-bt.hex) (Mitosis-BT, for the right half only, makes it Gazell host and Bluetooth HID, no receiver needed!)
+* [mitosis-bt.hex](https://raw.githubusercontent.com/joric/mitosis/devel/precompiled_iar/mitosis-bt.hex) (For the right half only, makes it Gazell host and Bluetooth HID, no receiver needed!)
 
 ### Default layout (Mitosis-BT)
 
