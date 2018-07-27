@@ -31,7 +31,7 @@ See https://github.com/joric/mitosis/tree/devel#bluepill
 ## Building
 
 Open mitosis-bluetooth.eww, select Release, hit Make, that's it.
-I'm using a single plate (reversed) for the Debug build (modules soldered to the top of the PCB).
+I'm using a single plate (reversed) version for the Debug build (modules soldered to the top of the PCB).
 To make standard version, remove `COMPILE_REVERSED` from the preprocessor directives.
 You may also use firmware from the [precompiled_iar](../precompiled_iar) folder.
 
