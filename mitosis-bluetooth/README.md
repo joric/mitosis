@@ -18,7 +18,7 @@ Bluetooth firmware for the Mitosis keyboard (BLE and Gazell timesharing via time
 
 ## Flashing
 
-Flash the right half only.
+You need to flash the right half only.
 Don't forget to flash softdevice s130 first (refer to [program.cmd](program.cmd) for Windows).
 You can also use [$1.80](https://www.aliexpress.com/item//32583160323.html) STM32 board,
 upgrade it with UART adapter ([RX - A9, TX - A10](https://i.imgur.com/sLyYM27.jpg))
