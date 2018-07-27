@@ -20,14 +20,10 @@ enum mitosis_keycodes
 };
 
 
-#define LONGPRESS_DELAY 150
-#define LAYER_TOGGLE_DELAY 300
-
 // Fillers to make layering more clear
 #define _______ KC_TRNS
 #define XXXXXXX KC_NO
 #define DUAL_R  LT(_RAISE,KC_SPC)
-
 
 const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
 
