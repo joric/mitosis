@@ -1,6 +1,6 @@
 # Mitosis-BT
 
-Bluetooth firmware for the Mitosis keyboard (BLE and Gazell timesharing)
+Bluetooth firmware for the Mitosis keyboard (BLE and Gazell timesharing via timeslot API)
 
 ## Video
 
