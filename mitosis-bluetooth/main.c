@@ -442,7 +442,7 @@ void key_handler() {
 						modifiers |= modifier;
 					} else if (key & QK_LAYER_TAP) {
 						m_layer = (key >> 8) & 0xf;
-					} else if (keys_sent<MAX_KEYS && key!=KC_TRNS) {
+					} else if (keys_sent<MAX_KEYS) {
 						buf[2 + keys_sent++] = key;
 					}
 				}
