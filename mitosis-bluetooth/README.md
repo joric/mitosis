@@ -24,6 +24,8 @@ This is actually much better because it also has built in UART ([pin A3](https:/
 on the second virtual COM port so you don't need to occupy another USB port for debugging. Read more
 about it here: https://github.com/joric/mitosis/tree/devel#bluepill
 
+![](https://i.imgur.com/7DW64qP.png)
+
 ## Building
 
 Open mitosis-bluetooth.eww, select Release, hit Make, that's it.
