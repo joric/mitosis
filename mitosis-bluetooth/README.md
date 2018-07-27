@@ -8,13 +8,13 @@ Bluetooth firmware for the Mitosis keyboard (BLE and Gazell timesharing via time
 
 ## Precompiled Firmware
 
-* [mitosis-bt.hex](https://raw.githubusercontent.com/joric/mitosis/devel/precompiled_iar/mitosis-bt.hex) (Mitosis-BT, for the right half only, makes it Gazell host and Bluetooth HID, no receiver needed anymore!)
+* [mitosis-bt.hex](https://raw.githubusercontent.com/joric/mitosis/devel/precompiled_iar/mitosis-bt.hex) (Mitosis-BT, for the right half only, makes it Gazell host and Bluetooth HID, no receiver needed!)
 
 ### Default layout (Mitosis-BT)
 
 [![](https://kle-render.herokuapp.com/api/3f5dd1c848bb9a7a723161ad5e0c8e39?4)](http://www.keyboard-layout-editor.com/#/gists/3f5dd1c848bb9a7a723161ad5e0c8e39)
 
-## Uploading
+## Flashing
 
 You only need to flash the right half! Don't forget to flash softdevice s130 first
 (refer to [program.cmd](program.cmd) on Windows).
