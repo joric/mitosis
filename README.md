@@ -26,12 +26,12 @@ Original Mitosis software repository: https://github.com/reversebias/mitosis
 
 Original Mitosis hardware repository: https://github.com/reversebias/mitosis-hardware
 
-* [ST-LINK/V2][stlink]: $2.54, had in stock (you can also use [$1.80 STM32 board instead](https://gojimmypi.blogspot.com/2017/07/BluePill-STM32F103-to-BlackMagic-Probe.html)).
+* [ST-LINK/V2][stlink]: $2.54, had in stock (you can also use [$1.80](https://www.aliexpress.com/item//32583160323.html) STM32 board [instead](https://gojimmypi.blogspot.com/2017/07/BluePill-STM32F103-to-BlackMagic-Probe.html)).
 * [YJ-14015][yj-ali]: nrf51822 modules, 3 pcs: $10.5 ($3.50 * 3), free shipping, need 2/3, so $7.
 * [10 main PCB's][mitosis.zip] from [EasyEDA], $13.32 ($2 + $11.32 for trackable shipping), used 4/10, so $5.32.
 * [3 receiver PCB's][receiver.zip] from [OshPark], $5.40, free shipping, used only 1/3, so $1.80.
 * [Arduino Pro Micro](https://www.aliexpress.com/item/-/32648920631.html) from Aliexpress (price varies from $2.54 to $4), had in stock.
-* [Si2302] mosfets: board survives reverse polarity for a short while, you may just [short the pads](https://i.imgur.com/h1Mx8Yw.jpg).
+* [Si2302] mosfets: board survives reverse polarity for a while, you may just [short the pads](https://i.imgur.com/h1Mx8Yw.jpg).
 * [ASMB-MTB1-0A3A2] from Aliexpress (or Cree CLVBA-FKA, or 3 single LEDs, very optional)
 * [AMS1117]: 5v to 3v regulator, had in stock. You probably can use diodes for 2v drop.
 * [1206 4.7k] resistor arrays, 2 pcs: had in stock (taken from an old motherboard).
