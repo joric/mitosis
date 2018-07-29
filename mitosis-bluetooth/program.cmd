@@ -1,6 +1,7 @@
 @echo off
 
 set build=Debug
+set merge=0
 
 set file=%~dp0custom\iar\%build%\Exe\nrf51822_xxac.hex
 ::set file=%~dp0custom\armgcc\_build\nrf51822_xxac.hex
@@ -36,15 +37,19 @@ set path=%eabi%;%path%
 set nordic=C:\Program Files (x86)\Nordic Semiconductor\nrf5x\bin
 set path=%nordic%;%path%
 
-echo Merging files...
-
-::mergehex.exe --quiet -m %s130% %file% -o out.hex || exit
+set opt=
+if "%merge%"=="1" (
+echo Merging softdevice...
+mergehex.exe --quiet -m %s130% %file% -o out.hex || exit
+set opt=-ex "mon erase"
+) else (
 copy /Y %file% out.hex
+)
 
 echo Uploading...
 
 arm-none-eabi-gdb.exe --quiet --batch -ex "target extended-remote \\.\%port%" -ex "mon swdp_scan" ^
--ex "file out.hex"  -ex "att 1" -ex "mon erase" -ex "load" -ex "run"
+-ex "file out.hex" -ex "att 1" %opt% -ex "load" -ex "run"
 
 :end
 
