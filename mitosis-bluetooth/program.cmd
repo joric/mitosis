@@ -4,8 +4,10 @@ set build=Debug
 set merge=0
 
 set file=%~dp0custom\iar\%build%\Exe\nrf51822_xxac.hex
-::set file=%~dp0custom\armgcc\_build\nrf51822_xxac.hex
 set s130=%~dp0..\..\components\softdevice\s130\hex\s130_nrf51_2.0.0_softdevice.hex
+
+::gcc version doesn't work yet, see gzll_gcc_nrf51.ld
+::set file=%~dp0custom\armgcc\_build\nrf51822_xxac.hex
 
 set option=bluepill
 
