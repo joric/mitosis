@@ -302,7 +302,7 @@
 #endif //NRF52
 #endif
 
-#define TWI0_ENABLED 0
+#define TWI0_ENABLED 1
 
 #if (TWI0_ENABLED == 1)
 #define TWI0_USE_EASY_DMA 0
@@ -315,7 +315,7 @@
 #define TWI0_INSTANCE_INDEX      0
 #endif
 
-#define TWI1_ENABLED 0
+#define TWI1_ENABLED 1
 
 #if (TWI1_ENABLED == 1)
 #define TWI1_USE_EASY_DMA 0

@@ -48,6 +48,8 @@
 #include "app_error.h"
 #include "app_util_platform.h"
 
+#include "tetris.h"
+
 static ble_hids_t m_hids;	/**< Structure used to identify the HID service. */
 static ble_bas_t m_bas;		/**< Structure used to identify the battery service. */
 static bool m_in_boot_mode = false;			/**< Current protocol mode. */
@@ -416,6 +418,11 @@ uint8_t get_modifier(uint16_t key) {
 	return 0;
 }
 
+// Key buffers
+static uint32_t keys = 0, keys_snapshot = 0;
+static uint32_t debounce_ticks, activity_ticks;
+static volatile bool debouncing = false;
+
 void key_handler() {
 	const int MAX_KEYS = 6;
 	uint8_t buf[8];
@@ -457,6 +464,10 @@ void key_handler() {
 		uint32_t err_code = ble_hids_inp_rep_send(&m_hids, INPUT_REPORT_KEYS_INDEX, INPUT_REPORT_KEYS_MAX_LEN, buf);
 		APP_ERROR_CHECK(err_code);
 	}
+
+	if (keys & (1<<S20)) {
+
+	}
 }
 
 
@@ -496,11 +507,6 @@ static uint32_t read_keys(void) {
 #define DEBOUNCE 5
 #define ACTIVITY 500
 #define DEBOUNCE_MEAS_INTERVAL			APP_TIMER_TICKS(5, APP_TIMER_PRESCALER)
-
-// Key buffers
-static uint32_t keys = 0, keys_snapshot = 0;
-static uint32_t debounce_ticks, activity_ticks;
-static volatile bool debouncing = false;
 
 static void send_data(int keyboard_mode) {
 
@@ -1340,6 +1346,8 @@ int main(void) {
 	gazell_sd_radio_init();
 	printf("Gazell initialized\r\n");
 
+	display_init();
+
 	// Start execution.
 	timers_start();
 	err_code = ble_advertising_start(BLE_ADV_MODE_FAST);
@@ -1352,9 +1360,11 @@ int main(void) {
 	printf("Endpoint: " ADDR_FMT "\n", ADDR_T(addr.addr));
 	printf("Entering main loop.\n");
 
+
 	// Enter main loop.
 	for (;;) {
 		app_sched_execute();
 		power_manage();
+		update();
 	}
 }

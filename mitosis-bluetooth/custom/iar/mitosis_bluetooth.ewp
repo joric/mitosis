@@ -359,6 +359,7 @@
           <state>$PROJ_DIR$\..\..\..\..\components\toolchain</state>
           <state>$PROJ_DIR$\..\..\..\..\components\toolchain\CMSIS\Include</state>
           <state>$PROJ_DIR$\..\..\..\..\components\properitary_rf\gzll</state>
+          <state>D:\Projects\mitosis-keyboard\nRF5_SDK_11\components\drivers_nrf\twi_master</state>
         </option>
         <option>
           <name>CCStdIncCheck</name>
@@ -2134,6 +2135,9 @@
       <name>$PROJ_DIR$\..\..\..\..\components\drivers_nrf\common\nrf_drv_common.c</name>
     </file>
     <file>
+      <name>$PROJ_DIR$\..\..\..\..\components\drivers_nrf\twi_master\nrf_drv_twi.c</name>
+    </file>
+    <file>
       <name>$PROJ_DIR$\..\..\..\..\components\drivers_nrf\uart\nrf_drv_uart.c</name>
     </file>
     <file>
@@ -2192,3 +2196,5 @@
     </file>
   </group>
 </project>
+
+
