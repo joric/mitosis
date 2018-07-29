@@ -48,7 +48,7 @@
 #include "app_error.h"
 #include "app_util_platform.h"
 
-#include "tetris.h"
+#include "display.h"
 
 static ble_hids_t m_hids;	/**< Structure used to identify the HID service. */
 static ble_bas_t m_bas;		/**< Structure used to identify the battery service. */
