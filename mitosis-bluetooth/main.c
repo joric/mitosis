@@ -88,7 +88,7 @@ void m_configure_next_event(void) {
 }
 
 void sys_evt_dispatch(uint32_t evt_id) {
-	printf("%s - %d (%s)\n", __FUNCTION__, evt_id, nrfEvtName(evt_id));
+	printf("%s - %d (%s)\n", __FUNCTION__, (int)evt_id, nrfEvtName(evt_id));
 
 	uint32_t err_code;
 
@@ -400,14 +400,10 @@ uint8_t battery_level_get(void) {
 #define SHIFT_KEY_CODE						0x02	/**< Key code indicating the press of the Shift Key. */
 #define MAX_KEYS_IN_ONE_REPORT				(INPUT_REPORT_KEYS_MAX_LEN - SCAN_CODE_POS)		/**< Maximum number of key presses that can be sent in one Input Report. */
 
-
-
-void hidEmuKbdSendReport(uint8_t modifier, uint8_t keycode);
-
+static void hidEmuKbdSendReport(uint8_t modifier, uint8_t keycode);
 int biton32(int x) {
 	return x;
 }
-
 uint8_t m_layer = 0;
 static bool m_caps_on = false;
 uint16_t matrix[MATRIX_ROWS];

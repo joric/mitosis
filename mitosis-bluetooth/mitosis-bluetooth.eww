@@ -2,7 +2,7 @@
 
 <workspace>
   <project>
-    <path>$WS_DIR$\mitosis\s130\iar\mitosis_bluetooth_s130.ewp</path>
+    <path>$WS_DIR$\custom\iar\mitosis_bluetooth.ewp</path>
   </project>
   <batchBuild/>
 </workspace>

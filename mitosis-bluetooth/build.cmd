@@ -8,10 +8,10 @@ if "%1"=="" (
 	set build=%1
 )
 
-IarBuild.exe mitosis\s130\iar\mitosis_bluetooth_s130.ewp %build%
+IarBuild.exe custom\iar\mitosis_bluetooth.ewp %build%
 
 if "%build%"=="Release" (
-copy /Y mitosis\s130\iar\%build%\Exe\ble_app_hids_keyboard_s130_custom.hex ..\precompiled_iar\mitosis-bt.hex
+copy /Y custom\iar\%build%\Exe\nrf51822_xxac.hex ..\precompiled_iar\mitosis-bt.hex
 )
 
 

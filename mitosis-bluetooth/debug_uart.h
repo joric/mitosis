@@ -172,6 +172,6 @@ char * hciStatusName(int type) {
 #undef APP_ERROR_HANDLER
 #define APP_ERROR_HANDLER(ERR_CODE) app_error_handler_custom((ERR_CODE), __LINE__, (uint8_t*) __FILE__);
 void app_error_handler_custom (ret_code_t error_code, uint32_t line_num, const uint8_t * p_file_name) {
-	printf ("ERROR! code: %d status: %s line: %d file: %s\n", error_code, hciStatusName(error_code), line_num, p_file_name);
+	printf ("ERROR! code: %d status: %s line: %d file: %s\n", (int)error_code, hciStatusName((int)error_code), (int)line_num, p_file_name);
 }
 
