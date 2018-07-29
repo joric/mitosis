@@ -1,8 +1,13 @@
 /* Linker script to configure memory regions. */
 
 /*
-  Can't make GCC work yet. Maybe it's Makefile options, maybe Linker, maybe it's not GCC compatible at all
-  used mergegex with s130 and -ex "mon erase" for flashing
+  Can't make YJ-14015 work yet. Maybe it's Makefile options, maybe Linker, maybe it's not GCC compatible at all
+  used mergegex with s130 and -ex "mon erase" for flashing.
+
+  Defaults are:
+  FLASH (rx) : ORIGIN = 0x1b000, LENGTH = 0x25000
+  RAM (rwx) :  ORIGIN = 0x20002080, LENGTH = 0x5f80
+  Considering YJ-14015 requires LENGTH=0x4000 maybe waveshare modules will work?
 
   RAM (rwx) :  ORIGIN = 0x20000000, LENGTH = 0x4000 //doesn't crash, no uart output
   RAM (rwx) :  ORIGIN = 0x20002000, LENGTH = 0x2000 //overflowed with stack
@@ -21,7 +26,7 @@ GROUP(-lgcc -lc -lnosys)
 MEMORY
 {
   FLASH (rx) : ORIGIN = 0x1b000, LENGTH = 0x25000
-  RAM (rwx) :  ORIGIN = 0x20001A00, LENGTH = 0x2600
+  RAM (rwx) :  ORIGIN = 0x20002080, LENGTH = 0x5f80
 }
 
 SECTIONS
