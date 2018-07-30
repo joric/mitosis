@@ -192,6 +192,7 @@
           <state>BLE_STACK_SUPPORT_REQD</state>
           <state>S130</state>
           <state>COMPILE_REVERSED</state>
+          <state>COMPILE_DEBUG</state>
           <state>SOFTDEVICE_PRESENT</state>
           <state>NRF51</state>
           <state>SWI_DISABLE0</state>

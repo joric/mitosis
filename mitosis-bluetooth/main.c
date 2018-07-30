@@ -1,7 +1,5 @@
 // Mitosis-BT, https://github.com/joric/mitosis/tree/devel
 
-#define DEBUG					// enables UART, etc.
-
 #define COMPILE_RIGHT
 #include "mitosis.h"
 
@@ -406,7 +404,6 @@ int biton32(int x) {
 }
 uint8_t m_layer = 0;
 static bool m_caps_on = false;
-uint16_t matrix[MATRIX_ROWS];
 
 uint8_t get_modifier(uint16_t key) {
 	const int modifiers[] = {KC_LCTRL, KC_LSHIFT, KC_LALT, KC_LGUI, KC_RCTRL, KC_RSHIFT, KC_RALT, KC_RGUI};
@@ -425,10 +422,10 @@ void key_handler() {
 	memset(buf, 0, sizeof(buf));
 
 	for (uint8_t row = 0; row < MATRIX_ROWS; row++) {
-		matrix[row] = (uint16_t) data_buffer[row * 2] | (uint16_t) data_buffer[row * 2 + 1] << 5;
-		if (matrix[row]) {
+		uint16_t val = (uint16_t) data_buffer[row * 2] | (uint16_t) data_buffer[row * 2 + 1] << 5;
+		if (val) {
 			for (int col = 0; col < 16; col++) {
-				if (matrix[row] & (1 << col)) {
+				if (val & (1 << col)) {
 					keys_pressed++;
 					uint16_t key = keymaps[m_layer][row][col];
 					if (key == KC_TRNS)
@@ -487,30 +484,34 @@ static void gpio_config(void) {
 	nrf_gpio_cfg_sense_input(S23, NRF_GPIO_PIN_PULLUP, NRF_GPIO_PIN_SENSE_LOW);
 }
 
+
 // Return the key states, masked with valid key pins
 static uint32_t read_keys(void) {
+//#define FILTER_OUT_UART_PIN_KEY // uncomment on unwanted HID reports
+#ifdef FILTER_OUT_UART_PIN_KEY
+	uint32_t uart_pin = 1 << TX_PIN_NUMBER;
+	return ~NRF_GPIO->IN & INPUT_MASK & ~uart_pin;
+#else
 	return ~NRF_GPIO->IN & INPUT_MASK;
+#endif
 }
 
 // Debounce time (dependent on tick frequency)
-#define DEBOUNCE 5
-#define ACTIVITY 500
-#define DEBOUNCE_MEAS_INTERVAL			APP_TIMER_TICKS(5, APP_TIMER_PRESCALER)
+#define ACTIVITY 1000
+#define DEBOUNCE_MEAS_INTERVAL			APP_TIMER_TICKS(25, APP_TIMER_PRESCALER)
 
 // Key buffers
 static uint32_t keys = 0, keys_snapshot = 0;
-static uint32_t debounce_ticks, activity_ticks;
-static volatile bool debouncing = false;
+static uint32_t activity_ticks = 0;
 
-static void send_data(int keyboard_mode) {
-
+static void send_data() {
 	static uint8_t *data_payload = data_payload_right;
 
 	data_payload[0] = ((keys & 1 << S01) ? 1 : 0) << 7 | ((keys & 1 << S02) ? 1 : 0) << 6 | ((keys & 1 << S03) ? 1 : 0) << 5 | ((keys & 1 << S04) ? 1 : 0) << 4 | ((keys & 1 << S05) ? 1 : 0) << 3 | ((keys & 1 << S06) ? 1 : 0) << 2 | ((keys & 1 << S07) ? 1 : 0) << 1 | ((keys & 1 << S08) ? 1 : 0) << 0;
 	data_payload[1] = ((keys & 1 << S09) ? 1 : 0) << 7 | ((keys & 1 << S10) ? 1 : 0) << 6 | ((keys & 1 << S11) ? 1 : 0) << 5 | ((keys & 1 << S12) ? 1 : 0) << 4 | ((keys & 1 << S13) ? 1 : 0) << 3 | ((keys & 1 << S14) ? 1 : 0) << 2 | ((keys & 1 << S15) ? 1 : 0) << 1 | ((keys & 1 << S16) ? 1 : 0) << 0;
 	data_payload[2] = ((keys & 1 << S17) ? 1 : 0) << 7 | ((keys & 1 << S18) ? 1 : 0) << 6 | ((keys & 1 << S19) ? 1 : 0) << 5 | ((keys & 1 << S20) ? 1 : 0) << 4 | ((keys & 1 << S21) ? 1 : 0) << 3 | ((keys & 1 << S22) ? 1 : 0) << 2 | ((keys & 1 << S23) ? 1 : 0) << 1 | 0 << 0;
 
-	if (keyboard_mode != MODE_BLUETOOTH)
+	if (m_keyboard_mode != MODE_BLUETOOTH)
 		nrf_gzll_add_packet_to_tx_fifo(PIPE_NUMBER, data_payload, TX_PAYLOAD_LENGTH);
 
 	data_buffer[1] = ((data_payload_right[0] & 1 << 7) ? 1 : 0) << 0 | ((data_payload_right[0] & 1 << 6) ? 1 : 0) << 1 | ((data_payload_right[0] & 1 << 5) ? 1 : 0) << 2 | ((data_payload_right[0] & 1 << 4) ? 1 : 0) << 3 | ((data_payload_right[0] & 1 << 3) ? 1 : 0) << 4;
@@ -518,49 +519,34 @@ static void send_data(int keyboard_mode) {
 	data_buffer[5] = ((data_payload_right[1] & 1 << 5) ? 1 : 0) << 0 | ((data_payload_right[1] & 1 << 4) ? 1 : 0) << 1 | ((data_payload_right[1] & 1 << 3) ? 1 : 0) << 2 | ((data_payload_right[1] & 1 << 2) ? 1 : 0) << 3 | ((data_payload_right[1] & 1 << 1) ? 1 : 0) << 4;
 	data_buffer[7] = ((data_payload_right[1] & 1 << 0) ? 1 : 0) << 0 | ((data_payload_right[2] & 1 << 7) ? 1 : 0) << 1 | ((data_payload_right[2] & 1 << 6) ? 1 : 0) << 2 | ((data_payload_right[2] & 1 << 5) ? 1 : 0) << 3;
 	data_buffer[9] = ((data_payload_right[2] & 1 << 4) ? 1 : 0) << 0 | ((data_payload_right[2] & 1 << 3) ? 1 : 0) << 1 | ((data_payload_right[2] & 1 << 2) ? 1 : 0) << 2 | ((data_payload_right[2] & 1 << 1) ? 1 : 0) << 3;
-
-	key_handler();
 }
 
-// 1000Hz debounce sampling
+// former 1000Hz debounce sampling - it's 25 ticks now. do we still need debouncing? seem to work fine
 static void handler_debounce(void *p_context) {
 
-	keys_recv = data_payload_left[0] | (data_payload_left[1] << 8) | (data_payload_left[2] << 16);
-	if (keys_recv != keys_recv_snapshot)
+	// right half
+	keys_snapshot = read_keys();
+	if (keys != keys_snapshot) {
+		keys = keys_snapshot;
+		send_data();
 		key_handler();
-	keys_recv_snapshot = keys_recv;
-
-	// debouncing, waits until there have been no transitions in 5ms (assuming five 1ms ticks)
-	if (debouncing) {
-		// if debouncing, check if current keystates equal to the snapshot
-		if (keys_snapshot == read_keys()) {
-			// DEBOUNCE ticks of stable sampling needed before sending data
-			debounce_ticks++;
-			if (debounce_ticks == DEBOUNCE) {
-				keys = keys_snapshot;
-				send_data(m_keyboard_mode);
-			}
-		} else {
-			// if keys change, start period again
-			debouncing = false;
-		}
-	} else {
-		// if the keystate is different from the last data
-		// sent to the receiver, start debouncing
-		if (keys != read_keys()) {
-			keys_snapshot = read_keys();
-			debouncing = true;
-			debounce_ticks = 0;
-		}
 	}
 
-	// looking for 500 ticks of no keys pressed, to go back to deep sleep
-	if (read_keys() == 0) {
-		activity_ticks++;
-		if (activity_ticks > ACTIVITY) {
-			//nrf_drv_rtc_disable(&rtc_maint);
-			//nrf_drv_rtc_disable(&rtc_deb);
-		}
+	// left half
+	keys_recv = data_payload_left[0] | (data_payload_left[1] << 8) | (data_payload_left[2] << 16);
+	if (keys_recv != keys_recv_snapshot) {
+		keys_recv_snapshot = keys_recv;
+		key_handler();
+	}
+
+	if ( keys == 0 && keys_recv == 0 ) {
+        activity_ticks++;
+        if (activity_ticks > ACTIVITY) {
+			printf("shutting down on inactivity...");
+			nrf_delay_ms(100);
+			// Go to system-off mode (this function will not return; wakeup will cause a reset).
+			sd_power_system_off();
+        }
 	} else {
 		activity_ticks = 0;
 	}
@@ -1317,12 +1303,7 @@ int main(void) {
 		nrf_delay_ms(250);
 	}
 
-	debouncing = false;
-	debounce_ticks = 0;
-	activity_ticks = 0;
-
 	// Initialize.
-	app_trace_init();
 	timers_init();
 	buttons_leds_init(&erase_bonds);
 
