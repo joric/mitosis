@@ -2072,6 +2072,9 @@
       <name>$PROJ_DIR$\..\..\app_timer_qdec.c</name>
     </file>
     <file>
+      <name>$PROJ_DIR$\..\..\display.h</name>
+    </file>
+    <file>
       <name>$PROJ_DIR$\..\..\keymap.c</name>
     </file>
     <file>

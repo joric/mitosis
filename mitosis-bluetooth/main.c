@@ -162,6 +162,11 @@ void m_process_gazelle() {
 		data_buffer[7] = ((data_payload_right[1] & 1 << 0) ? 1 : 0) << 0 | ((data_payload_right[2] & 1 << 7) ? 1 : 0) << 1 | ((data_payload_right[2] & 1 << 6) ? 1 : 0) << 2 | ((data_payload_right[2] & 1 << 5) ? 1 : 0) << 3;
 		data_buffer[9] = ((data_payload_right[2] & 1 << 4) ? 1 : 0) << 0 | ((data_payload_right[2] & 1 << 3) ? 1 : 0) << 1 | ((data_payload_right[2] & 1 << 2) ? 1 : 0) << 2 | ((data_payload_right[2] & 1 << 1) ? 1 : 0) << 3;
 	}
+
+	keys_recv = data_payload_left[0] | (data_payload_left[1] << 8) | (data_payload_left[2] << 16);
+	if (keys_recv != keys_recv_snapshot)
+		key_handler();
+	keys_recv_snapshot = keys_recv;
 }
 
 
@@ -291,6 +296,7 @@ void nrf_gzll_host_rx_data_ready(uint32_t pipe, nrf_gzll_host_rx_info_t rx_info)
 		// Pop packet and write first byte of the payload to the GPIO port.
 		nrf_gzll_fetch_packet_from_rx_fifo(pipe, data_payload_right, &data_payload_length);
 	}
+
 	// not sure if required, I guess if enough packets are missed during blocking uart
 	nrf_gzll_flush_rx_fifo(pipe);
 
@@ -419,8 +425,7 @@ uint8_t get_modifier(uint16_t key) {
 
 // Key buffers
 static uint32_t keys = 0, keys_snapshot = 0;
-static uint32_t debounce_ticks, activity_ticks;
-static volatile bool debouncing = false;
+void display_keypress(uint8_t key);
 
 void key_handler() {
 	const int MAX_KEYS = 6;
@@ -446,12 +451,7 @@ void key_handler() {
 						m_layer = (key >> 8) & 0xf;
 					} else if (keys_sent<MAX_KEYS) {
 						buf[2 + keys_sent++] = key;
-
-						if (key==KC_UP) g_key |= KEY_V1;
-						if (key==KC_DOWN) g_key |= KEY_V2;
-						if (key==KC_LEFT) g_key |= KEY_V3;
-						if (key==KC_RIGHT) g_key |= KEY_V4;
-
+						display_keypress(key);
 					}
 				}
 			}
@@ -460,9 +460,6 @@ void key_handler() {
 
 	if (!keys_pressed)
 		m_layer = 0;
-
-	if (!keys_pressed)
-		g_key = 0;
 
 	buf[0] = modifiers;
 	buf[1] = 0; // reserved
@@ -507,12 +504,10 @@ static uint32_t read_keys(void) {
 	return ~NRF_GPIO->IN & INPUT_MASK;
 }
 
-// Debounce time (dependent on tick frequency)
-#define DEBOUNCE 5
-#define ACTIVITY 500
+// Debounce time (dependent on tick frequency)[
 #define DEBOUNCE_MEAS_INTERVAL			APP_TIMER_TICKS(20, APP_TIMER_PRESCALER)
 
-static void send_data(int keyboard_mode) {
+static void send_data() {
 
 	static uint8_t *data_payload = data_payload_right;
 
@@ -520,7 +515,7 @@ static void send_data(int keyboard_mode) {
 	data_payload[1] = ((keys & 1 << S09) ? 1 : 0) << 7 | ((keys & 1 << S10) ? 1 : 0) << 6 | ((keys & 1 << S11) ? 1 : 0) << 5 | ((keys & 1 << S12) ? 1 : 0) << 4 | ((keys & 1 << S13) ? 1 : 0) << 3 | ((keys & 1 << S14) ? 1 : 0) << 2 | ((keys & 1 << S15) ? 1 : 0) << 1 | ((keys & 1 << S16) ? 1 : 0) << 0;
 	data_payload[2] = ((keys & 1 << S17) ? 1 : 0) << 7 | ((keys & 1 << S18) ? 1 : 0) << 6 | ((keys & 1 << S19) ? 1 : 0) << 5 | ((keys & 1 << S20) ? 1 : 0) << 4 | ((keys & 1 << S21) ? 1 : 0) << 3 | ((keys & 1 << S22) ? 1 : 0) << 2 | ((keys & 1 << S23) ? 1 : 0) << 1 | 0 << 0;
 
-	if (keyboard_mode != MODE_BLUETOOTH)
+	if (m_keyboard_mode != MODE_BLUETOOTH)
 		nrf_gzll_add_packet_to_tx_fifo(PIPE_NUMBER, data_payload, TX_PAYLOAD_LENGTH);
 
 	data_buffer[1] = ((data_payload_right[0] & 1 << 7) ? 1 : 0) << 0 | ((data_payload_right[0] & 1 << 6) ? 1 : 0) << 1 | ((data_payload_right[0] & 1 << 5) ? 1 : 0) << 2 | ((data_payload_right[0] & 1 << 4) ? 1 : 0) << 3 | ((data_payload_right[0] & 1 << 3) ? 1 : 0) << 4;
@@ -532,49 +527,13 @@ static void send_data(int keyboard_mode) {
 	key_handler();
 }
 
-// 1000Hz debounce sampling
+// 1000Hz debounce sampling // not applicable anymore, use 5 ms timer for automatic debouncing
 static void handler_debounce(void *p_context) {
-
-	keys_recv = data_payload_left[0] | (data_payload_left[1] << 8) | (data_payload_left[2] << 16);
-	if (keys_recv != keys_recv_snapshot)
-		key_handler();
-	keys_recv_snapshot = keys_recv;
-
-	// debouncing, waits until there have been no transitions in 5ms (assuming five 1ms ticks)
-	if (debouncing) {
-		// if debouncing, check if current keystates equal to the snapshot
-		if (keys_snapshot == read_keys()) {
-			// DEBOUNCE ticks of stable sampling needed before sending data
-			debounce_ticks++;
-			if (debounce_ticks == DEBOUNCE) {
-				keys = keys_snapshot;
-				send_data(m_keyboard_mode);
-			}
-		} else {
-			// if keys change, start period again
-			debouncing = false;
-		}
-	} else {
-		// if the keystate is different from the last data
-		// sent to the receiver, start debouncing
-		if (keys != read_keys()) {
-			keys_snapshot = read_keys();
-			debouncing = true;
-			debounce_ticks = 0;
-		}
+	keys_snapshot = read_keys();
+	if (keys != keys_snapshot) {
+		keys = keys_snapshot;
+		send_data();
 	}
-
-	// looking for 500 ticks of no keys pressed, to go back to deep sleep
-	if (read_keys() == 0) {
-		activity_ticks++;
-		if (activity_ticks > ACTIVITY) {
-			//nrf_drv_rtc_disable(&rtc_maint);
-			//nrf_drv_rtc_disable(&rtc_deb);
-		}
-	} else {
-		activity_ticks = 0;
-	}
-
 }
 
 typedef enum {
@@ -1332,10 +1291,6 @@ int main(void) {
 		nrf_gpio_pin_clear(LED_PIN);
 		nrf_delay_ms(250);
 	}
-
-	debouncing = false;
-	debounce_ticks = 0;
-	activity_ticks = 0;
 
 	// Initialize.
 	//app_trace_init();
