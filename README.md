@@ -4,7 +4,7 @@ Tetris for the Mitosis Keyboard
 
 ## Hardware
 
-* YJ-14015 (ARM Cortex-M0, 16Mhz, 128Kb flash, 16 Kb RAM)
+* YJ-14015 (Core51822, ARM Cortex-M0, 16Mhz, 256Kb flash, 16 Kb RAM)
 * SSD1306 (White 128x32 OLED Display, I2C interface)
 * DIY Blackmagic programmer and debugger (STM32F103-based)
 
