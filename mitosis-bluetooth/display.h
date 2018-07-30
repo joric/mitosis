@@ -80,7 +80,7 @@ void ssd1306_command(uint8_t c) {
 		while (twi_evt_done != true);
 		twi_evt_done = false;
 	} else {
-		nrf_delay_ms(10);
+		//nrf_delay_ms(10);
 	}
 }
 
@@ -101,8 +101,8 @@ void ssd1306_write(uint8_t c) {
 	ret = nrf_drv_twi_tx(&m_twi, SSD1306_I2C_ADDRESS, &c, 1, true);
 
         if (ret != 0) {
-                printf("ssd1306 send data failed err = %d\r\n", ret);
-                nrf_delay_ms(10);
+                //printf("ssd1306 send data failed err = %d\r\n", ret);
+                //nrf_delay_ms(10);
         } else {
                 while (twi_evt_done != true);
                 twi_evt_done = false;
@@ -116,8 +116,8 @@ void ssd1306_data(uint8_t data){
         uint8_t dta_send[] = {0x40, data};
         ret = nrf_drv_twi_tx(&m_twi, SSD1306_I2C_ADDRESS, dta_send, 2, false);
         if (ret != 0) {
-                printf("ssd1306 send data %02X failed err = %d\r\n", data, ret);
-                nrf_delay_ms(10);
+                //printf("ssd1306 send data %02X failed err = %d\r\n", data, ret);
+                //nrf_delay_ms(10);
         } else {
                 while (twi_evt_done != true);
                 twi_evt_done = false;
@@ -141,7 +141,6 @@ void Oled_DrawArea(int x, int y, int w, int h, uint8_t * buf) {
 	static uint8_t control = 0x40;
 	nrf_drv_twi_tx(&m_twi, SSD1306_I2C_ADDRESS, &control, 1, true);
 	nrf_drv_twi_tx(&m_twi, SSD1306_I2C_ADDRESS, buf, w * h / 8, false);
-
 	// ^ does not work
 #endif
 
@@ -156,7 +155,7 @@ void display_init() {
 	nrf_drv_twi_config_t twi_config = {
 		.scl = SCL_PIN,
 		.sda = SDA_PIN,
-		.frequency = NRF_TWI_FREQ_100K,
+		.frequency = NRF_TWI_FREQ_400K,
 		.interrupt_priority = APP_IRQ_PRIORITY_HIGH
 	};
 
@@ -165,9 +164,7 @@ void display_init() {
 
 	cmd(0xAE, 0xD5, 0x80, 0xA8, 0x1F, 0xD3, 0x00, 0x40, 0x8D, 0x14, 0x20, 0x00, 0xA1, 0xC8, 0xDA, 0x02, 0x81, 0x8F, 0xD9, 0xF1, 0xDB, 0x40, 0xA4, 0xA6, 0x2E, 0xAF, -1);
 
-	for (int i = 0; i < SCREEN_W * SCREEN_H / 8; i++) {
-		buf[i] = 0x00;
-	}
+	memset(buf, 0, sizeof(buf));
 
 	oledWriteString("Mitosis-BT2", 0, 0);
 	oledWriteString(" Main menu", 0, 16);
@@ -180,11 +177,9 @@ static bool m_display_init = false;
 static int m_display_counter = 0;
 void display_update() {
 
-	for (int i = 0; i < SCREEN_W * SCREEN_H / 8; i++) {
-		buf[i] = m_display_counter % 0xff;
-	}
+	memset(buf, m_display_counter % 0xff, sizeof(buf));
 
-	//Oled_DrawArea(0, 0, 4, 8, buf);
+	Oled_DrawArea(0, 0, 128, 32, buf);
 
 	m_display_counter++;
 }

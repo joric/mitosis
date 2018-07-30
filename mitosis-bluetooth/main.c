@@ -506,7 +506,7 @@ static uint32_t read_keys(void) {
 // Debounce time (dependent on tick frequency)
 #define DEBOUNCE 5
 #define ACTIVITY 500
-#define DEBOUNCE_MEAS_INTERVAL			APP_TIMER_TICKS(5, APP_TIMER_PRESCALER)
+#define DEBOUNCE_MEAS_INTERVAL			APP_TIMER_TICKS(50, APP_TIMER_PRESCALER)
 
 static void send_data(int keyboard_mode) {
 
@@ -914,11 +914,13 @@ static void on_hid_rep_char_write(ble_hids_evt_t * p_evt) {
 
 
 static void sleep_mode_enter(void) {
-	uint32_t err_code;
+	//uint32_t err_code;
 
 	// Go to system-off mode (this function will not return; wakeup will cause a reset).
-	err_code = sd_power_system_off();
-	APP_ERROR_CHECK(err_code);
+
+	//err_code = sd_power_system_off();
+
+	//APP_ERROR_CHECK(err_code);
 }
 
 
@@ -1096,8 +1098,10 @@ static void on_ble_evt(ble_evt_t * p_ble_evt) {
 		case BLE_GAP_EVT_TIMEOUT:
 			if (p_ble_evt->evt.gap_evt.params.timeout.src == BLE_GAP_TIMEOUT_SRC_ADVERTISING) {
 				// Go to system-off mode (this function will not return; wakeup will cause a reset)
-				err_code = sd_power_system_off();
-				APP_ERROR_CHECK(err_code);
+
+				//err_code = sd_power_system_off();
+
+				//APP_ERROR_CHECK(err_code);
 			}
 			break;
 
