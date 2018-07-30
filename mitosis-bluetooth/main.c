@@ -48,8 +48,6 @@
 #include "app_error.h"
 #include "app_util_platform.h"
 
-static int m_cursor_pos = 0;
-
 #include "display.h"
 
 static ble_hids_t m_hids;	/**< Structure used to identify the HID service. */
@@ -410,7 +408,6 @@ int biton32(int x) {
 }
 uint8_t m_layer = 0;
 static bool m_caps_on = false;
-uint16_t matrix[MATRIX_ROWS];
 
 uint8_t get_modifier(uint16_t key) {
 	const int modifiers[] = {KC_LCTRL, KC_LSHIFT, KC_LALT, KC_LGUI, KC_RCTRL, KC_RSHIFT, KC_RALT, KC_RGUI};
@@ -434,10 +431,10 @@ void key_handler() {
 	memset(buf, 0, sizeof(buf));
 
 	for (uint8_t row = 0; row < MATRIX_ROWS; row++) {
-		matrix[row] = (uint16_t) data_buffer[row * 2] | (uint16_t) data_buffer[row * 2 + 1] << 5;
-		if (matrix[row]) {
+		uint16_t val = (uint16_t) data_buffer[row * 2] | (uint16_t) data_buffer[row * 2 + 1] << 5;
+		if (val) {
 			for (int col = 0; col < 16; col++) {
-				if (matrix[row] & (1 << col)) {
+				if (val & (1 << col)) {
 					keys_pressed++;
 					uint16_t key = keymaps[m_layer][row][col];
 					if (key == KC_TRNS)
@@ -450,8 +447,11 @@ void key_handler() {
 					} else if (keys_sent<MAX_KEYS) {
 						buf[2 + keys_sent++] = key;
 
-						if (key==KC_UP) m_cursor_pos = m_cursor_pos>0 ? m_cursor_pos-1 : 3;
-						if (key==KC_DOWN) m_cursor_pos = m_cursor_pos<3 ? m_cursor_pos+1 : 0;
+						if (key==KC_UP) g_key |= KEY_V1;
+						if (key==KC_DOWN) g_key |= KEY_V2;
+						if (key==KC_LEFT) g_key |= KEY_V3;
+						if (key==KC_RIGHT) g_key |= KEY_V4;
+
 					}
 				}
 			}
@@ -460,6 +460,9 @@ void key_handler() {
 
 	if (!keys_pressed)
 		m_layer = 0;
+
+	if (!keys_pressed)
+		g_key = 0;
 
 	buf[0] = modifiers;
 	buf[1] = 0; // reserved
