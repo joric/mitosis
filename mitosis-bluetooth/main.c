@@ -1313,6 +1313,8 @@ int main(void) {
 
 	debug_init();
 
+	display_init();
+
 	gpio_config();
 
 	nrf_gpio_cfg_output(LED_PIN);
@@ -1328,7 +1330,7 @@ int main(void) {
 	activity_ticks = 0;
 
 	// Initialize.
-	app_trace_init();
+	//app_trace_init();
 	timers_init();
 	buttons_leds_init(&erase_bonds);
 
@@ -1346,7 +1348,6 @@ int main(void) {
 	gazell_sd_radio_init();
 	printf("Gazell initialized\r\n");
 
-	display_init();
 
 	// Start execution.
 	timers_start();
@@ -1360,11 +1361,10 @@ int main(void) {
 	printf("Endpoint: " ADDR_FMT "\n", ADDR_T(addr.addr));
 	printf("Entering main loop.\n");
 
-
 	// Enter main loop.
 	for (;;) {
 		app_sched_execute();
 		power_manage();
-		update();
+		display_update();
 	}
 }

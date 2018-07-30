@@ -45,27 +45,21 @@ static const uint8_t ASCII[] PROGMEM = {
 	0x00, 0x00, 0x41, 0x36, 0x08, 0x00, 0x10, 0x08, 0x08, 0x10, 0x08, 0x78, 0x46, 0x41, 0x46, 0x78
 };
 
-#define u8 uint8_t
-#define u16 uint16_t
-#define u32 uint32_t
-
-u8 buf[SCREEN_W * SCREEN_H / 8] PROGMEM;
+uint8_t buf[SCREEN_W * SCREEN_H / 8] PROGMEM;
 
 void oledWriteCharacter (char c, uint8_t ** pp) {
 	uint8_t *p = *pp;
 	const uint8_t * src = ASCII + (c - 0x20)*5;
-	for (int i = 0; i < 5; i++) {
+	for (int i = 0; i < 5; i++)
 		*p++ = *src++;
-	}
-	*p++ = 0x00;				// 1px space
+	*p++ = 0x00; // 1px space
 	*pp = p;
 }
 
 void oledWriteString (const char *s, int x, int y) {
 	uint8_t *p = buf + y * SCREEN_W / 8 + x;
-	while (*s) {
-			oledWriteCharacter(*s++, &p);
-	}
+	while (*s)
+		oledWriteCharacter(*s++, &p);
 }
 
 
@@ -93,6 +87,7 @@ void ssd1306_command(uint8_t c) {
 void cmd(uint8_t b, ...) {
 	va_list v;
 	va_start(v, b);
+	ssd1306_command(b);
 	for (;;) {
 		uint8_t c = va_arg(v, int);
 		if (c == 0xff)
@@ -132,27 +127,22 @@ void ssd1306_data(uint8_t data){
 }
 
 
-void Oled_DrawArea(int x, int y, int w, int h, u8 * buf) {
+void Oled_DrawArea(int x, int y, int w, int h, uint8_t * buf) {
 
 	send_count = 0;
 
-        ssd1306_command(0x21); // set column start/end
-        ssd1306_command(0);
-        ssd1306_command(127);
-
-        ssd1306_command(0x22); // set page start/end
-        ssd1306_command(0);
-        ssd1306_command(7);
+		cmd(0x21, 0, SCREEN_W - 1, 0x22, 0, SCREEN_H==64 ? 7 : SCREEN_H==32 ? 3 : 1, 0xff);
 
 #if 1
         for (int i = 0; i < w * h / 8; i++) {
                 ssd1306_data(buf[i]);
         }
 #else
- 		ssd1306_write(0x40);
-        for (int i = 0; i < w * h / 8; i++) {
-                ssd1306_write(buf[i]);
-        }
+	static uint8_t control = 0x40;
+	nrf_drv_twi_tx(&m_twi, SSD1306_I2C_ADDRESS, &control, 1, true);
+	nrf_drv_twi_tx(&m_twi, SSD1306_I2C_ADDRESS, buf, w * h / 8, false);
+
+	// ^ does not work
 #endif
 
 
@@ -179,16 +169,16 @@ void display_init() {
 		buf[i] = 0x00;
 	}
 
-	oledWriteString("Mitosis-BT", 0, 0);
+	oledWriteString("Mitosis-BT2", 0, 0);
 	oledWriteString(" Main menu", 0, 16);
-	oledWriteString(">Connected devices", 0, 24);
+	oledWriteString(">Connected devices 4", 0, 24);
 
 	Oled_DrawArea(0, 0, SCREEN_W, SCREEN_H, buf);
 }
 
 static bool m_display_init = false;
 static int m_display_counter = 0;
-void update() {
+void display_update() {
 
 	for (int i = 0; i < SCREEN_W * SCREEN_H / 8; i++) {
 		buf[i] = m_display_counter % 0xff;
