@@ -3,13 +3,13 @@
 #define SCL_PIN 28
 #define SDA_PIN 29
 
-#define SCREEN_W 128
-#define SCREEN_H 32
-#define BUFSIZE (SCREEN_W * SCREEN_H / 8)
-
 #define SSD1306_I2C_ADDRESS	0x3c
 #define SSD1306_LCDWIDTH	128
 #define SSD1306_LCDHEIGHT	32
+
+#define SCREEN_W SSD1306_LCDWIDTH
+#define SCREEN_H SSD1306_LCDHEIGHT
+#define BUFSIZE (SCREEN_W * SCREEN_H / 8)
 
 static const nrf_drv_twi_t m_twi = NRF_DRV_TWI_INSTANCE(1);
 static uint16_t send_count = 0;
@@ -99,6 +99,7 @@ void display_init() {
 }
 
 //////////////////////////////////////////////////////////
+// copypasted from ts100tris almost verbatim
 
 #define u8 unsigned char
 #define u16 unsigned short
@@ -111,8 +112,8 @@ static uint8_t screen[FIELD_W][FIELD_H];
 
 #define NUM_FIGURES 7
 
-#define BMP_WIDTH 128
-#define BMP_HEIGHT 32
+#define BMP_WIDTH SCREEN_W
+#define BMP_HEIGHT SCREEN_H
 #define FALSE 0
 #define TRUE 1
 
