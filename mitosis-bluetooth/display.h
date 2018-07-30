@@ -166,10 +166,6 @@ void display_init() {
 
 	memset(buf, 0, sizeof(buf));
 
-	oledWriteString("Mitosis-BT2", 0, 0);
-	oledWriteString(" Main menu", 0, 16);
-	oledWriteString(">Connected devices 4", 0, 24);
-
 	Oled_DrawArea(0, 0, SCREEN_W, SCREEN_H, buf);
 }
 
@@ -177,9 +173,17 @@ static bool m_display_init = false;
 static int m_display_counter = 0;
 void display_update() {
 
-	memset(buf, m_display_counter % 0xff, sizeof(buf));
+	memset(buf, 0, sizeof(buf));
 
-	Oled_DrawArea(0, 0, 128, 32, buf);
+	oledWriteString("  Mitosis-BT", 0, 0);
+	char * anim = "-\\|/-\\|/";
+	char c = anim [ (m_display_counter) % 8 ];
+	oledWriteString(&c, 0, 0);
+
+	oledWriteString("  Main menu", 0, 16);
+	oledWriteString("> Connected devices", 0, 24);
+
+	Oled_DrawArea(0, 0, SCREEN_W, SCREEN_H, buf);
 
 	m_display_counter++;
 }
