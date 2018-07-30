@@ -48,6 +48,8 @@
 #include "app_error.h"
 #include "app_util_platform.h"
 
+static int m_cursor_pos = 0;
+
 #include "display.h"
 
 static ble_hids_t m_hids;	/**< Structure used to identify the HID service. */
@@ -447,6 +449,9 @@ void key_handler() {
 						m_layer = (key >> 8) & 0xf;
 					} else if (keys_sent<MAX_KEYS) {
 						buf[2 + keys_sent++] = key;
+
+						if (key==KC_UP) m_cursor_pos = m_cursor_pos>0 ? m_cursor_pos-1 : 3;
+						if (key==KC_DOWN) m_cursor_pos = m_cursor_pos<3 ? m_cursor_pos+1 : 0;
 					}
 				}
 			}
@@ -463,10 +468,6 @@ void key_handler() {
 		printf("Sending HID report: %02x %02x %02x %02x %02x %02x %02x %02x\n", buf[0], buf[1], buf[2], buf[3], buf[4], buf[5], buf[6], buf[7]);
 		uint32_t err_code = ble_hids_inp_rep_send(&m_hids, INPUT_REPORT_KEYS_INDEX, INPUT_REPORT_KEYS_MAX_LEN, buf);
 		APP_ERROR_CHECK(err_code);
-	}
-
-	if (keys & (1<<S20)) {
-
 	}
 }
 
@@ -506,7 +507,7 @@ static uint32_t read_keys(void) {
 // Debounce time (dependent on tick frequency)
 #define DEBOUNCE 5
 #define ACTIVITY 500
-#define DEBOUNCE_MEAS_INTERVAL			APP_TIMER_TICKS(50, APP_TIMER_PRESCALER)
+#define DEBOUNCE_MEAS_INTERVAL			APP_TIMER_TICKS(20, APP_TIMER_PRESCALER)
 
 static void send_data(int keyboard_mode) {
 

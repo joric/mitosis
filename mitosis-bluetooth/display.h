@@ -6,11 +6,11 @@
 #define SCREEN_W 128
 #define SCREEN_H 32
 
-#define SSD1306_I2C_ADDRESS 0x3c
+#define SSD1306_I2C_ADDRESS	0x3c
 
 #define SSD1306_128_32
-#define SSD1306_LCDWIDTH                  128
-#define SSD1306_LCDHEIGHT                 32
+#define SSD1306_LCDWIDTH	128
+#define SSD1306_LCDHEIGHT	32
 
 static const uint8_t ASCII[] PROGMEM = {
 	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x5f, 0x00, 0x00, 0x00, 0x07, 0x00, 0x07, 0x00, 0x14,
@@ -47,16 +47,16 @@ static const uint8_t ASCII[] PROGMEM = {
 
 uint8_t buf[SCREEN_W * SCREEN_H / 8] PROGMEM;
 
-void oledWriteCharacter (char c, uint8_t ** pp) {
+void oledWriteCharacter(char c, uint8_t ** pp) {
 	uint8_t *p = *pp;
-	const uint8_t * src = ASCII + (c - 0x20)*5;
+	const uint8_t *src = ASCII + (c - 0x20) * 5;
 	for (int i = 0; i < 5; i++)
 		*p++ = *src++;
-	*p++ = 0x00; // 1px space
+	*p++ = 0x00;				// 1px space
 	*pp = p;
 }
 
-void oledWriteString (const char *s, int x, int y) {
+void oledWriteString(const char *s, int x, int y) {
 	uint8_t *p = buf + y * SCREEN_W / 8 + x;
 	while (*s)
 		oledWriteCharacter(*s++, &p);
@@ -100,47 +100,64 @@ void ssd1306_write(uint8_t c) {
 	ret_code_t ret;
 	ret = nrf_drv_twi_tx(&m_twi, SSD1306_I2C_ADDRESS, &c, 1, true);
 
-        if (ret != 0) {
-                //printf("ssd1306 send data failed err = %d\r\n", ret);
-                //nrf_delay_ms(10);
-        } else {
-                while (twi_evt_done != true);
-                twi_evt_done = false;
-        }
+	if (ret != 0) {
+		//printf("ssd1306 send data failed err = %d\r\n", ret);
+		//nrf_delay_ms(10);
+	} else {
+		while (twi_evt_done != true);
+		twi_evt_done = false;
+	}
 
-        UNUSED_VARIABLE(ret);
+	UNUSED_VARIABLE(ret);
 }
 
-void ssd1306_data(uint8_t data){
-        ret_code_t ret;
-        uint8_t dta_send[] = {0x40, data};
-        ret = nrf_drv_twi_tx(&m_twi, SSD1306_I2C_ADDRESS, dta_send, 2, false);
-        if (ret != 0) {
-                //printf("ssd1306 send data %02X failed err = %d\r\n", data, ret);
-                //nrf_delay_ms(10);
-        } else {
-                while (twi_evt_done != true);
-                twi_evt_done = false;
-        }
+void ssd1306_data(uint8_t data) {
+	ret_code_t ret;
+	uint8_t dta_send[] = { 0x40, data };
+	ret = nrf_drv_twi_tx(&m_twi, SSD1306_I2C_ADDRESS, dta_send, 2, false);
+	if (ret != 0) {
+		//printf("ssd1306 send data %02X failed err = %d\r\n", data, ret);
+		//nrf_delay_ms(10);
+	} else {
+		while (twi_evt_done != true);
+		twi_evt_done = false;
+	}
 
-        UNUSED_VARIABLE(ret);
+	UNUSED_VARIABLE(ret);
 }
 
+void ssd1306_data_batch(uint8_t * data, int size) {
+	ret_code_t ret;
+	uint8_t dta_send[64+1];
+	dta_send[0] = 0x40;
+	memcpy(dta_send+1, data, size);
+
+	ret = nrf_drv_twi_tx(&m_twi, SSD1306_I2C_ADDRESS, dta_send, size+1, false);
+	if (ret != 0) {
+		//printf("ssd1306 send data %02X failed err = %d\r\n", data, ret);
+		//nrf_delay_ms(10);
+	} else {
+		while (twi_evt_done != true);
+		twi_evt_done = false;
+	}
+
+	UNUSED_VARIABLE(ret);
+}
 
 void Oled_DrawArea(int x, int y, int w, int h, uint8_t * buf) {
 
 	send_count = 0;
 
-		cmd(0x21, 0, SCREEN_W - 1, 0x22, 0, SCREEN_H==64 ? 7 : SCREEN_H==32 ? 3 : 1, 0xff);
+	cmd(0x21, 0, SCREEN_W - 1, 0x22, 0, SCREEN_H == 64 ? 7 : SCREEN_H == 32 ? 3 : 1, 0xff);
 
 #if 1
-        for (int i = 0; i < w * h / 8; i++) {
-                ssd1306_data(buf[i]);
-        }
+	int size=64;
+	for (int i = 0; i < w * h / 8; i+=size)
+		ssd1306_data_batch(buf+i, size);
 #else
 	static uint8_t control = 0x40;
 	nrf_drv_twi_tx(&m_twi, SSD1306_I2C_ADDRESS, &control, 1, true);
-	nrf_drv_twi_tx(&m_twi, SSD1306_I2C_ADDRESS, buf, w * h / 8, false);
+	nrf_drv_twi_tx(&m_twi, SSD1306_I2C_ADDRESS, buf, w*h/8, false);
 	// ^ does not work
 #endif
 
@@ -176,16 +193,15 @@ void display_update() {
 	memset(buf, 0, sizeof(buf));
 
 	oledWriteString("  Mitosis-BT", 0, 0);
-	char * anim = "-\\|/-\\|/";
-	char c = anim [ (m_display_counter) % 8 ];
-	oledWriteString(&c, 0, 0);
+	oledWriteString("  Keyboard Layout", 0, 8);
+	oledWriteString("  Connected Devices", 0, 16);
+	oledWriteString("  Play Tetris", 0, 24);
 
-	oledWriteString("  Main menu", 0, 16);
-	oledWriteString("> Connected devices", 0, 24);
+	char *anim = "-\\|/-\\|/";
+	char c = anim[(m_display_counter/2) % 8];
+	oledWriteString(&c, 0, m_cursor_pos*8);
 
 	Oled_DrawArea(0, 0, SCREEN_W, SCREEN_H, buf);
 
 	m_display_counter++;
 }
-
-
