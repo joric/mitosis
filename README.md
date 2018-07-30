@@ -262,8 +262,8 @@ and it worked ([see mitosis-bluetooth](https://github.com/joric/mitosis/tree/dev
 There were speculations that Core 51822 has 32 GPIO pins available, so it's possible to make an Atreus62 without
 using a keyboard matrix. It is not true. GPIO 26/27 are shared by the 32kHz crystal. Pin 31 (AINT7) isn't
 routed outside as well. So mitosis only have 4 extra pins available: 11, 12, 20, plus LED pin (17 or 23)
-and the best case scenario for nRF51822 Core-B (reference design) is 26 or 27 keys on each side,
-52 keys total (54 if you get rid of the LED).
+and the best case scenario for nRF51822 Core-B (reference design) is 26 or 27 keys on each side, 29 tops
+if you manage to layout all the remaining pins without crossing.
 
 * [nRF51822 Core-B Schematics](http://i.imgur.com/8aF2mbI.png)
 * [nRF51822 Core-B Pinout](https://www.waveshare.com/img/devkit/accBoard/Core51822-B/Core51822-B-pin.jpg)
