@@ -1,7 +1,5 @@
 #include "keymap.h"
 
-//#define COMPILE_REVERSED
-
 #define HAND_SENSE 12
 #define RIGHT_HAND false
 #define LEFT_HAND true

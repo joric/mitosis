@@ -189,6 +189,7 @@
         </option>
         <option>
           <name>CCDefines</name>
+          <state>BOARD_CUSTOM</state>
           <state>BLE_STACK_SUPPORT_REQD</state>
           <state>S130</state>
           <state>COMPILE_REVERSED</state>
@@ -325,6 +326,7 @@
         <option>
           <name>CCIncludePath2</name>
           <state>$PROJ_DIR$\..\..\config</state>
+          <state>$PROJ_DIR$\..\..\..\..\examples\bsp</state>
           <state>$PROJ_DIR$\..\..\..\..\components\ble\ble_advertising</state>
           <state>$PROJ_DIR$\..\..\..\..\components\ble\ble_services\ble_bas</state>
           <state>$PROJ_DIR$\..\..\..\..\components\ble\ble_services\ble_dis</state>
@@ -2114,6 +2116,9 @@
       <name>$PROJ_DIR$\..\..\..\..\components\ble\common\ble_srv_common.c</name>
     </file>
     <file>
+      <name>$PROJ_DIR$\..\..\..\..\examples\bsp\bsp.c</name>
+    </file>
+    <file>
       <name>$PROJ_DIR$\..\..\..\..\components\ble\device_manager\device_manager_peripheral.c</name>
     </file>
   </group>
@@ -2177,6 +2182,9 @@
       <name>$PROJ_DIR$\..\..\..\..\components\libraries\util\nrf_assert.c</name>
     </file>
     <file>
+      <name>$PROJ_DIR$\..\..\..\..\components\libraries\util\nrf_log.c</name>
+    </file>
+    <file>
       <name>$PROJ_DIR$\..\..\..\..\components\libraries\uart\retarget.c</name>
     </file>
   </group>
@@ -2193,3 +2201,5 @@
     </file>
   </group>
 </project>
+
+

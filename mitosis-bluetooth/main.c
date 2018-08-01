@@ -33,7 +33,7 @@
 #include "app_button.h"
 #include "pstorage.h"
 #include "app_trace.h"
-#include "debug_uart.h"
+//#include "debug_uart.h"
 
 ////////////////////////////////////////
 
@@ -45,6 +45,34 @@
 #include "nrf_gzll.h"
 #include "app_error.h"
 #include "app_util_platform.h"
+
+#include "app_uart.h"
+
+#define TX_PIN_NUMBER  21
+#define RX_PIN_NUMBER  20
+#define CTS_PIN_NUMBER 20
+#define RTS_PIN_NUMBER 20
+#define HWFC true
+
+#define UART_TX_BUF_SIZE 256
+#define UART_RX_BUF_SIZE 256
+
+void uart_error_handle (app_uart_evt_t * p_event) {
+#if 0 // unused
+	if (p_event->evt_type == APP_UART_COMMUNICATION_ERROR) {
+		APP_ERROR_HANDLER (p_event->data.error_communication);
+	}
+	else if (p_event->evt_type == APP_UART_FIFO_ERROR) {
+		APP_ERROR_HANDLER (p_event->data.error_code);
+	}
+#endif
+}
+
+#undef app_trace_log
+void app_trace_log(const char * s) {
+	for (const char *p = s; *p; p++)
+		app_uart_put (*p);
+}
 
 static ble_hids_t m_hids;	/**< Structure used to identify the HID service. */
 static ble_bas_t m_bas;		/**< Structure used to identify the battery service. */
@@ -86,7 +114,6 @@ void m_configure_next_event(void) {
 }
 
 void sys_evt_dispatch(uint32_t evt_id) {
-	printf("%s - %d (%s)\n", __FUNCTION__, (int)evt_id, nrfEvtName(evt_id));
 
 	uint32_t err_code;
 
@@ -104,6 +131,7 @@ void sys_evt_dispatch(uint32_t evt_id) {
 			break;
 
 		case NRF_EVT_RADIO_BLOCKED:
+            //app_trace_log("Blocked\n");
 			m_configure_next_event();
 			err_code = sd_radio_request(&m_timeslot_request);
 			APP_ERROR_CHECK(err_code);
@@ -238,7 +266,6 @@ nrf_radio_signal_callback_return_param_t *m_radio_callback(uint8_t signal_type) 
 }
 
 uint32_t gazell_sd_radio_init(void) {
-	printf("%s\n", __FUNCTION__);
 
 	uint32_t err_code;
 	err_code = sd_radio_session_open(m_radio_callback);
@@ -255,7 +282,6 @@ uint32_t gazell_sd_radio_init(void) {
 
 
 void nrf_gzll_device_tx_success(uint32_t pipe, nrf_gzll_device_tx_info_t tx_info) {
-	printf("%s\n", __FUNCTION__);
 #if 0
 	uint32_t ack_payload_length = ACK_PAYLOAD_LENGTH;
 	if (tx_info.payload_received_in_ack) {
@@ -268,12 +294,9 @@ void nrf_gzll_device_tx_success(uint32_t pipe, nrf_gzll_device_tx_info_t tx_info
 }
 
 void nrf_gzll_device_tx_failed(uint32_t pipe, nrf_gzll_device_tx_info_t tx_info) {
-	printf("%s\n", __FUNCTION__);
 }
 
 void nrf_gzll_host_rx_data_ready(uint32_t pipe, nrf_gzll_host_rx_info_t rx_info) {
-	//printf("%s, pipe: %d\n", __FUNCTION__, pipe);
-
 	uint32_t data_payload_length = NRF_GZLL_CONST_MAX_PAYLOAD_LENGTH;
 
 	if (pipe == 0) {
@@ -298,11 +321,9 @@ void nrf_gzll_host_rx_data_ready(uint32_t pipe, nrf_gzll_host_rx_info_t rx_info)
 }
 
 void nrf_gzll_disabled(void) {
-	printf("%s\n", __FUNCTION__);
 }
 
 bool debug_cmd_available(void) {
-	printf("%s\n", __FUNCTION__);
 	return m_cmd_received;
 }
 
@@ -343,7 +364,6 @@ uint8_t battery_level_get(void) {
 	if (percent > 100)
 		percent = 100;
 
-	printf("Sending battery report: %d%% (%dmV of %dmV) \n", percent, vbat_current_in_mv, VBAT_MAX_IN_MV);
 	return (uint8_t) percent;
 }
 
@@ -398,10 +418,10 @@ uint8_t battery_level_get(void) {
 #define SHIFT_KEY_CODE						0x02	/**< Key code indicating the press of the Shift Key. */
 #define MAX_KEYS_IN_ONE_REPORT				(INPUT_REPORT_KEYS_MAX_LEN - SCAN_CODE_POS)		/**< Maximum number of key presses that can be sent in one Input Report. */
 
-static void hidEmuKbdSendReport(uint8_t modifier, uint8_t keycode);
 int biton32(int x) {
 	return x;
 }
+
 uint8_t m_layer = 0;
 static bool m_caps_on = false;
 
@@ -449,11 +469,9 @@ void key_handler() {
 	buf[0] = modifiers;
 	buf[1] = 0; // reserved
 
-	if (m_conn_handle != BLE_CONN_HANDLE_INVALID) {
-		printf("Sending HID report: %02x %02x %02x %02x %02x %02x %02x %02x\n", buf[0], buf[1], buf[2], buf[3], buf[4], buf[5], buf[6], buf[7]);
-		uint32_t err_code = ble_hids_inp_rep_send(&m_hids, INPUT_REPORT_KEYS_INDEX, INPUT_REPORT_KEYS_MAX_LEN, buf);
-		APP_ERROR_CHECK(err_code);
-	}
+    app_trace_log("Sending HID report\n");
+    uint32_t err_code = ble_hids_inp_rep_send(&m_hids, INPUT_REPORT_KEYS_INDEX, INPUT_REPORT_KEYS_MAX_LEN, buf);
+    APP_ERROR_CHECK(err_code);
 }
 
 
@@ -523,7 +541,6 @@ static void send_data() {
 
 // former 1000Hz debounce sampling - it's 25 ticks now. do we still need debouncing? seem to work fine
 static void handler_debounce(void *p_context) {
-
 	// right half
 	keys_snapshot = read_keys();
 	if (keys != keys_snapshot) {
@@ -542,10 +559,9 @@ static void handler_debounce(void *p_context) {
 	if ( keys == 0 && keys_recv == 0 ) {
         activity_ticks++;
         if (activity_ticks > ACTIVITY) {
-			printf("shutting down on inactivity...");
-			nrf_delay_ms(100);
+			//nrf_delay_ms(100);
 			// Go to system-off mode (this function will not return; wakeup will cause a reset).
-			sd_power_system_off();
+			//sd_power_system_off();
         }
 	} else {
 		activity_ticks = 0;
@@ -856,9 +872,6 @@ static void timers_start(void) {
 
 
 static void on_hid_rep_char_write(ble_hids_evt_t * p_evt) {
-
-	printf("%s - %d (%s)\n", __FUNCTION__, p_evt->evt_type, hidsEventName(p_evt->evt_type));
-
 	if (p_evt->params.char_write.char_id.rep_type == BLE_HIDS_REP_TYPE_OUTPUT) {
 		uint32_t err_code;
 		uint8_t report_val;
@@ -872,21 +885,16 @@ static void on_hid_rep_char_write(ble_hids_evt_t * p_evt) {
 			err_code = ble_hids_outp_rep_get(&m_hids, report_index, OUTPUT_REPORT_MAX_LEN, 0, &report_val);
 			APP_ERROR_CHECK(err_code);
 
-			printf("%s - report value: %d\n", __FUNCTION__, report_val);
-
 			if (!m_caps_on && ((report_val & OUTPUT_REPORT_BIT_MASK_CAPS_LOCK) != 0)) {
 				//err_code = bsp_indication_set(BSP_INDICATE_ALERT_3);
 				APP_ERROR_CHECK(err_code);
-				printf("CapsLock is turned ON\n");
 				m_caps_on = true;
 			} else if (m_caps_on && ((report_val & OUTPUT_REPORT_BIT_MASK_CAPS_LOCK) == 0)) {
 				//err_code = bsp_indication_set(BSP_INDICATE_ALERT_OFF);
 				APP_ERROR_CHECK(err_code);
-				printf("CapsLock is turned OFF\n");
 				m_caps_on = false;
 			} else {
 				// The report received is not supported by this application. Do nothing.
-				printf("Unsupported report value: %d\n", report_val);
 			}
 		}
 	}
@@ -894,16 +902,14 @@ static void on_hid_rep_char_write(ble_hids_evt_t * p_evt) {
 
 
 static void sleep_mode_enter(void) {
-	uint32_t err_code;
-
+	//uint32_t err_code;
 	// Go to system-off mode (this function will not return; wakeup will cause a reset).
-	err_code = sd_power_system_off();
-	APP_ERROR_CHECK(err_code);
+	//err_code = sd_power_system_off();
+	//APP_ERROR_CHECK(err_code);
 }
 
 
 static void on_hids_evt(ble_hids_t * p_hids, ble_hids_evt_t * p_evt) {
-	printf("%s - %d (%s)\n", __FUNCTION__, p_evt->evt_type, hidsEventName(p_evt->evt_type));
 
 	switch (p_evt->evt_type) {
 		case BLE_HIDS_EVT_BOOT_MODE_ENTERED:
@@ -978,8 +984,6 @@ static void on_hids_evt(ble_hids_t * p_hids, ble_hids_evt_t * p_evt) {
 static void on_adv_evt(ble_adv_evt_t ble_adv_evt) {
 	uint32_t err_code;
 
-	printf("%s - %d (%s)\n", __FUNCTION__, ble_adv_evt, bleAdvEvtName(ble_adv_evt));
-
 	switch (ble_adv_evt) {
 		case BLE_ADV_EVT_DIRECTED:
 			break;
@@ -1039,36 +1043,22 @@ static void on_ble_evt(ble_evt_t * p_ble_evt) {
 	uint32_t err_code;
 	ble_gatts_rw_authorize_reply_params_t auth_reply;
 
-	if (p_ble_evt->header.evt_id >= BLE_GAP_EVT_BASE)
-		printf("%s - %d (%s)\n", __FUNCTION__, p_ble_evt->header.evt_id, gapEventName(p_ble_evt->header.evt_id));
-
 	switch (p_ble_evt->header.evt_id) {
 
 		case BLE_GAP_EVT_CONNECTED:
-		{
-			m_conn_handle = p_ble_evt->evt.gap_evt.conn_handle;
-			ble_gap_addr_t *p_addr = &p_ble_evt->evt.gap_evt.params.connected.peer_addr;
-			printf("Connected to " ADDR_FMT "\n", ADDR_T(p_addr->addr));
+            app_trace_log("Connected\n");
 			break;
-		}
 
 		case BLE_EVT_TX_COMPLETE:
-			// Send next key event
-			//(void)buffer_dequeue(true);
 			break;
 
 		case BLE_GAP_EVT_DISCONNECTED:
 		{
-			// Dequeue all keys without transmission.
-			//(void)buffer_dequeue(false);
-			uint8_t reason = p_ble_evt->evt.gap_evt.params.disconnected.reason;
-			printf("Disconnected, reason: %s (%d)\n", hciStatusName(reason), reason);
-			m_conn_handle = BLE_CONN_HANDLE_INVALID;
+            app_trace_log("Disconnected\n");
 			m_caps_on = false;
-
-			dm_device_delete(&m_bonded_peer_handle);
 			m_conn_handle = BLE_CONN_HANDLE_INVALID;
-			ble_advertising_start(BLE_ADV_MODE_FAST);
+            //dm_device_delete(&m_bonded_peer_handle);
+			//ble_advertising_start(BLE_ADV_MODE_FAST); // crash?
 
 			break;
 		}
@@ -1076,14 +1066,14 @@ static void on_ble_evt(ble_evt_t * p_ble_evt) {
 		case BLE_GAP_EVT_TIMEOUT:
 			if (p_ble_evt->evt.gap_evt.params.timeout.src == BLE_GAP_TIMEOUT_SRC_ADVERTISING) {
 				// Go to system-off mode (this function will not return; wakeup will cause a reset)
-				err_code = sd_power_system_off();
-				APP_ERROR_CHECK(err_code);
+				//err_code = sd_power_system_off();
+				//APP_ERROR_CHECK(err_code);
 			}
 			break;
 
 		case BLE_GAP_EVT_SEC_PARAMS_REQUEST:
-			//err_code = sd_ble_gap_sec_params_reply(m_conn_handle, BLE_GAP_SEC_STATUS_PAIRING_NOT_SUPP, NULL, NULL); // no bonding
-			//APP_ERROR_CHECK(err_code);
+			err_code = sd_ble_gap_sec_params_reply(m_conn_handle, BLE_GAP_SEC_STATUS_PAIRING_NOT_SUPP, NULL, NULL); // no bonding
+			APP_ERROR_CHECK(err_code);
 			break;
 
 		case BLE_EVT_USER_MEM_REQUEST:
@@ -1169,36 +1159,6 @@ static void ble_stack_init(void) {
 
 static void scheduler_init(void) {
 	APP_SCHED_INIT(SCHED_MAX_EVENT_DATA_SIZE, SCHED_QUEUE_SIZE);
-}
-
-
-#define KEY_NONE                    0x00
-#define HID_KEYBOARD_IN_RPT_LEN     8
-
-static void hidEmuKbdSendReport(uint8_t modifier, uint8_t keycode) {
-	uint8_t buf[HID_KEYBOARD_IN_RPT_LEN];
-
-	buf[0] = modifier;			// Modifier keys
-	buf[1] = 0;					// Reserved
-	buf[2] = keycode;			// Keycode 1
-	buf[3] = 0;					// Keycode 2
-	buf[4] = 0;					// Keycode 3
-	buf[5] = 0;					// Keycode 4
-	buf[6] = 0;					// Keycode 5
-	buf[7] = 0;					// Keycode 6
-
-	if (m_conn_handle != BLE_CONN_HANDLE_INVALID) {
-		printf("Sending HID report: %02x %02x %02x %02x %02x %02x %02x %02x\n", buf[0], buf[1], buf[2], buf[3], buf[4], buf[5], buf[6], buf[7]);
-		uint32_t err_code = ble_hids_inp_rep_send(&m_hids, INPUT_REPORT_KEYS_INDEX, INPUT_REPORT_KEYS_MAX_LEN, buf);
-		APP_ERROR_CHECK(err_code);
-	}
-}
-
-
-void send_winkey() {
-	hidEmuKbdSendReport(0x80, 0);	// winkey
-	nrf_delay_us(10000);
-	hidEmuKbdSendReport(0, KEY_NONE);
 }
 
 static void advertising_init(void) {
@@ -1291,25 +1251,18 @@ int main(void) {
 	bool erase_bonds;
 	uint32_t err_code;
 
-	debug_init();
-
-	gpio_config();
+    gpio_config();
 
 	nrf_gpio_cfg_output(LED_PIN);
-	for (int i = 0; i < 3; i++) {
-		nrf_gpio_pin_set(LED_PIN);
-		nrf_delay_ms(250);
-		nrf_gpio_pin_clear(LED_PIN);
-		nrf_delay_ms(250);
+	for (int i = 0; i < 6; i++) {
+		i%2 ? nrf_gpio_pin_clear(LED_PIN) : nrf_gpio_pin_set(LED_PIN);
+		nrf_delay_ms(100);
 	}
 
 	// Initialize.
+    app_trace_init();
 	timers_init();
 	buttons_leds_init(&erase_bonds);
-
-	//erase_bonds = true;           //for faster discovery NB!!! remove in final version
-	printf("erase bonds: %d\n", erase_bonds);
-
 	ble_stack_init();
 	scheduler_init();
 	device_manager_init(erase_bonds);
@@ -1317,21 +1270,20 @@ int main(void) {
 	advertising_init();
 	services_init();
 	conn_params_init();
-
 	gazell_sd_radio_init();
-	printf("Gazell initialized\r\n");
 
 	// Start execution.
 	timers_start();
 	err_code = ble_advertising_start(BLE_ADV_MODE_FAST);
 	APP_ERROR_CHECK(err_code);
 
-	ble_gap_addr_t addr;
-	err_code = sd_ble_gap_address_get(&addr);
-	APP_ERROR_CHECK(err_code);
+	const app_uart_comm_params_t comm_params = { RX_PIN_NUMBER, TX_PIN_NUMBER, RTS_PIN_NUMBER, CTS_PIN_NUMBER,
+		APP_UART_FLOW_CONTROL_DISABLED, false,
+		UART_BAUDRATE_BAUDRATE_Baud115200
+	};
+	APP_UART_FIFO_INIT (&comm_params, UART_RX_BUF_SIZE, UART_TX_BUF_SIZE, uart_error_handle, APP_IRQ_PRIORITY_LOW, err_code);
 
-	printf("Endpoint: " ADDR_FMT "\n", ADDR_T(addr.addr));
-	printf("Entering main loop.\n");
+    app_trace_log("\n---\nUART initialized\n");
 
 	// Enter main loop.
 	for (;;) {
