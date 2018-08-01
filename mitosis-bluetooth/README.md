@@ -67,7 +67,7 @@ to erase pairing information.
 I had to disable whitelist support because I couldn't properly erase pairing data in runtime.
 
 There is a built in app_trace_log but it doesn't work with GCC (probably lacks free memory)
-so I had to write a small drop-in replacement but. In IAR you can just try the following preprocessor
+so I had to write a small drop-in replacement, but in IAR you can just use the following preprocessor
 directives (the last one is optional if it's too verbose):
 
 ```
