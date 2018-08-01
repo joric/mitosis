@@ -19,29 +19,33 @@ Bluetooth firmware for the Mitosis keyboard (BLE and Gazell timesharing via time
 ## Flashing
 
 You need to flash the right half only.
-Don't forget to flash softdevice s130 first (refer to [program.cmd](program.cmd) for Windows).
+Flash softdevice s130 first (you need to do this only once):
+
+```
+cd ../../components/softdevice/s130/hex
+openocd -f interface/stlink-v2.cfg -f target/nrf51.cfg ^
+-c init -c "reset halt" -c "flash write_image erase s130_nrf51_2.0.0_softdevice.hex" -c reset -c exit
+```
+
+Then flash `_build/nrf51822_xxac.hex` the same way.
+
 You can also use [$1.80](https://www.aliexpress.com/item//32583160323.html) STM32 board,
 upgrade it with UART adapter ([RX - A9, TX - A10](https://i.imgur.com/sLyYM27.jpg))
 into a [Blackmagic](https://gojimmypi.blogspot.com/2017/07/BluePill-STM32F103-to-BlackMagic-Probe.html) board,
 and use it as an ST-Link V2 replacement ([SWCLK - A5, SWDIO - B14](https://i.imgur.com/Ikt8yZz.jpg)).
 It is actually much better because it also has a built in UART ([pin A3](https://i.imgur.com/6jPsgzv.jpg))
-on the second virtual COM port so you don't need to occupy another USB.
+on the second virtual COM port so you don't need another USB.
 See https://github.com/joric/mitosis/tree/devel#bluepill
 
 ## Building
+
+### IAR
 
 Open mitosis-bluetooth.eww, select Release, hit Make, that's it.
 I'm using a single plate (reversed) version for the Debug build (modules soldered to the top of the PCB).
 To make standard version, remove `COMPILE_REVERSED` from the preprocessor directives.
 You may also use firmware from the [precompiled_iar](../precompiled_iar) folder.
-
-## Debugging
-
-You can hook up a single UART RX pin at 115200 baud ([currently pin 21, key S15 or S23](https://i.imgur.com/apx8W8W.png)).
-You will also need common GND and VCC to make it work. It doesn't really interfere much with the keyboard matrix so you can use any pin you want,
-just don't use the same pin for TX and RX to avoid feedback.
-
-I wasn't able to make a working GCC version with a built in app_trace_log (memory issues) but in IAR it would be just:
+I wasn't able to make a working GCC version with a built in app_trace_log (memory issues) but in IAR you can just add the following to the preprocessor directives:
 
 ```
 NRF_LOG_USES_UART=1
@@ -49,11 +53,23 @@ NRF_LOG_ENABLED=1
 ENABLE_DEBUG_LOG_SUPPORT=1
 DM_DISABLE_LOGS=1 (optional if it's too verbose)
 ```
+
+### GCC
+
+Cd custom/s130/armgcc, make.
+
 Working GCC linker settings for softdevice s130 and YJ-14015 modules (256K ROM, 16K RAM) are:
 ```
   FLASH (rx) : ORIGIN = 0x1b000, LENGTH = 0x25000
   RAM (rwx) :  ORIGIN = 0x20002000, LENGTH = 0x2000
 ```
+
+## Debugging
+
+You can hook up a single UART RX pin at 115200 baud ([currently pin 21, key S15 or S23](https://i.imgur.com/apx8W8W.png)).
+You will also need common GND and VCC to make it work. It doesn't really interfere much with the keyboard matrix so you can use any pin you want,
+just don't use the same pin for TX and RX to avoid feedback.
+
 
 ## Status
 
