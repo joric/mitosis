@@ -1749,7 +1749,7 @@
       <archiveVersion>1</archiveVersion>
       <data>
         <prebuild></prebuild>
-        <postbuild>D:\Projects\mitosis-keyboard\nRF5_SDK_11\mitosis\mitosis-bluetooth\program.cmd Release</postbuild>
+        <postbuild></postbuild>
       </data>
     </settings>
     <settings>

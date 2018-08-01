@@ -18,7 +18,7 @@ goto end
 
 :iar
 set file=custom\iar\%build%\Exe\nrf51822_xxac.hex
-IarBuild.exe custom\iar\mitosis_bluetooth.ewp %build%
+IarBuild.exe custom\iar\mitosis_bluetooth.ewp %build% || exit
 goto publish
 
 :gcc

@@ -79,10 +79,47 @@ void app_trace_init() {
 }
 #endif // SIMPLE_DEBUG
 
+#define ADDR_FMT "%02x:%02x:%02x:%02x:%02x:%02x"
+#define ADDR_T(a) a[5], a[4], a[3], a[2], a[1], a[0]
+
+#define TN(id) {static char buf[16]; sprintf(buf, "0x%04x", id); return buf; }
+#define T(id) if (type == id) return #id; else
+
+char *error_name(int type) {
+	T(BLE_HCI_STATUS_CODE_SUCCESS);
+	T(BLE_HCI_STATUS_CODE_UNKNOWN_BTLE_COMMAND);
+	T(BLE_HCI_STATUS_CODE_UNKNOWN_CONNECTION_IDENTIFIER);
+	T(BLE_HCI_AUTHENTICATION_FAILURE);
+	T(BLE_HCI_STATUS_CODE_PIN_OR_KEY_MISSING);
+	T(BLE_HCI_MEMORY_CAPACITY_EXCEEDED);
+	T(BLE_HCI_CONNECTION_TIMEOUT);
+	T(BLE_HCI_STATUS_CODE_COMMAND_DISALLOWED);
+	T(BLE_HCI_STATUS_CODE_INVALID_BTLE_COMMAND_PARAMETERS);
+	T(BLE_HCI_REMOTE_USER_TERMINATED_CONNECTION);
+	T(BLE_HCI_REMOTE_DEV_TERMINATION_DUE_TO_LOW_RESOURCES);
+	T(BLE_HCI_REMOTE_DEV_TERMINATION_DUE_TO_POWER_OFF);
+	T(BLE_HCI_LOCAL_HOST_TERMINATED_CONNECTION);
+	T(BLE_HCI_UNSUPPORTED_REMOTE_FEATURE);
+	T(BLE_HCI_STATUS_CODE_INVALID_LMP_PARAMETERS);
+	T(BLE_HCI_STATUS_CODE_UNSPECIFIED_ERROR);
+	T(BLE_HCI_STATUS_CODE_LMP_RESPONSE_TIMEOUT);
+	T(BLE_HCI_STATUS_CODE_LMP_PDU_NOT_ALLOWED);
+	T(BLE_HCI_INSTANT_PASSED);
+	T(BLE_HCI_PAIRING_WITH_UNIT_KEY_UNSUPPORTED);
+	T(BLE_HCI_DIFFERENT_TRANSACTION_COLLISION);
+	T(BLE_HCI_CONTROLLER_BUSY);
+	T(BLE_HCI_CONN_INTERVAL_UNACCEPTABLE);
+	T(BLE_HCI_DIRECTED_ADVERTISER_TIMEOUT);
+	T(BLE_HCI_CONN_TERMINATED_DUE_TO_MIC_FAILURE);
+	T(BLE_HCI_CONN_FAILED_TO_BE_ESTABLISHED);
+	T(BLE_ERROR_GATTS_SYS_ATTR_MISSING);
+	TN(type);
+}
+
 #undef APP_ERROR_HANDLER
 #define APP_ERROR_HANDLER(ERR_CODE) app_error_handler_custom((ERR_CODE), __LINE__, (uint8_t*) __FILE__);
 void app_error_handler_custom (ret_code_t error_code, uint32_t line_num, const uint8_t * p_file_name) {
-	app_trace_log("ERROR! code: %d line: %d\n", (int)error_code, (int)line_num);
+	app_trace_log("ERROR 0x%04x (%s) line: %d\n", (int)error_code, error_name(error_code), (int)line_num);
 }
 
 static ble_hids_t m_hids;									/**< Structure used to identify the HID service. */
@@ -172,7 +209,6 @@ void key_handler();
 
 // Key buffers
 static uint32_t keys = 0, keys_snapshot = 0;
-static uint32_t activity_ticks = 0;
 static uint32_t keys_recv = 0, keys_recv_snapshot = 0;
 static uint8_t data_buffer[10];
 
@@ -386,8 +422,8 @@ uint8_t battery_level_get(void) {
 #define PNP_ID_PRODUCT_VERSION				0x0001	/**< Product Version. */
 #define APP_ADV_FAST_INTERVAL				0x0028	/**< Fast advertising interval (in units of 0.625 ms. This value corresponds to 25 ms.). */
 #define APP_ADV_SLOW_INTERVAL				0x0C80	/**< Slow advertising interval (in units of 0.625 ms. This value corrsponds to 2 seconds). */
-#define APP_ADV_FAST_TIMEOUT				30	/**< The duration of the fast advertising period (in seconds). */
-#define APP_ADV_SLOW_TIMEOUT				180	/**< The duration of the slow advertising period (in seconds). */
+#define APP_ADV_FAST_TIMEOUT				15		/**< The duration of the fast advertising period (in seconds). */
+#define APP_ADV_SLOW_TIMEOUT				180		/**< The duration of the slow advertising period (in seconds). */
 /*lint -emacro(524, MIN_CONN_INTERVAL) // Loss of precision */
 #define MIN_CONN_INTERVAL					MSEC_TO_UNITS(7.5, UNIT_1_25_MS)	/**< Minimum ion interval (7.5 ms) */
 #define MAX_CONN_INTERVAL					MSEC_TO_UNITS(30, UNIT_1_25_MS)	/**< Maximum connection interval (30 ms). */
@@ -538,9 +574,13 @@ static void send_data() {
 	data_buffer[9] = ((data_payload_right[2] & 1 << 4) ? 1 : 0) << 0 | ((data_payload_right[2] & 1 << 3) ? 1 : 0) << 1 | ((data_payload_right[2] & 1 << 2) ? 1 : 0) << 2 | ((data_payload_right[2] & 1 << 1) ? 1 : 0) << 3;
 }
 
-// Debounce time (dependent on tick frequency, e.g. 10000 * 25 ms ~ 4 minutes)
-#define ACTIVITY 10000
-#define DEBOUNCE_MEAS_INTERVAL			APP_TIMER_TICKS(25, APP_TIMER_PRESCALER)
+
+#define DEBOUNCE 25 // standard 25 ms refresh
+#define ACTIVITY 4*60*1000 // unactivity time till power off (4 minutes)
+#define PAIRING 7*1000 // hold fn for a few seconds
+#define DEBOUNCE_MEAS_INTERVAL APP_TIMER_TICKS(DEBOUNCE, APP_TIMER_PRESCALER)
+static uint32_t activity_ticks = 0;
+static uint32_t reset_ticks = 0;
 
 // former 1000Hz debounce sampling - it's 25 ms now. do we still need debouncing? seem to work fine
 static void handler_debounce(void *p_context) {
@@ -561,9 +601,7 @@ static void handler_debounce(void *p_context) {
 	}
 
 	if ( keys == 0 && keys_recv == 0 ) {
-		activity_ticks++;
-		if (activity_ticks > ACTIVITY) {
-			// Go to system-off mode (this function will not return; wakeup will cause a reset).
+		if (++activity_ticks > ACTIVITY/DEBOUNCE) {
 			app_trace_log("Shutting down on inactivity...\n");
 			nrf_delay_ms(50);
 			sd_power_system_off();
@@ -572,15 +610,26 @@ static void handler_debounce(void *p_context) {
 		activity_ticks = 0;
 	}
 
+	if ( keys == (1<<S20) ) { // hold fn key only
+		if (++reset_ticks > PAIRING/DEBOUNCE) {
+			reset_ticks = 0;
+			app_trace_log("Resetting...\n");
+			nrf_delay_ms(50);
+			sd_power_system_off();
+		}
+	} else {
+		reset_ticks = 0;
+	}
+
 }
 
 typedef enum {
-	BLE_NO_ADV,						/**< No advertising running. */
-	BLE_DIRECTED_ADV,			/**< Direct advertising to the latest central. */
-	BLE_FAST_ADV_WHITELIST,		 /**< Advertising with whitelist. */
-	BLE_FAST_ADV,				/**< Fast advertising running. */
-	BLE_SLOW_ADV,				/**< Slow advertising running. */
-	BLE_SLEEP,						/**< Go to system-off. */
+	BLE_NO_ADV,				/**< No advertising running. */
+	BLE_DIRECTED_ADV,		/**< Direct advertising to the latest central. */
+	BLE_FAST_ADV_WHITELIST,	/**< Advertising with whitelist. */
+	BLE_FAST_ADV,			/**< Fast advertising running. */
+	BLE_SLOW_ADV,			/**< Slow advertising running. */
+	BLE_SLEEP,				/**< Go to system-off. */
 } ble_advertising_mode_t;
 
 APP_TIMER_DEF(m_battery_timer_id); /**< Battery timer. */
@@ -907,10 +956,10 @@ static void on_hid_rep_char_write(ble_hids_evt_t * p_evt) {
 
 
 static void sleep_mode_enter(void) {
-	//uint32_t err_code;
+	uint32_t err_code;
 	// Go to system-off mode (this function will not return; wakeup will cause a reset).
-	//err_code = sd_power_system_off();
-	//APP_ERROR_CHECK(err_code);
+	err_code = sd_power_system_off();
+	APP_ERROR_CHECK(err_code);
 }
 
 
@@ -993,12 +1042,18 @@ static void on_adv_evt(ble_adv_evt_t ble_adv_evt) {
 		case BLE_ADV_EVT_DIRECTED:
 			break;
 		case BLE_ADV_EVT_FAST:
+			app_trace_log("Fast advertising...\n");
 			break;
 		case BLE_ADV_EVT_SLOW:
+			app_trace_log("Slow advertising...\n");
 			break;
 		case BLE_ADV_EVT_FAST_WHITELIST:
+			app_trace_log("Fast advertising with whitelist...\n");
 			break;
 		case BLE_ADV_EVT_SLOW_WHITELIST:
+			app_trace_log("Slow advertising without whitelist...\n");
+            err_code = ble_advertising_restart_without_whitelist();
+            APP_ERROR_CHECK(err_code);
 			break;
 		case BLE_ADV_EVT_IDLE:
 			sleep_mode_enter();
@@ -1025,7 +1080,6 @@ static void on_adv_evt(ble_adv_evt_t ble_adv_evt) {
 		case BLE_ADV_EVT_PEER_ADDR_REQUEST:
 		{
 			ble_gap_addr_t peer_address;
-
 			// Only Give peer address if we have a handle to the bonded peer.
 			if (m_bonded_peer_handle.appl_id != DM_INVALID_ID) {
 				err_code = dm_peer_addr_get(&m_bonded_peer_handle, &peer_address);
@@ -1033,6 +1087,7 @@ static void on_adv_evt(ble_adv_evt_t ble_adv_evt) {
 					APP_ERROR_CHECK(err_code);
 					err_code = ble_advertising_peer_addr_reply(&peer_address);
 					APP_ERROR_CHECK(err_code);
+					printf("Address requested: " ADDR_FMT "\n", ADDR_T(peer_address.addr));
 				}
 
 			}
@@ -1047,12 +1102,14 @@ static void on_adv_evt(ble_adv_evt_t ble_adv_evt) {
 static void on_ble_evt(ble_evt_t * p_ble_evt) {
 	uint32_t err_code;
 	ble_gatts_rw_authorize_reply_params_t auth_reply;
+	ble_gap_addr_t *p_addr;
 
 	switch (p_ble_evt->header.evt_id) {
 
 		case BLE_GAP_EVT_CONNECTED:
-			app_trace_log("Connected\n");
 			m_conn_handle = p_ble_evt->evt.gap_evt.conn_handle;
+			p_addr = &p_ble_evt->evt.gap_evt.params.connected.peer_addr;
+			app_trace_log("Connected to " ADDR_FMT "\n", ADDR_T(p_addr->addr));
 			break;
 
 		case BLE_EVT_TX_COMPLETE:
@@ -1061,27 +1118,22 @@ static void on_ble_evt(ble_evt_t * p_ble_evt) {
 		case BLE_GAP_EVT_DISCONNECTED:
 		{
 			app_trace_log("Disconnected\n");
+			switch (p_ble_evt->evt.gap_evt.params.disconnected.reason) {
+				case BLE_HCI_REMOTE_DEV_TERMINATION_DUE_TO_POWER_OFF:
+					// do nothing, wait for the host
+				break;
+				case BLE_HCI_REMOTE_USER_TERMINATED_CONNECTION:
+					// see https://devzone.nordicsemi.com/f/nordic-q-a/9506/bond-deletion-notification
+					app_trace_log("You unpaired us, we unpaired you!\n");
+					dm_device_delete(&m_bonded_peer_handle);
+					ble_advertising_start(BLE_ADV_MODE_FAST);
+					ble_advertising_restart_without_whitelist();
+				break;
+			}
 			m_caps_on = false;
 			m_conn_handle = BLE_CONN_HANDLE_INVALID;
-
-			// erases current bond, critical for reconnecting so far (how to fix this?)
-			dm_device_delete(&m_bonded_peer_handle);
-			ble_advertising_start(BLE_ADV_MODE_FAST);
 			break;
 		}
-
-		case BLE_GAP_EVT_TIMEOUT:
-			if (p_ble_evt->evt.gap_evt.params.timeout.src == BLE_GAP_TIMEOUT_SRC_ADVERTISING) {
-				// Go to system-off mode (this function will not return; wakeup will cause a reset)
-				//err_code = sd_power_system_off();
-				//APP_ERROR_CHECK(err_code);
-			}
-			break;
-
-		case BLE_GAP_EVT_SEC_PARAMS_REQUEST:
-			//err_code = sd_ble_gap_sec_params_reply(m_conn_handle, BLE_GAP_SEC_STATUS_PAIRING_NOT_SUPP, NULL, NULL);
-			//APP_ERROR_CHECK(err_code);  // ERROR here?
-			break;
 
 		case BLE_EVT_USER_MEM_REQUEST:
 			err_code = sd_ble_user_mem_reply(m_conn_handle, NULL);
@@ -1107,15 +1159,10 @@ static void on_ble_evt(ble_evt_t * p_ble_evt) {
 
 		case BLE_GATTC_EVT_TIMEOUT:
 		case BLE_GATTS_EVT_TIMEOUT:
+			app_trace_log("Remote user terminated connection\n");
 			// Disconnect on GATT Server and Client timeout events.
 			err_code = sd_ble_gap_disconnect(m_conn_handle, BLE_HCI_REMOTE_USER_TERMINATED_CONNECTION);
 			APP_ERROR_CHECK(err_code);
-			break;
-
-		case BLE_GATTS_EVT_SYS_ATTR_MISSING:
-			// No system attributes have been stored.
-			//err_code = sd_ble_gatts_sys_attr_set(m_conn_handle, NULL, 0, 0); // ERROR here as well
-			//APP_ERROR_CHECK(err_code);
 			break;
 
 		default:
@@ -1184,9 +1231,9 @@ static void advertising_init(void) {
 	advdata.uuids_complete.p_uuids = m_adv_uuids;
 
 	ble_adv_modes_config_t options = {
-		BLE_ADV_WHITELIST_DISABLED,
-		BLE_ADV_DIRECTED_DISABLED,
-		BLE_ADV_DIRECTED_SLOW_DISABLED, 0, 0,
+		BLE_ADV_WHITELIST_ENABLED,
+		BLE_ADV_DIRECTED_ENABLED,
+		BLE_ADV_DIRECTED_SLOW_DISABLED, 0,0,
 		BLE_ADV_FAST_ENABLED, APP_ADV_FAST_INTERVAL, APP_ADV_FAST_TIMEOUT,
 		BLE_ADV_SLOW_ENABLED, APP_ADV_SLOW_INTERVAL, APP_ADV_SLOW_TIMEOUT
 	};
@@ -1245,7 +1292,7 @@ static void device_manager_init(bool erase_bonds) {
 
 
 static void buttons_leds_init(bool * p_erase_bonds) {
-	*p_erase_bonds = (read_keys() & (1 << S16)) ? 1 : 0;
+	*p_erase_bonds = (read_keys() & (1 << S20)) ? 1 : 0;
 }
 
 
@@ -1286,7 +1333,7 @@ int main(void) {
 	err_code = ble_advertising_start(BLE_ADV_MODE_FAST);
 	APP_ERROR_CHECK(err_code);
 
-	app_trace_log("Started\n");
+	app_trace_log("Started (erase_bonds: %d)\n", erase_bonds);
 
 	// Enter main loop.
 	for (;;) {
