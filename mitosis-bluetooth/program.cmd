@@ -1,6 +1,9 @@
 @echo off
 
 set build=Debug
+
+if "%1"=="Release" set build=Release
+
 set merge=0
 
 set file=%~dp0custom\iar\%build%\Exe\nrf51822_xxac.hex

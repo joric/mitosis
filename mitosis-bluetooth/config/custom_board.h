@@ -49,7 +49,7 @@
 
 #define BUTTONS_MASK   (BSP_BUTTON_0_MASK | BSP_BUTTON_1_MASK)
 
-#define RX_PIN_NUMBER  20
+#define RX_PIN_NUMBER  1 // doesn't work with pin -1 for some reason
 #define TX_PIN_NUMBER  21
 #define CTS_PIN_NUMBER -1
 #define RTS_PIN_NUMBER -1

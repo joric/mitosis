@@ -57,10 +57,12 @@ It is actually much better because it also has a built in UART ([pin A3](https:/
 on the second virtual COM port so you don't need another USB.
 See https://github.com/joric/mitosis/tree/devel#bluepill
 
-I couldn't really make app_trace_log work in the last version (had to write a drop-in replacement)
-but you can try adding the following to the preprocessor directives (it works just fine with a smaller Nordic SDK examples):
+I couldn't really make app_trace_log work in the GCC version probably because we only have 8K RAM
+(had to write a drop-in replacement)
+but in IAR you can just use the following preprocessor directives (it appears to be unstable as well):
 
 ```
+DEBUG
 NRF_LOG_USES_UART=1
 NRF_LOG_ENABLED=1
 ENABLE_DEBUG_LOG_SUPPORT=1

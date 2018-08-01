@@ -46,10 +46,10 @@
 #include "app_util_platform.h"
 
 #ifndef NRF_LOG_ENABLED
-#define COMPILE_DEBUG
+#define SIMPLE_DEBUG
 #endif
 
-#ifdef COMPILE_DEBUG
+#ifdef SIMPLE_DEBUG
 
 #include "app_uart.h"
 
@@ -80,21 +80,23 @@ void uart_error_handle (app_uart_evt_t * p_event) {
 void app_trace_init() {
 	uint32_t err_code;
 	const app_uart_comm_params_t comm_params = {
-        RX_PIN_NUMBER, TX_PIN_NUMBER, RTS_PIN_NUMBER, CTS_PIN_NUMBER,
+		RX_PIN_NUMBER, TX_PIN_NUMBER, RTS_PIN_NUMBER, CTS_PIN_NUMBER,
 		APP_UART_FLOW_CONTROL_DISABLED, false,
 		UART_BAUDRATE_BAUDRATE_Baud115200
 	};
 	APP_UART_FIFO_INIT (&comm_params, UART_RX_BUF_SIZE, UART_TX_BUF_SIZE, uart_error_handle, APP_IRQ_PRIORITY_LOW, err_code);
-    APP_ERROR_CHECK(err_code);
+	APP_ERROR_CHECK(err_code);
+	app_trace_log("\nUART initialized\n");
 }
 
-#endif // COMPILE_DEBUG
+#endif // SIMPLE_DEBUG
 
 #undef APP_ERROR_HANDLER
 #define APP_ERROR_HANDLER(ERR_CODE) app_error_handler_custom((ERR_CODE), __LINE__, (uint8_t*) __FILE__);
 void app_error_handler_custom (ret_code_t error_code, uint32_t line_num, const uint8_t * p_file_name) {
-    app_trace_log("ERROR! code: %d line: %d\n", (int)error_code, (int)line_num);
+	app_trace_log("ERROR! code: %d line: %d\n", (int)error_code, (int)line_num);
 }
+
 
 static ble_hids_t m_hids;	/**< Structure used to identify the HID service. */
 static ble_bas_t m_bas;		/**< Structure used to identify the battery service. */
@@ -127,8 +129,6 @@ void HardFault_Handler(uint32_t program_counter, uint32_t link_register) {
 void m_configure_next_event(void) {
 	m_slot_length = 10000;
 	m_timeslot_request.request_type = NRF_RADIO_REQ_TYPE_EARLIEST;
-	//m_timeslot_request.request_type = NRF_RADIO_REQ_TYPE_NORMAL;
-	//m_timeslot_request.params.earliest.hfclk       = NRF_RADIO_HFCLK_CFG_XTAL_GUARANTEED;
 	m_timeslot_request.params.earliest.hfclk = NRF_RADIO_HFCLK_CFG_NO_GUARANTEE;
 	m_timeslot_request.params.earliest.priority = NRF_RADIO_PRIORITY_NORMAL;
 	m_timeslot_request.params.earliest.length_us = m_slot_length;
@@ -136,7 +136,6 @@ void m_configure_next_event(void) {
 }
 
 void sys_evt_dispatch(uint32_t evt_id) {
-
 	uint32_t err_code;
 
 	switch (evt_id) {
@@ -153,7 +152,7 @@ void sys_evt_dispatch(uint32_t evt_id) {
 			break;
 
 		case NRF_EVT_RADIO_BLOCKED:
-            //app_trace_log("Blocked\n");
+			//app_trace_log("Blocked\n");
 			m_configure_next_event();
 			err_code = sd_radio_request(&m_timeslot_request);
 			APP_ERROR_CHECK(err_code);
@@ -184,6 +183,9 @@ static uint8_t ack_payload[TX_PAYLOAD_LENGTH];	///< Payload to attach to ACK sen
 uint32_t left_active = 0;
 uint32_t right_active = 0;
 void key_handler();
+// Key buffers
+static uint32_t keys = 0, keys_snapshot = 0;
+static uint32_t activity_ticks = 0;
 static uint32_t keys_recv = 0, keys_recv_snapshot = 0;
 
 static uint8_t data_buffer[10];
@@ -456,6 +458,8 @@ uint8_t get_modifier(uint16_t key) {
 }
 
 void key_handler() {
+	app_trace_log("%s %d %d\n", __FUNCTION__, keys, keys_recv);
+
 	const int MAX_KEYS = 6;
 	uint8_t buf[8];
 	int modifiers = 0;
@@ -491,11 +495,11 @@ void key_handler() {
 	buf[0] = modifiers;
 	buf[1] = 0; // reserved
 
-    if (m_conn_handle != BLE_CONN_HANDLE_INVALID) {
-        app_trace_log("Sending HID report\n");
-        uint32_t err_code = ble_hids_inp_rep_send(&m_hids, INPUT_REPORT_KEYS_INDEX, INPUT_REPORT_KEYS_MAX_LEN, buf);
-        APP_ERROR_CHECK(err_code);
-    }
+	if (m_conn_handle != BLE_CONN_HANDLE_INVALID) {
+		printf("Sending HID report: %02x %02x %02x %02x %02x %02x %02x %02x\n", buf[0], buf[1], buf[2], buf[3], buf[4], buf[5], buf[6], buf[7]);
+		uint32_t err_code = ble_hids_inp_rep_send(&m_hids, INPUT_REPORT_KEYS_INDEX, INPUT_REPORT_KEYS_MAX_LEN, buf);
+		APP_ERROR_CHECK(err_code);
+	}
 }
 
 
@@ -538,14 +542,6 @@ static uint32_t read_keys(void) {
 #endif
 }
 
-// Debounce time (dependent on tick frequency)
-#define ACTIVITY 5000
-#define DEBOUNCE_MEAS_INTERVAL			APP_TIMER_TICKS(25, APP_TIMER_PRESCALER)
-
-// Key buffers
-static uint32_t keys = 0, keys_snapshot = 0;
-static uint32_t activity_ticks = 0;
-
 static void send_data() {
 	static uint8_t *data_payload = data_payload_right;
 
@@ -563,8 +559,13 @@ static void send_data() {
 	data_buffer[9] = ((data_payload_right[2] & 1 << 4) ? 1 : 0) << 0 | ((data_payload_right[2] & 1 << 3) ? 1 : 0) << 1 | ((data_payload_right[2] & 1 << 2) ? 1 : 0) << 2 | ((data_payload_right[2] & 1 << 1) ? 1 : 0) << 3;
 }
 
-// former 1000Hz debounce sampling - it's 25 ticks now. do we still need debouncing? seem to work fine
+// Debounce time (dependent on tick frequency, e.g. 10000 * 25 ms ~ 4 minutes)
+#define ACTIVITY 10000
+#define DEBOUNCE_MEAS_INTERVAL			APP_TIMER_TICKS(25, APP_TIMER_PRESCALER)
+
+// former 1000Hz debounce sampling - it's 25 ms now. do we still need debouncing? seem to work fine
 static void handler_debounce(void *p_context) {
+
 	// right half
 	keys_snapshot = read_keys();
 	if (keys != keys_snapshot) {
@@ -581,11 +582,13 @@ static void handler_debounce(void *p_context) {
 	}
 
 	if ( keys == 0 && keys_recv == 0 ) {
-        activity_ticks++;
-        if (activity_ticks > ACTIVITY) {
+		activity_ticks++;
+		if (activity_ticks > ACTIVITY) {
 			// Go to system-off mode (this function will not return; wakeup will cause a reset).
+			app_trace_log("Shutting down on inactivity...\n");
+			nrf_delay_ms(50);
 			sd_power_system_off();
-        }
+		}
 	} else {
 		activity_ticks = 0;
 	}
@@ -895,7 +898,7 @@ static void timers_start(void) {
 
 
 static void on_hid_rep_char_write(ble_hids_evt_t * p_evt) {
-	if (p_evt->params.char_write.char_id.rep_type == BLE_HIDS_REP_TYPE_OUTPUT) {
+		if (p_evt->params.char_write.char_id.rep_type == BLE_HIDS_REP_TYPE_OUTPUT) {
 		uint32_t err_code;
 		uint8_t report_val;
 		uint8_t report_index = p_evt->params.char_write.char_id.rep_index;
@@ -1069,8 +1072,8 @@ static void on_ble_evt(ble_evt_t * p_ble_evt) {
 	switch (p_ble_evt->header.evt_id) {
 
 		case BLE_GAP_EVT_CONNECTED:
-            app_trace_log("Connected\n");
-            m_conn_handle = p_ble_evt->evt.gap_evt.conn_handle;
+			app_trace_log("Connected\n");
+			m_conn_handle = p_ble_evt->evt.gap_evt.conn_handle;
 			break;
 
 		case BLE_EVT_TX_COMPLETE:
@@ -1078,14 +1081,13 @@ static void on_ble_evt(ble_evt_t * p_ble_evt) {
 
 		case BLE_GAP_EVT_DISCONNECTED:
 		{
-            app_trace_log("Disconnected\n");
+			app_trace_log("Disconnected\n");
 			m_caps_on = false;
 			m_conn_handle = BLE_CONN_HANDLE_INVALID;
 
-            // erases current bond, critical for reconnecting so far (how to fix this?)
-            dm_device_delete(&m_bonded_peer_handle);
+			// erases current bond, critical for reconnecting so far (how to fix this?)
+			dm_device_delete(&m_bonded_peer_handle);
 			ble_advertising_start(BLE_ADV_MODE_FAST);
-
 			break;
 		}
 
@@ -1277,16 +1279,18 @@ int main(void) {
 	bool erase_bonds;
 	uint32_t err_code;
 
-    gpio_config();
+	gpio_config();
 
 	nrf_gpio_cfg_output(LED_PIN);
-	for (int i = 0; i < 6; i++) {
-		i%2 ? nrf_gpio_pin_clear(LED_PIN) : nrf_gpio_pin_set(LED_PIN);
+	for (int i = 0; i < 3; i++) {
+		nrf_gpio_pin_set(LED_PIN);
+		nrf_delay_ms(100);
+		nrf_gpio_pin_clear(LED_PIN);
 		nrf_delay_ms(100);
 	}
 
 	// Initialize.
-    app_trace_init();
+	app_trace_init();
 	timers_init();
 	buttons_leds_init(&erase_bonds);
 	ble_stack_init();
@@ -1303,7 +1307,7 @@ int main(void) {
 	err_code = ble_advertising_start(BLE_ADV_MODE_FAST);
 	APP_ERROR_CHECK(err_code);
 
-    app_trace_log("\nStarted\n");
+	app_trace_log("Started\n");
 
 	// Enter main loop.
 	for (;;) {
