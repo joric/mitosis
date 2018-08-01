@@ -42,6 +42,7 @@ Working GCC linker settings for softdevice s130 and [YJ-14015] modules (256K ROM
   FLASH (rx) : ORIGIN = 0x1b000, LENGTH = 0x25000
   RAM (rwx) :  ORIGIN = 0x20002000, LENGTH = 0x2000
 ```
+RAM is supposed to be 0x20002800 (10K) and 0x1800 (6K) accordingly but it doesn't work this way on my setup.
 
 ## Debugging
 
@@ -57,9 +58,17 @@ It is actually much better because it also has a built in UART ([pin A3][pinout]
 on the second virtual COM port so you don't need another USB.
 See https://github.com/joric/mitosis/tree/devel#bluepill
 
-I couldn't really make app_trace_log work in the GCC version probably because it lacks free memory
+I'm using [nRF5 SDK 11] (mostly because original Mitosis using it).
+There's no softdevice s110 support so we are limited to 6K RAM.
+Bluetooth devices seem to shutdown and restart a lot (sleep mode is actually power off mode
+with a hardware interrupt from the pin that restarts the device).
+Default pairing works on power on only, hold the button (currently [S16][pinout])
+to erase pairing information.
+I had to disable whitelist support because the board was mostly inaccesible after pairing.
+
+I couldn't make app_trace_log work in the GCC version because it lacks free memory
 (had to write a drop-in replacement)
-but in IAR you can just use the following preprocessor directives (it appears to be unstable as well):
+but in IAR you can just use the following preprocessor directives (the last option is optional if log is too verbose).
 
 ```
 DEBUG
@@ -68,16 +77,6 @@ NRF_LOG_ENABLED=1
 ENABLE_DEBUG_LOG_SUPPORT=1
 DM_DISABLE_LOGS=1
 ```
-
-(The last option is optional if log is too verbose.)
-
-I'm using [nRF5 SDK 11] (mostly because original Mitosis using it).
-There's no softdevice s110 support so we are limited to 8K RAM.
-Bluetooth devices seem to shutdown and restart a lot (sleep mode is actually power off mode
-with a hardware interrupt from the pin that restarts the device).
-Default pairing works on power on only, hold the button (currently [S16][pinout])
-to erase pairing information.
-I had to disable whitelist support because the board was mostly inaccesible after pairing.
 
 ## Status
 
