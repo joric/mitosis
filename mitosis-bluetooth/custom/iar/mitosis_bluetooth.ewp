@@ -1229,7 +1229,6 @@
           <state>SOFTDEVICE_PRESENT</state>
           <state>NRF51</state>
           <state>SWI_DISABLE0</state>
-          <state>NRF_LOG_USES_UART=1</state>
         </option>
         <option>
           <name>CCPreprocFile</name>
@@ -1556,7 +1555,6 @@
           <state>SOFTDEVICE_PRESENT</state>
           <state>NRF51</state>
           <state>SWI_DISABLE0</state>
-          <state>NRF_LOG_USES_UART=1</state>
         </option>
         <option>
           <name>AList</name>
@@ -2116,9 +2114,6 @@
       <name>$PROJ_DIR$\..\..\..\..\components\ble\common\ble_srv_common.c</name>
     </file>
     <file>
-      <name>$PROJ_DIR$\..\..\..\..\examples\bsp\bsp.c</name>
-    </file>
-    <file>
       <name>$PROJ_DIR$\..\..\..\..\components\ble\device_manager\device_manager_peripheral.c</name>
     </file>
   </group>
@@ -2180,12 +2175,6 @@
     </file>
     <file>
       <name>$PROJ_DIR$\..\..\..\..\components\libraries\util\nrf_assert.c</name>
-    </file>
-    <file>
-      <name>$PROJ_DIR$\..\..\..\..\components\libraries\util\nrf_log.c</name>
-    </file>
-    <file>
-      <name>$PROJ_DIR$\..\..\..\..\components\libraries\uart\retarget.c</name>
     </file>
   </group>
   <group>

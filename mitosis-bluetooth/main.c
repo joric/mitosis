@@ -33,7 +33,6 @@
 #include "app_button.h"
 #include "pstorage.h"
 #include "app_trace.h"
-//#include "debug_uart.h"
 
 ////////////////////////////////////////
 
@@ -48,11 +47,11 @@
 
 #include "app_uart.h"
 
+#define RX_PIN_NUMBER  -1
 #define TX_PIN_NUMBER  21
-#define RX_PIN_NUMBER  20
-#define CTS_PIN_NUMBER 20
-#define RTS_PIN_NUMBER 20
-#define HWFC true
+#define CTS_PIN_NUMBER -1
+#define RTS_PIN_NUMBER -1
+#define HWFC false
 
 #define UART_TX_BUF_SIZE 256
 #define UART_RX_BUF_SIZE 256
@@ -515,7 +514,7 @@ static uint32_t read_keys(void) {
 }
 
 // Debounce time (dependent on tick frequency)
-#define ACTIVITY 1000
+#define ACTIVITY 5000
 #define DEBOUNCE_MEAS_INTERVAL			APP_TIMER_TICKS(25, APP_TIMER_PRESCALER)
 
 // Key buffers
@@ -1246,6 +1245,18 @@ static void power_manage(void) {
 	APP_ERROR_CHECK(err_code);
 }
 
+void uart_init() {
+	uint32_t err_code;
+	const app_uart_comm_params_t comm_params = {
+        RX_PIN_NUMBER, TX_PIN_NUMBER, RTS_PIN_NUMBER, CTS_PIN_NUMBER,
+		APP_UART_FLOW_CONTROL_DISABLED, false,
+		UART_BAUDRATE_BAUDRATE_Baud115200
+	};
+	APP_UART_FIFO_INIT (&comm_params, UART_RX_BUF_SIZE, UART_TX_BUF_SIZE, uart_error_handle, APP_IRQ_PRIORITY_LOW, err_code);
+    APP_ERROR_CHECK(err_code);
+    app_trace_log("\n---\nUART initialized\n");
+}
+
 int main(void) {
 	bool erase_bonds;
 	uint32_t err_code;
@@ -1260,6 +1271,7 @@ int main(void) {
 
 	// Initialize.
     app_trace_init();
+    uart_init();
 	timers_init();
 	buttons_leds_init(&erase_bonds);
 	ble_stack_init();
@@ -1275,14 +1287,6 @@ int main(void) {
 	timers_start();
 	err_code = ble_advertising_start(BLE_ADV_MODE_FAST);
 	APP_ERROR_CHECK(err_code);
-
-	const app_uart_comm_params_t comm_params = { RX_PIN_NUMBER, TX_PIN_NUMBER, RTS_PIN_NUMBER, CTS_PIN_NUMBER,
-		APP_UART_FLOW_CONTROL_DISABLED, false,
-		UART_BAUDRATE_BAUDRATE_Baud115200
-	};
-	APP_UART_FIFO_INIT (&comm_params, UART_RX_BUF_SIZE, UART_TX_BUF_SIZE, uart_error_handle, APP_IRQ_PRIORITY_LOW, err_code);
-
-    app_trace_log("\n---\nUART initialized\n");
 
 	// Enter main loop.
 	for (;;) {

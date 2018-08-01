@@ -10,32 +10,17 @@ Bluetooth firmware for the Mitosis keyboard (BLE and Gazell timesharing via time
 
 * [mitosis-bt.hex] (firmware upgrade for the right half, turns Mitosis into a fully wireless split Bluetooth HID keyboard)
 
-[mitosis-bt.hex]: https://raw.githubusercontent.com/joric/mitosis/devel/precompiled_iar/mitosis-bt.hex
+You need to flash the right half only. It is already merged with softdevice s130 so you don't need to flash softdevice first.
+
+```
+openocd -f interface/stlink-v2.cfg -f target/nrf51.cfg ^
+-c init -c "reset halt" -c "flash write_image erase mitosis-bt.hex" -c reset -c exit
+```
 
 ### Default layout (Mitosis-BT)
 
 [![](https://kle-render.herokuapp.com/api/3f5dd1c848bb9a7a723161ad5e0c8e39?4)](http://www.keyboard-layout-editor.com/#/gists/3f5dd1c848bb9a7a723161ad5e0c8e39)
 
-## Flashing
-
-You need to flash the right half only.
-Flash softdevice s130 first (you need to do this only once):
-
-```
-cd ../../components/softdevice/s130/hex
-openocd -f interface/stlink-v2.cfg -f target/nrf51.cfg ^
--c init -c "reset halt" -c "flash write_image erase s130_nrf51_2.0.0_softdevice.hex" -c reset -c exit
-```
-
-Then flash `_build/nrf51822_xxac.hex` the same way.
-
-You can also use [$1.80](https://www.aliexpress.com/item//32583160323.html) STM32 board,
-upgrade it with UART adapter ([RX - A9, TX - A10](https://i.imgur.com/sLyYM27.jpg))
-into a [Blackmagic](https://gojimmypi.blogspot.com/2017/07/BluePill-STM32F103-to-BlackMagic-Probe.html) board,
-and use it as an ST-Link V2 replacement ([SWCLK - A5, SWDIO - B14](https://i.imgur.com/Ikt8yZz.jpg)).
-It is actually much better because it also has a built in UART ([pin A3](https://i.imgur.com/6jPsgzv.jpg))
-on the second virtual COM port so you don't need another USB.
-See https://github.com/joric/mitosis/tree/devel#bluepill
 
 ## Building
 
@@ -70,6 +55,13 @@ You can hook up a single UART RX pin at 115200 baud ([currently pin 21, key S15 
 You will also need common GND and VCC to make it work. It doesn't really interfere much with the keyboard matrix so you can use any pin you want,
 just don't use the same pin for TX and RX to avoid feedback.
 
+You can also use [$1.80](https://www.aliexpress.com/item//32583160323.html) STM32 board,
+upgrade it with UART adapter ([RX - A9, TX - A10](https://i.imgur.com/sLyYM27.jpg))
+into a [Blackmagic](https://gojimmypi.blogspot.com/2017/07/BluePill-STM32F103-to-BlackMagic-Probe.html) board,
+and use it as an ST-Link V2 replacement ([SWCLK - A5, SWDIO - B14](https://i.imgur.com/Ikt8yZz.jpg)).
+It is actually much better because it also has a built in UART ([pin A3](https://i.imgur.com/6jPsgzv.jpg))
+on the second virtual COM port so you don't need another USB.
+See https://github.com/joric/mitosis/tree/devel#bluepill
 
 ## Status
 
@@ -95,4 +87,4 @@ Please contribute!
 
 * [My fork of the Mitosis repository (bonus documentation included)](https://github.com/joric/mitosis/tree/devel)
 * [Reddit thread](https://redd.it/91s4pu)
-
+[mitosis-bt.hex]: https://raw.githubusercontent.com/joric/mitosis/devel/precompiled_iar/mitosis-bt.hex
