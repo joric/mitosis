@@ -37,12 +37,11 @@ to Release configuration.
 ### GCC
 
 As usual, change directory to custom/armgcc, make.
-Working GCC linker settings for softdevice s130 and [YJ-14015] modules (256K ROM, 16K RAM) appear to be:
+Working GCC linker settings for softdevice s130 2.0.0 and [YJ-14015] modules (256K ROM, 16K RAM) appear to be:
 ```
   FLASH (rx) : ORIGIN = 0x1b000, LENGTH = 0x25000
   RAM (rwx) :  ORIGIN = 0x20002000, LENGTH = 0x2000
 ```
-RAM is supposed to be 0x20002800 (10K) and 0x1800 (6K) accordingly but it doesn't work this way on my setup.
 
 ## Debugging
 
@@ -64,7 +63,7 @@ Bluetooth devices seem to shutdown and restart a lot (sleep mode is actually pow
 with a hardware interrupt from the pin that restarts the device).
 Default pairing works on power on only, hold the button (currently [S16][pinout])
 to erase pairing information.
-I had to disable whitelist support because the board was mostly inaccesible after pairing.
+I had to disable whitelist support because I couldn't properly erase pairing data in runtime.
 
 I couldn't make app_trace_log work in the GCC version because it lacks free memory
 (had to write a drop-in replacement)
@@ -110,3 +109,4 @@ Please contribute!
 [Blackmagic]: https://gojimmypi.blogspot.com/2017/07/BluePill-STM32F103-to-BlackMagic-Probe.html
 [nRF5 SDK 11]: https://developer.nordicsemi.com/nRF5_SDK/nRF5_SDK_v11.x.x/nRF5_SDK_11.0.0_89a8197.zip
 [pinout]: https://i.imgur.com/6jPsgzv.jpg
+[RAM]: https://devzone.nordicsemi.com/b/blog/posts/rom-and-ram-management
