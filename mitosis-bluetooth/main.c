@@ -3,54 +3,43 @@
 #define COMPILE_RIGHT
 #include "mitosis.h"
 
-#include "nrf_drv_config.h"
-#include "nrf_gzll.h"
-#include "nrf_gpio.h"
-#include "nrf_delay.h"
-#include "nrf_drv_clock.h"
-#include "nrf_drv_rtc.h"
-
 #include <stdint.h>
+#include <stdio.h>
 #include <string.h>
 #include "nordic_common.h"
 #include "nrf.h"
 #include "nrf_assert.h"
-#include "app_error.h"
-#include "nrf_gpio.h"
-#include "ble.h"
-#include "ble_hci.h"
-#include "ble_srv_common.h"
-#include "ble_advertising.h"
-#include "ble_advdata.h"
-#include "ble_hids.h"
-#include "ble_bas.h"
-#include "ble_dis.h"
-#include "ble_conn_params.h"
-#include "app_scheduler.h"
-#include "softdevice_handler_appsh.h"
-#include "app_timer_appsh.h"
-#include "device_manager.h"
-#include "app_button.h"
-#include "pstorage.h"
-#include "app_trace.h"
-
-////////////////////////////////////////
-
-#include <stdint.h>
-#include <stdio.h>
-#include <string.h>
-#include "nrf_assert.h"
-#include "nrf_soc.h"
+#include "nrf_delay.h"
+#include "nrf_drv_config.h"
+#include "nrf_drv_clock.h"
+#include "nrf_drv_rtc.h"
 #include "nrf_gzll.h"
+#include "nrf_gpio.h"
+#include "nrf_soc.h"
+#include "ble.h"
+#include "ble_advdata.h"
+#include "ble_advertising.h"
+#include "ble_bas.h"
+#include "ble_conn_params.h"
+#include "ble_dis.h"
+#include "ble_hci.h"
+#include "ble_hids.h"
+#include "ble_srv_common.h"
+#include "app_button.h"
 #include "app_error.h"
+#include "app_scheduler.h"
+#include "app_timer_appsh.h"
+#include "app_trace.h"
 #include "app_util_platform.h"
+#include "pstorage.h"
+#include "device_manager.h"
+#include "softdevice_handler_appsh.h"
 
 #ifndef NRF_LOG_ENABLED
 #define SIMPLE_DEBUG
 #endif
 
 #ifdef SIMPLE_DEBUG
-
 #include "app_uart.h"
 
 #define RX_PIN_NUMBER  -1
@@ -88,7 +77,6 @@ void app_trace_init() {
 	APP_ERROR_CHECK(err_code);
 	app_trace_log("\nUART initialized\n");
 }
-
 #endif // SIMPLE_DEBUG
 
 #undef APP_ERROR_HANDLER
@@ -97,13 +85,12 @@ void app_error_handler_custom (ret_code_t error_code, uint32_t line_num, const u
 	app_trace_log("ERROR! code: %d line: %d\n", (int)error_code, (int)line_num);
 }
 
-
-static ble_hids_t m_hids;	/**< Structure used to identify the HID service. */
-static ble_bas_t m_bas;		/**< Structure used to identify the battery service. */
-static bool m_in_boot_mode = false;			/**< Current protocol mode. */
-static uint16_t m_conn_handle = BLE_CONN_HANDLE_INVALID;		/**< Handle of the current connection. */
-static dm_application_instance_t m_app_handle;		/**< Application identifier allocated by device manager. */
-static dm_handle_t m_bonded_peer_handle;	/**< Device reference handle to the current 	 central. */
+static ble_hids_t m_hids;									/**< Structure used to identify the HID service. */
+static ble_bas_t m_bas;										/**< Structure used to identify the battery service. */
+static bool m_in_boot_mode = false;							/**< Current protocol mode. */
+static uint16_t m_conn_handle = BLE_CONN_HANDLE_INVALID;	/**< Handle of the current connection. */
+static dm_application_instance_t m_app_handle;				/**< Application identifier allocated by device manager. */
+static dm_handle_t m_bonded_peer_handle;					/**< Device reference handle to the current 	 central. */
 
 //void notification_cb(nrf_impl_notification_t notification);
 /*lint -e526 "Symbol RADIO_IRQHandler not defined" */
@@ -121,7 +108,6 @@ static volatile bool m_cmd_received = false;
 static volatile bool m_gzll_initialized = false;
 
 static nrf_radio_signal_callback_return_param_t signal_callback_return_param;
-//static uint8_t ack_payload[ACK_PAYLOAD_LENGTH];
 
 void HardFault_Handler(uint32_t program_counter, uint32_t link_register) {
 }
@@ -183,11 +169,11 @@ static uint8_t ack_payload[TX_PAYLOAD_LENGTH];	///< Payload to attach to ACK sen
 uint32_t left_active = 0;
 uint32_t right_active = 0;
 void key_handler();
+
 // Key buffers
 static uint32_t keys = 0, keys_snapshot = 0;
 static uint32_t activity_ticks = 0;
 static uint32_t keys_recv = 0, keys_recv_snapshot = 0;
-
 static uint8_t data_buffer[10];
 
 void m_process_gazelle() {
@@ -357,14 +343,7 @@ char get_debug_cmd(void) {
 	return cmd;
 }
 
-////////////////////////////////////////
-
-#define ADDR_FMT "%02x:%02x:%02x:%02x:%02x:%02x"
-#define ADDR_T(a) a[5], a[4], a[3], a[2], a[1], a[0]
-
-
 #define VBAT_MAX_IN_MV 3000
-
 uint8_t battery_level_get(void) {
 	// Configure ADC
 	NRF_ADC->CONFIG = (ADC_CONFIG_RES_8bit << ADC_CONFIG_RES_Pos) | (ADC_CONFIG_INPSEL_SupplyOneThirdPrescaling << ADC_CONFIG_INPSEL_Pos) | (ADC_CONFIG_REFSEL_VBG << ADC_CONFIG_REFSEL_Pos) | (ADC_CONFIG_PSEL_Disabled << ADC_CONFIG_PSEL_Pos) | (ADC_CONFIG_EXTREFSEL_None << ADC_CONFIG_EXTREFSEL_Pos);
