@@ -197,7 +197,6 @@
           <state>NRF51</state>
           <state>SWI_DISABLE0</state>
           <state>NRF_LOG_USES_UART=1</state>
-          <state>DEBUG</state>
         </option>
         <option>
           <name>CCPreprocFile</name>

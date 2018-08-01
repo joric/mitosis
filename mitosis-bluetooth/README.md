@@ -29,24 +29,15 @@ openocd -f interface/stlink-v2.cfg -f target/nrf51.cfg ^
 
 ### IAR
 
-Open mitosis-bluetooth.eww, select Release, hit Make, that's it.
+Open mitosis-bluetooth.eww, select Release configuration, hit Make, that's it.
 I'm using a single plate (reversed) version for the Debug build (modules soldered to the top of the PCB),
-to debug standard version, remove `COMPILE_REVERSED` from the preprocessor directives.
-GCC app_trace_log version crashes but in IAR you can just add the following to the preprocessor directives:
-
-```
-NRF_LOG_USES_UART=1
-NRF_LOG_ENABLED=1
-ENABLE_DEBUG_LOG_SUPPORT=1
-DM_DISABLE_LOGS=1
-```
-
-(the last one is optional if log is too verbose)
+to debug standard version remove `COMPILE_REVERSED` from the preprocessor directives of the Debug version
+or just switch to a Release configuration.
 
 ### GCC
 
 As usual, change directory to custom/armgcc, make.
-Working GCC linker settings for softdevice s130 and [YJ-14015] modules (256K ROM, 16K RAM) are:
+Working GCC linker settings for softdevice s130 and [YJ-14015] modules (256K ROM, 16K RAM) appear to be:
 ```
   FLASH (rx) : ORIGIN = 0x1b000, LENGTH = 0x25000
   RAM (rwx) :  ORIGIN = 0x20002000, LENGTH = 0x2000
@@ -60,11 +51,23 @@ just don't use the same pin for TX and RX to avoid feedback.
 
 You can also use [$1.80](https://www.aliexpress.com/item//32583160323.html) STM32 board,
 upgrade it with UART adapter ([RX - A9, TX - A10](https://i.imgur.com/sLyYM27.jpg))
-into a [Blackmagic](https://gojimmypi.blogspot.com/2017/07/BluePill-STM32F103-to-BlackMagic-Probe.html) board,
-and use it as an ST-Link V2 replacement ([SWCLK - A5, SWDIO - B14](https://i.imgur.com/Ikt8yZz.jpg)).
+into a [Blackmagic] board,
+and use it as an [ST-LINK/V2] replacement ([SWCLK - A5, SWDIO - B14](https://i.imgur.com/Ikt8yZz.jpg)).
 It is actually much better because it also has a built in UART ([pin A3](https://i.imgur.com/6jPsgzv.jpg))
 on the second virtual COM port so you don't need another USB.
 See https://github.com/joric/mitosis/tree/devel#bluepill
+
+I couldn't really make app_trace_log work in the last version (had to write a drop-in replacement)
+but you can try adding the following to the preprocessor directives (it works just fine with a smaller Nordic SDK examples):
+
+```
+NRF_LOG_USES_UART=1
+NRF_LOG_ENABLED=1
+ENABLE_DEBUG_LOG_SUPPORT=1
+DM_DISABLE_LOGS=1
+```
+
+(The last option is optional if log is too verbose.)
 
 ## Status
 
@@ -95,4 +98,5 @@ Please contribute!
 [ST-LINK/V2]: http://www.ebay.com/itm/331803020521
 [OpenOCD]: http://www.freddiechopin.info/en/download/category/10-openocd-dev
 [YJ-14015]: https://www.ebay.com/itm/282575577879
+[Blackmagic]: https://gojimmypi.blogspot.com/2017/07/BluePill-STM32F103-to-BlackMagic-Probe.html
 
