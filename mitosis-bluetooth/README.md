@@ -29,8 +29,8 @@ openocd -f interface/stlink-v2.cfg -f target/nrf51.cfg ^
 
 ### IAR
 
-Open mitosis-bluetooth.eww, select Release configuration, hit Make, that's it.
-I'm using a single plate (reversed) version for the Debug build (modules soldered to the top of the PCB),
+Open mitosis-bluetooth.eww, hit Make, that's it.I'm using a single plate (reversed) version for
+the Debug configuration (modules soldered to the top of the PCB),
 to debug standard version remove `COMPILE_REVERSED` from the preprocessor directives or switch
 to Release configuration.
 
