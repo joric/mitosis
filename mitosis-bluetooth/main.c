@@ -45,6 +45,11 @@
 #include "app_error.h"
 #include "app_util_platform.h"
 
+#ifndef NRF_LOG_ENABLED
+#define COMPILE_DEBUG
+#endif
+
+#ifdef COMPILE_DEBUG
 #include "app_uart.h"
 
 #define RX_PIN_NUMBER  -1
@@ -56,22 +61,35 @@
 #define UART_TX_BUF_SIZE 256
 #define UART_RX_BUF_SIZE 256
 
-void uart_error_handle (app_uart_evt_t * p_event) {
-#if 0 // unused
-	if (p_event->evt_type == APP_UART_COMMUNICATION_ERROR) {
-		APP_ERROR_HANDLER (p_event->data.error_communication);
-	}
-	else if (p_event->evt_type == APP_UART_FIFO_ERROR) {
-		APP_ERROR_HANDLER (p_event->data.error_code);
-	}
-#endif
-}
-
 #undef app_trace_log
 void app_trace_log(const char * s) {
 	for (const char *p = s; *p; p++)
 		app_uart_put (*p);
 }
+
+void uart_error_handle (app_uart_evt_t * p_event) {
+}
+
+#undef app_trace_init
+void app_trace_init() {
+	uint32_t err_code;
+	const app_uart_comm_params_t comm_params = {
+        RX_PIN_NUMBER, TX_PIN_NUMBER, RTS_PIN_NUMBER, CTS_PIN_NUMBER,
+		APP_UART_FLOW_CONTROL_DISABLED, false,
+		UART_BAUDRATE_BAUDRATE_Baud115200
+	};
+	APP_UART_FIFO_INIT (&comm_params, UART_RX_BUF_SIZE, UART_TX_BUF_SIZE, uart_error_handle, APP_IRQ_PRIORITY_LOW, err_code);
+    APP_ERROR_CHECK(err_code);
+}
+
+#undef APP_ERROR_HANDLER
+#define APP_ERROR_HANDLER(ERR_CODE) app_error_handler_custom((ERR_CODE), __LINE__, (uint8_t*) __FILE__);
+void app_error_handler_custom (ret_code_t error_code, uint32_t line_num, const uint8_t * p_file_name) {
+    char buf[128];
+    sprintf(buf, "ERROR! code: %d line: %d\n", (int)error_code, (int)line_num);
+    app_trace_log(buf);
+}
+#endif
 
 static ble_hids_t m_hids;	/**< Structure used to identify the HID service. */
 static ble_bas_t m_bas;		/**< Structure used to identify the battery service. */
@@ -468,9 +486,11 @@ void key_handler() {
 	buf[0] = modifiers;
 	buf[1] = 0; // reserved
 
-    app_trace_log("Sending HID report\n");
-    uint32_t err_code = ble_hids_inp_rep_send(&m_hids, INPUT_REPORT_KEYS_INDEX, INPUT_REPORT_KEYS_MAX_LEN, buf);
-    APP_ERROR_CHECK(err_code);
+    if (m_conn_handle != BLE_CONN_HANDLE_INVALID) {
+        app_trace_log("Sending HID report\n");
+        uint32_t err_code = ble_hids_inp_rep_send(&m_hids, INPUT_REPORT_KEYS_INDEX, INPUT_REPORT_KEYS_MAX_LEN, buf);
+        APP_ERROR_CHECK(err_code);
+    }
 }
 
 
@@ -559,7 +579,7 @@ static void handler_debounce(void *p_context) {
         activity_ticks++;
         if (activity_ticks > ACTIVITY) {
 			// Go to system-off mode (this function will not return; wakeup will cause a reset).
-			sd_power_system_off();
+			// sd_power_system_off();
         }
 	} else {
 		activity_ticks = 0;
@@ -1045,6 +1065,7 @@ static void on_ble_evt(ble_evt_t * p_ble_evt) {
 
 		case BLE_GAP_EVT_CONNECTED:
             app_trace_log("Connected\n");
+            m_conn_handle = p_ble_evt->evt.gap_evt.conn_handle;
 			break;
 
 		case BLE_EVT_TX_COMPLETE:
@@ -1055,8 +1076,10 @@ static void on_ble_evt(ble_evt_t * p_ble_evt) {
             app_trace_log("Disconnected\n");
 			m_caps_on = false;
 			m_conn_handle = BLE_CONN_HANDLE_INVALID;
-            //dm_device_delete(&m_bonded_peer_handle);
-			//ble_advertising_start(BLE_ADV_MODE_FAST); // crash?
+
+            // erases current bond, critical for reconnecting so far (how to fix this?)
+            dm_device_delete(&m_bonded_peer_handle);
+			ble_advertising_start(BLE_ADV_MODE_FAST);
 
 			break;
 		}
@@ -1070,8 +1093,8 @@ static void on_ble_evt(ble_evt_t * p_ble_evt) {
 			break;
 
 		case BLE_GAP_EVT_SEC_PARAMS_REQUEST:
-			err_code = sd_ble_gap_sec_params_reply(m_conn_handle, BLE_GAP_SEC_STATUS_PAIRING_NOT_SUPP, NULL, NULL); // no bonding
-			APP_ERROR_CHECK(err_code);
+			//err_code = sd_ble_gap_sec_params_reply(m_conn_handle, BLE_GAP_SEC_STATUS_PAIRING_NOT_SUPP, NULL, NULL);
+			//APP_ERROR_CHECK(err_code);  // ERROR here?
 			break;
 
 		case BLE_EVT_USER_MEM_REQUEST:
@@ -1105,9 +1128,9 @@ static void on_ble_evt(ble_evt_t * p_ble_evt) {
 
 		case BLE_GATTS_EVT_SYS_ATTR_MISSING:
 			// No system attributes have been stored.
-			err_code = sd_ble_gatts_sys_attr_set(m_conn_handle, NULL, 0, 0);
-			APP_ERROR_CHECK(err_code);
-			break;				// BLE_GATTS_EVT_SYS_ATTR_MISSING
+			//err_code = sd_ble_gatts_sys_attr_set(m_conn_handle, NULL, 0, 0); // ERROR here as well
+			//APP_ERROR_CHECK(err_code);
+			break;
 
 		default:
 			// No implementation needed.
@@ -1245,18 +1268,6 @@ static void power_manage(void) {
 	APP_ERROR_CHECK(err_code);
 }
 
-void uart_init() {
-	uint32_t err_code;
-	const app_uart_comm_params_t comm_params = {
-        RX_PIN_NUMBER, TX_PIN_NUMBER, RTS_PIN_NUMBER, CTS_PIN_NUMBER,
-		APP_UART_FLOW_CONTROL_DISABLED, false,
-		UART_BAUDRATE_BAUDRATE_Baud115200
-	};
-	APP_UART_FIFO_INIT (&comm_params, UART_RX_BUF_SIZE, UART_TX_BUF_SIZE, uart_error_handle, APP_IRQ_PRIORITY_LOW, err_code);
-    APP_ERROR_CHECK(err_code);
-    app_trace_log("\n---\nUART initialized\n");
-}
-
 int main(void) {
 	bool erase_bonds;
 	uint32_t err_code;
@@ -1271,7 +1282,6 @@ int main(void) {
 
 	// Initialize.
     app_trace_init();
-    uart_init();
 	timers_init();
 	buttons_leds_init(&erase_bonds);
 	ble_stack_init();
@@ -1287,6 +1297,8 @@ int main(void) {
 	timers_start();
 	err_code = ble_advertising_start(BLE_ADV_MODE_FAST);
 	APP_ERROR_CHECK(err_code);
+
+    app_trace_log("\nStarted.\n");
 
 	// Enter main loop.
 	for (;;) {
