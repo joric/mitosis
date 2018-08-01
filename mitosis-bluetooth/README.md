@@ -53,11 +53,11 @@ You can also use [$1.80](https://www.aliexpress.com/item//32583160323.html) STM3
 upgrade it with UART adapter ([RX - A9, TX - A10](https://i.imgur.com/sLyYM27.jpg))
 into a [Blackmagic] board,
 and use it as an [ST-LINK/V2] replacement ([SWCLK - A5, SWDIO - B14](https://i.imgur.com/Ikt8yZz.jpg)).
-It is actually much better because it also has a built in UART ([pin A3](https://i.imgur.com/6jPsgzv.jpg))
+It is actually much better because it also has a built in UART ([pin A3][pinout])
 on the second virtual COM port so you don't need another USB.
 See https://github.com/joric/mitosis/tree/devel#bluepill
 
-I couldn't really make app_trace_log work in the GCC version probably because we only have 8K RAM
+I couldn't really make app_trace_log work in the GCC version probably because it lacks free memory
 (had to write a drop-in replacement)
 but in IAR you can just use the following preprocessor directives (it appears to be unstable as well):
 
@@ -70,6 +70,14 @@ DM_DISABLE_LOGS=1
 ```
 
 (The last option is optional if log is too verbose.)
+
+I'm using [nRF5 SDK 11] (mostly because original Mitosis using it).
+There's no softdevice s110 support so we are limited to 8K RAM.
+Bluetooth devices seem to shutdown and restart a lot (sleep mode is actually power off mode
+with a hardware interrupt from the pin that restarts the device).
+Default pairing works on power on only, hold the button (currently [S16][pinout])
+to erase pairing information.
+I had to disable whitelist support because the board was mostly inaccesible after pairing.
 
 ## Status
 
@@ -101,4 +109,5 @@ Please contribute!
 [OpenOCD]: http://www.freddiechopin.info/en/download/category/10-openocd-dev
 [YJ-14015]: https://www.ebay.com/itm/282575577879
 [Blackmagic]: https://gojimmypi.blogspot.com/2017/07/BluePill-STM32F103-to-BlackMagic-Probe.html
-
+[nRF5 SDK 11]: https://developer.nordicsemi.com/nRF5_SDK/nRF5_SDK_v11.x.x/nRF5_SDK_11.0.0_89a8197.zip
+[pinout]: https://i.imgur.com/6jPsgzv.jpg
