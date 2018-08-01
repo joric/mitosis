@@ -89,6 +89,7 @@ DM_DISABLE_LOGS=1
 * Battery level reporting via Bluetooth
 * Debugging via UART
 * Basic QMK layout support
+* Pairing and reset key
 
 ### TODO
 
