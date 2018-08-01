@@ -197,6 +197,7 @@
           <state>NRF51</state>
           <state>SWI_DISABLE0</state>
           <state>NRF_LOG_USES_UART=1</state>
+          <state>DEBUG</state>
         </option>
         <option>
           <name>CCPreprocFile</name>
@@ -2171,10 +2172,22 @@
       <name>$PROJ_DIR$\..\..\..\..\components\libraries\trace\app_trace.c</name>
     </file>
     <file>
+      <name>$PROJ_DIR$\..\..\..\..\examples\bsp\bsp.c</name>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\..\..\..\examples\bsp\bsp_btn_ble.c</name>
+    </file>
+    <file>
       <name>$PROJ_DIR$\..\..\..\..\components\libraries\fstorage\fstorage.c</name>
     </file>
     <file>
       <name>$PROJ_DIR$\..\..\..\..\components\libraries\util\nrf_assert.c</name>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\..\..\..\components\libraries\util\nrf_log.c</name>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\..\..\..\components\libraries\uart\retarget.c</name>
     </file>
   </group>
   <group>

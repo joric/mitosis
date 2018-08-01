@@ -10,7 +10,11 @@ Bluetooth firmware for the Mitosis keyboard (BLE and Gazell timesharing via time
 
 * [mitosis-bt.hex] (firmware upgrade for the right half, turns Mitosis into a fully wireless split Bluetooth HID keyboard)
 
-You need to flash the right half only. It is already merged with softdevice s130 so you don't need to flash softdevice first.
+## Uploading Firmware
+
+You need to flash the right half only.
+Use [ST-LINK/V2] and [OpenOCD].
+Precompiled firmware is already merged with softdevice s130 so you don't need to flash softdevice first.
 
 ```
 openocd -f interface/stlink-v2.cfg -f target/nrf51.cfg ^
@@ -21,29 +25,28 @@ openocd -f interface/stlink-v2.cfg -f target/nrf51.cfg ^
 
 [![](https://kle-render.herokuapp.com/api/3f5dd1c848bb9a7a723161ad5e0c8e39?4)](http://www.keyboard-layout-editor.com/#/gists/3f5dd1c848bb9a7a723161ad5e0c8e39)
 
-
 ## Building
 
 ### IAR
 
 Open mitosis-bluetooth.eww, select Release, hit Make, that's it.
-I'm using a single plate (reversed) version for the Debug build (modules soldered to the top of the PCB).
-To make standard version, remove `COMPILE_REVERSED` from the preprocessor directives.
-You may also use firmware from the [precompiled_iar](../precompiled_iar) folder.
-I wasn't able to make a working GCC version with a built in app_trace_log (memory issues) but in IAR you can just add the following to the preprocessor directives:
+I'm using a single plate (reversed) version for the Debug build (modules soldered to the top of the PCB),
+to debug standard version, remove `COMPILE_REVERSED` from the preprocessor directives.
+GCC app_trace_log version crashes but in IAR you can just add the following to the preprocessor directives:
 
 ```
 NRF_LOG_USES_UART=1
 NRF_LOG_ENABLED=1
 ENABLE_DEBUG_LOG_SUPPORT=1
-DM_DISABLE_LOGS=1 (optional if it's too verbose)
+DM_DISABLE_LOGS=1
 ```
+
+(the last one is optional if log is too verbose)
 
 ### GCC
 
-Cd custom/s130/armgcc, make.
-
-Working GCC linker settings for softdevice s130 and YJ-14015 modules (256K ROM, 16K RAM) are:
+As usual, change directory to custom/s130/armgcc, make.
+Working GCC linker settings for softdevice s130 and [YJ-14015] modules (256K ROM, 16K RAM) are:
 ```
   FLASH (rx) : ORIGIN = 0x1b000, LENGTH = 0x25000
   RAM (rwx) :  ORIGIN = 0x20002000, LENGTH = 0x2000
@@ -89,3 +92,7 @@ Please contribute!
 * [Reddit thread](https://redd.it/91s4pu)
 
 [mitosis-bt.hex]: https://raw.githubusercontent.com/joric/mitosis/devel/precompiled_iar/mitosis-bt.hex
+[ST-LINK/V2]: http://www.ebay.com/itm/331803020521
+[OpenOCD]: http://www.freddiechopin.info/en/download/category/10-openocd-dev
+[YJ-14015]: https://www.ebay.com/itm/282575577879
+

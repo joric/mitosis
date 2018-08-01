@@ -50,6 +50,7 @@
 #endif
 
 #ifdef COMPILE_DEBUG
+
 #include "app_uart.h"
 
 #define RX_PIN_NUMBER  -1
@@ -62,9 +63,14 @@
 #define UART_RX_BUF_SIZE 256
 
 #undef app_trace_log
-void app_trace_log(const char * s) {
-	for (const char *p = s; *p; p++)
-		app_uart_put (*p);
+void app_trace_log(const char *fmt, ...) {
+	va_list list;
+	va_start (list, fmt);
+	char buf[256] = { 0 };
+	vsprintf(buf, fmt, list);
+	va_end(list);
+	for (char *p = buf; *p; p++)
+		app_uart_put(*p);
 }
 
 void uart_error_handle (app_uart_evt_t * p_event) {
@@ -82,14 +88,13 @@ void app_trace_init() {
     APP_ERROR_CHECK(err_code);
 }
 
+#endif // COMPILE_DEBUG
+
 #undef APP_ERROR_HANDLER
 #define APP_ERROR_HANDLER(ERR_CODE) app_error_handler_custom((ERR_CODE), __LINE__, (uint8_t*) __FILE__);
 void app_error_handler_custom (ret_code_t error_code, uint32_t line_num, const uint8_t * p_file_name) {
-    char buf[128];
-    sprintf(buf, "ERROR! code: %d line: %d\n", (int)error_code, (int)line_num);
-    app_trace_log(buf);
+    app_trace_log("ERROR! code: %d line: %d\n", (int)error_code, (int)line_num);
 }
-#endif
 
 static ble_hids_t m_hids;	/**< Structure used to identify the HID service. */
 static ble_bas_t m_bas;		/**< Structure used to identify the battery service. */
@@ -579,7 +584,7 @@ static void handler_debounce(void *p_context) {
         activity_ticks++;
         if (activity_ticks > ACTIVITY) {
 			// Go to system-off mode (this function will not return; wakeup will cause a reset).
-			// sd_power_system_off();
+			sd_power_system_off();
         }
 	} else {
 		activity_ticks = 0;
@@ -1298,7 +1303,7 @@ int main(void) {
 	err_code = ble_advertising_start(BLE_ADV_MODE_FAST);
 	APP_ERROR_CHECK(err_code);
 
-    app_trace_log("\nStarted.\n");
+    app_trace_log("\nStarted\n");
 
 	// Enter main loop.
 	for (;;) {
