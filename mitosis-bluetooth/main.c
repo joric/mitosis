@@ -559,9 +559,8 @@ static void handler_debounce(void *p_context) {
 	if ( keys == 0 && keys_recv == 0 ) {
         activity_ticks++;
         if (activity_ticks > ACTIVITY) {
-			//nrf_delay_ms(100);
 			// Go to system-off mode (this function will not return; wakeup will cause a reset).
-			//sd_power_system_off();
+			sd_power_system_off();
         }
 	} else {
 		activity_ticks = 0;

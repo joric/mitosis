@@ -41,6 +41,20 @@ You can hook up a single UART RX pin at 115200 baud ([currently pin 21, key S15 
 You will also need common GND and VCC to make it work. It doesn't really interfere much with the keyboard matrix so you can use any pin you want,
 just don't use the same pin for TX and RX to avoid feedback.
 
+I wasn't able to make a working GCC version with a built in app_trace_log (memory issues) but in IAR it would be just:
+
+```
+NRF_LOG_USES_UART=1
+NRF_LOG_ENABLED=1
+ENABLE_DEBUG_LOG_SUPPORT=1
+DM_DISABLE_LOGS=1 (optional if it's too verbose)
+```
+Working GCC linker settings for softdevice s130 and YJ-14015 modules (256K ROM, 16K RAM) are:
+```
+  FLASH (rx) : ORIGIN = 0x1b000, LENGTH = 0x25000
+  RAM (rwx) :  ORIGIN = 0x20002000, LENGTH = 0x2000
+```
+
 ## Status
 
 ### Works
