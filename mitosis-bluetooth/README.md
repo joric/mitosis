@@ -109,5 +109,5 @@ Please contribute!
 [YJ-14015]: https://www.ebay.com/itm/282575577879
 [Blackmagic]: https://gojimmypi.blogspot.com/2017/07/BluePill-STM32F103-to-BlackMagic-Probe.html
 [nRF5 SDK 11]: https://developer.nordicsemi.com/nRF5_SDK/nRF5_SDK_v11.x.x/nRF5_SDK_11.0.0_89a8197.zip
-[pinout]: https://i.imgur.com/6jPsgzv.jpg
+[pinout]: https://i.imgur.com/apx8W8W.png
 [RAM]: https://devzone.nordicsemi.com/b/blog/posts/rom-and-ram-management
