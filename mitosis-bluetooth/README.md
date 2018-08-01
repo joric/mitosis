@@ -45,7 +45,7 @@ DM_DISABLE_LOGS=1
 
 ### GCC
 
-As usual, change directory to custom/s130/armgcc, make.
+As usual, change directory to custom/armgcc, make.
 Working GCC linker settings for softdevice s130 and [YJ-14015] modules (256K ROM, 16K RAM) are:
 ```
   FLASH (rx) : ORIGIN = 0x1b000, LENGTH = 0x25000
