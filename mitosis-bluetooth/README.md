@@ -64,9 +64,8 @@ I'm using [nRF5 SDK 11] (mostly because original Mitosis using it).
 There's no softdevice s110 support so we are limited to 6K RAM.
 Bluetooth devices seem to shutdown and restart a lot (sleep mode is actually power off mode
 with a hardware interrupt from the pin that restarts the device).
-Default pairing works on power on only, hold the button (currently [S16][pinout])
+Default pairing works on power on only, hold the button (currently [S20][pinout])
 to erase pairing information.
-I had to disable whitelist support because I couldn't properly erase pairing data in runtime.
 
 There is a built in app_trace_log but it doesn't work with GCC (probably lacks free memory)
 so I had to write a small drop-in replacement, but in IAR you can just use the following preprocessor
@@ -94,7 +93,6 @@ DM_DISABLE_LOGS=1
 ### TODO
 
 * HID buffering and improved latency
-* Better pairing and a pairing key shortcut
 * Switching between RF and Bluetooth modes
 * Switching between Bluetooth devices
 
