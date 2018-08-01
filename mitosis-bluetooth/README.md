@@ -10,7 +10,7 @@ Bluetooth firmware for the Mitosis keyboard (BLE and Gazell timesharing via time
 
 * [mitosis-bt.hex] (firmware upgrade for the right half, turns Mitosis into a fully wireless split Bluetooth HID keyboard)
 
-Hold Fn key ([S20][pinout]) while powering on to erase bonding data from memory or hold Fn key for 10 seconds to reboot.
+Hold Fn key ([S20][pinout]) while powering on to erase bonding data from memory or hold (only) Fn key for 10 seconds to reboot.
 
 ## Uploading Firmware
 
