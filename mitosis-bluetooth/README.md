@@ -13,8 +13,7 @@ Bluetooth firmware for the Mitosis keyboard (BLE and Gazell timesharing via time
 Current firmware version switches into a System Off mode after a few minutes of inactivity to save the battery,
 and wakes up on hardware interrupt (any key, usually you press something on a home row).
 Reset shortcut (currently a single Fn key) in System Off mode wakes up the keyboard and clears all existing bonds
-(works as a pairing key).
-The bonds can also be cleared by power-cycling the board by keeping the Reset shortcut pressed for about 10 seconds.
+(works as a pairing key), the bonds can also be cleared by power-cycling the board by keeping it pressed for about 10 seconds.
 
 ## Uploading Firmware
 
@@ -68,8 +67,6 @@ I'm using [nRF5 SDK 11] (mostly because original Mitosis using it).
 There's no softdevice s110 support so we are limited to 6K RAM.
 Bluetooth devices seem to shutdown and restart a lot (sleep mode is actually power off mode
 with a hardware interrupt from the pin that restarts the device).
-Default pairing works on power on only, hold the reset button.
-to erase pairing information.
 
 There is a built in app_trace_log but it doesn't work with GCC (probably lacks free memory)
 so I had to write a small drop-in replacement, but in IAR you can just use the following preprocessor
