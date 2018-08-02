@@ -84,17 +84,14 @@ DM_DISABLE_LOGS=1
 
 ### Works
 
-* Mitosis debouncing code
 * Bluetooth and Gazell timesharing
-* Master and slave mode (left half doesn't need firmware update at all)
 * Battery level reporting via Bluetooth
 * Debugging via UART
 * Basic QMK layout support
-* Pairing and reset key
+* Bluetooth pairing shortcut
 
 ### TODO
 
-* HID buffering and improved latency
 * Switching between RF and Bluetooth modes
 * Switching between Bluetooth devices
 
