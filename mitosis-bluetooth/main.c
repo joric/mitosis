@@ -1167,6 +1167,12 @@ static void on_ble_evt(ble_evt_t * p_ble_evt) {
 			APP_ERROR_CHECK(err_code);
 			break;
 
+		case BLE_GATTS_EVT_SYS_ATTR_MISSING:
+			// No system attributes have been stored.
+			err_code = sd_ble_gatts_sys_attr_set(m_conn_handle, NULL, 0, 0);
+			APP_ERROR_CHECK(err_code);
+			break;
+
 		default:
 			// No implementation needed.
 			break;
