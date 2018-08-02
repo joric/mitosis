@@ -40,7 +40,7 @@ set path=%nordic%;%path%
 echo Uploading...
 
 arm-none-eabi-gdb.exe --quiet --batch -ex "target extended-remote \\.\%port%" -ex "mon swdp_scan" ^
--ex "file %file:\=/%" -ex "att 1" %opt% -ex "load" -ex "run"
+-ex "file %file:\=/%" -ex "att 1" %opt% -ex load -ex kill
 
 :end
 

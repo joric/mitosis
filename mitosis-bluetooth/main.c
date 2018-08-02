@@ -403,6 +403,8 @@ uint8_t battery_level_get(void) {
 	if (percent > 100)
 		percent = 100;
 
+	app_trace_log("Sending BAS report: %d%% (%dmV)\n", percent, vbat_current_in_mv);
+
 	return (uint8_t) percent;
 }
 
@@ -415,7 +417,7 @@ uint8_t battery_level_get(void) {
 #define MANUFACTURER_NAME					"NordicSemiconductor"	/**< Manufacturer. Will be passed to Device Information Service. */
 #define APP_TIMER_PRESCALER					0	/**< Value of the RTC1 PRESCALER register. */
 #define APP_TIMER_OP_QUEUE_SIZE				4	/**< Size of timer operation queues. */
-#define BATTERY_LEVEL_MEAS_INTERVAL			APP_TIMER_TICKS(60000, APP_TIMER_PRESCALER)	/**< Battery level measurement interval (ticks). */
+#define BATTERY_LEVEL_MEAS_INTERVAL			APP_TIMER_TICKS(5*60*1000, APP_TIMER_PRESCALER)	/**< Battery level measurement interval (ticks). */
 #define PNP_ID_VENDOR_ID_SOURCE				0x02	/**< Vendor ID Source. */
 #define PNP_ID_VENDOR_ID					0x1915	/**< Vendor ID. */
 #define PNP_ID_PRODUCT_ID					0xEEEE	/**< Product ID. */
@@ -921,7 +923,6 @@ static void timers_start(void) {
 
 	err_code = app_timer_start(m_debounce_timer_id, DEBOUNCE_MEAS_INTERVAL, NULL);
 	APP_ERROR_CHECK(err_code);
-
 }
 
 
@@ -1110,6 +1111,7 @@ static void on_ble_evt(ble_evt_t * p_ble_evt) {
 			m_conn_handle = p_ble_evt->evt.gap_evt.conn_handle;
 			p_addr = &p_ble_evt->evt.gap_evt.params.connected.peer_addr;
 			app_trace_log("Connected to " ADDR_FMT "\n", ADDR_T(p_addr->addr));
+			battery_level_update();
 			break;
 
 		case BLE_EVT_TX_COMPLETE:

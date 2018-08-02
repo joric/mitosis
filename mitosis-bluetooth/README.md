@@ -10,7 +10,10 @@ Bluetooth firmware for the Mitosis keyboard (BLE and Gazell timesharing via time
 
 * [mitosis-bt.hex] (firmware upgrade for the right half, turns Mitosis into a fully wireless split Bluetooth HID keyboard)
 
-Hold Fn key ([S20][pinout]) while powering on to erase bonding data from memory or hold (only) Fn key for 10 seconds to reboot.
+Current firmware version switches into a System Off mode after a few minutes of inactivity to save the battery,
+and wakes up on hardware interrupt (any key).
+Reset key (currently Fn) in System Off mode wakes up the keyboard and clears all existing bonds.
+The bonds can also be cleared by power-cycling the board by keeping the button pressed for about 10 seconds.
 
 ## Uploading Firmware
 
@@ -64,7 +67,7 @@ I'm using [nRF5 SDK 11] (mostly because original Mitosis using it).
 There's no softdevice s110 support so we are limited to 6K RAM.
 Bluetooth devices seem to shutdown and restart a lot (sleep mode is actually power off mode
 with a hardware interrupt from the pin that restarts the device).
-Default pairing works on power on only, hold the button (currently [S20][pinout])
+Default pairing works on power on only, hold the reset button.
 to erase pairing information.
 
 There is a built in app_trace_log but it doesn't work with GCC (probably lacks free memory)
