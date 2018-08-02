@@ -12,7 +12,8 @@ Bluetooth firmware for the Mitosis keyboard (BLE and Gazell timesharing via time
 
 Current firmware version switches into a System Off mode after a few minutes of inactivity to save the battery,
 and wakes up on hardware interrupt (any key, usually you press something on a home row).
-Reset shortcut (currently a single Fn key) in System Off mode wakes up the keyboard and clears all existing bonds.
+Reset shortcut (currently a single Fn key) in System Off mode wakes up the keyboard and clears all existing bonds
+(works as a pairing key).
 The bonds can also be cleared by power-cycling the board by keeping the Reset shortcut pressed for about 10 seconds.
 
 ## Uploading Firmware
