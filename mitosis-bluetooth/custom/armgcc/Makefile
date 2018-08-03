@@ -39,7 +39,6 @@ remduplicates = $(strip $(if $1,$(firstword $1) $(call remduplicates,$(filter-ou
 C_SOURCE_FILES += \
 $(abspath ../../main.c) \
 $(abspath ../../keymap.c) \
-$(abspath ../../app_timer_qdec.c) \
 $(abspath ../../../../components/libraries/uart/retarget.c) \
 $(abspath ../../../../components/libraries/uart/app_uart_fifo.c) \
 $(abspath ../../../../components/libraries/util/app_error.c) \
@@ -47,6 +46,7 @@ $(abspath ../../../../components/libraries/util/app_error_weak.c) \
 $(abspath ../../../../components/libraries/util/app_util_platform.c) \
 $(abspath ../../../../components/libraries/fifo/app_fifo.c) \
 $(abspath ../../../../components/libraries/scheduler/app_scheduler.c) \
+$(abspath ../../../../components/libraries/timer/app_timer_ble_gzll.c) \
 $(abspath ../../../../components/libraries/timer/app_timer_appsh.c) \
 $(abspath ../../../../components/libraries/trace/app_trace.c) \
 $(abspath ../../../../components/libraries/fstorage/fstorage.c) \

@@ -2073,9 +2073,6 @@
   <group>
     <name>Application</name>
     <file>
-      <name>$PROJ_DIR$\..\..\app_timer_qdec.c</name>
-    </file>
-    <file>
       <name>$PROJ_DIR$\..\..\device_manager_peripheral_switch.c</name>
     </file>
     <file>
@@ -2176,6 +2173,9 @@
     </file>
     <file>
       <name>$PROJ_DIR$\..\..\..\..\components\libraries\timer\app_timer_appsh.c</name>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\..\..\..\components\libraries\timer\app_timer_ble_gzll.c</name>
     </file>
     <file>
       <name>$PROJ_DIR$\..\..\..\..\components\libraries\trace\app_trace.c</name>
