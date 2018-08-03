@@ -33,7 +33,8 @@ Bluetooth mode key in System Off mode wakes up the keyboard and clears all exist
 (works as a pairing key), the bonds can also be cleared by power-cycling the board by keeping
 the key pressed for a few seconds.
 
-* Press `Menu` shortly to switch between two recent bluetooth devices
+* Press `Menu` to switch between two recent bluetooth devices
+* Press `Fn`+`Menu` shortly to pair bluetooth device
 
 [![](https://kle-render.herokuapp.com/api/3f5dd1c848bb9a7a723161ad5e0c8e39?5)](http://www.keyboard-layout-editor.com/#/gists/3f5dd1c848bb9a7a723161ad5e0c8e39)
 

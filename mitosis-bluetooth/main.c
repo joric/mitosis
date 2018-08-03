@@ -602,7 +602,7 @@ uint8_t battery_level_get(void) {
 #define PNP_ID_PRODUCT_VERSION				0x0001	/**< Product Version. */
 #define APP_ADV_FAST_INTERVAL				0x0028	/**< Fast advertising interval (in units of 0.625 ms. This value corresponds to 25 ms.). */
 #define APP_ADV_SLOW_INTERVAL				0x0C80	/**< Slow advertising interval (in units of 0.625 ms. This value corrsponds to 2 seconds). */
-#define APP_ADV_FAST_TIMEOUT				30		/**< The duration of the fast advertising period (in seconds). */
+#define APP_ADV_FAST_TIMEOUT				10		/**< The duration of the fast advertising period (in seconds). */
 #define APP_ADV_SLOW_TIMEOUT				180		/**< The duration of the slow advertising period (in seconds). */
 /*lint -emacro(524, MIN_CONN_INTERVAL) // Loss of precision */
 #define MIN_CONN_INTERVAL					MSEC_TO_UNITS(7.5, UNIT_1_25_MS)	/**< Minimum ion interval (7.5 ms) */
@@ -766,11 +766,12 @@ static void send_data() {
 #define DEBOUNCE 25				// standard 25 ms refresh
 #define ACTIVITY 4*60*1000		// unactivity time till power off (4 minutes)
 #define REBOOT 6*1000			// hold reboot for a few seconds
-#define PAIRING 2*1000			// hold switch key for a few seconds
+#define PAIRING 1*1000			// hold switch key for a few seconds
 #define DEBOUNCE_MEAS_INTERVAL APP_TIMER_TICKS(DEBOUNCE, APP_TIMER_PRESCALER)
 static uint32_t activity_ticks = 0;
 static uint32_t reset_ticks = 0;
 static uint32_t pairing_ticks = 0;
+static bool m_pairing_reset = false;
 
 static uint32_t advertising_restart(ble_adv_mode_t mode) {
 	uint32_t err_code;
@@ -794,10 +795,18 @@ static void handler_debounce(void *p_context) {
 		send_data();
 		key_handler();
 
-		if (m_keyboard_mode == MODE_BT && keys == (1 << KEY_RF)) {	// menu key
-			m_switch_context.current_index = (m_switch_context.current_index + 1) % (MAX_DEVICES - 1);
-			switch_select(m_switch_context.current_index);
-			advertising_restart(BLE_ADV_MODE_FAST);
+		if (m_keyboard_mode == MODE_BT) {
+			if (keys == ((1 << KEY_RF)|(1 << KEY_BT))) { // fn + menu
+				app_trace_log("Pairing...\n");
+				switch_reset(&m_bonded_peer_handle);
+				advertising_restart(BLE_ADV_MODE_FAST);
+				ble_advertising_restart_without_whitelist();
+				m_pairing_reset = true;
+			} else if (keys == (1 << KEY_RF)) {	// menu key
+				m_switch_context.current_index = (m_switch_context.current_index + 1) % (MAX_DEVICES - 1);
+				switch_select(m_switch_context.current_index);
+				advertising_restart(BLE_ADV_MODE_FAST);
+			}
 		}
 	}
 	// left half
@@ -830,13 +839,11 @@ static void handler_debounce(void *p_context) {
 		reset_ticks = 0;
 	}
 
-	if (keys == (1 << KEY_RF)) {	// hardware keys
+	if (m_pairing_reset) {	// hardware keys
 		pairing_ticks++;
 		if (pairing_ticks * DEBOUNCE > PAIRING) {
 			pairing_ticks = 0;
-			app_trace_log("Pairing...\n");
-			switch_reset(&m_bonded_peer_handle);
-			advertising_restart(BLE_ADV_MODE_FAST);
+			NVIC_SystemReset();
 		}
 	} else {
 		pairing_ticks = 0;
