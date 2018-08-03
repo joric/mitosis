@@ -1344,7 +1344,7 @@ static void on_ble_evt(ble_evt_t * p_ble_evt) {
 			m_conn_handle = p_ble_evt->evt.gap_evt.conn_handle;
 			p_addr = &p_ble_evt->evt.gap_evt.params.connected.peer_addr;
 			app_trace_log("Connected to " ADDR_FMT "\n", ADDR_T(p_addr->addr));
-			//battery_level_update();
+			battery_level_update();
 			break;
 
 		case BLE_EVT_TX_COMPLETE:
