@@ -28,11 +28,12 @@ Hold either of those keys while inserting the battery or press for about 10 seco
 
 * Hold `Fn` for a few seconds to switch into Bluetooth mode
 * Hold `Menu` for a few seconds to switch into Receiver mode
-* Press `Menu` to switch between two recent bluetooth devices
 
 Bluetooth mode key in System Off mode wakes up the keyboard and clears all existing bonds
 (works as a pairing key), the bonds can also be cleared by power-cycling the board by keeping
 the key pressed for a few seconds.
+
+* Press `Menu` shortly to switch between two recent bluetooth devices
 
 [![](https://kle-render.herokuapp.com/api/3f5dd1c848bb9a7a723161ad5e0c8e39?5)](http://www.keyboard-layout-editor.com/#/gists/3f5dd1c848bb9a7a723161ad5e0c8e39)
 
