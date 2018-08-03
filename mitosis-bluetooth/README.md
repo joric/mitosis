@@ -10,13 +10,6 @@ Bluetooth firmware for the Mitosis keyboard (BLE and Gazell timesharing via time
 
 * [mitosis-bt.hex] (firmware upgrade for the right half, turns Mitosis into a fully wireless split Bluetooth HID keyboard)
 
-Current firmware version switches into a System Off mode after a few minutes of inactivity to save the battery,
-and wakes up on hardware interrupt (any key, usually you press something on a home row).
-Reset shortcut (currently a single Fn key) in System Off mode wakes up the keyboard and clears all existing bonds
-(works as a pairing key), the bonds can also be cleared by power-cycling the board by keeping it pressed for about 10 seconds.
-
-## Uploading Firmware
-
 You need to flash the right half only.
 Use [ST-LINK/V2] and [OpenOCD].
 Precompiled firmware is already merged with softdevice s130 so you don't need to flash softdevice first.
@@ -26,9 +19,22 @@ openocd -f interface/stlink-v2.cfg -f target/nrf51.cfg ^
 -c init -c "reset halt" -c "flash write_image erase mitosis-bt.hex" -c reset -c exit
 ```
 
-### Default layout (Mitosis-BT)
+Current firmware version switches into a System Off mode after a few minutes of inactivity to save the battery,
+and wakes up on hardware interrupt (any key, usually you press something on a home row).
 
-[![](https://kle-render.herokuapp.com/api/3f5dd1c848bb9a7a723161ad5e0c8e39?4)](http://www.keyboard-layout-editor.com/#/gists/3f5dd1c848bb9a7a723161ad5e0c8e39)
+## Default Layout (Mitosis-BT)
+
+Hold either of those keys while inserting the battery or press for about 10 seconds to reboot in desired mode:
+
+* Hold `Fn` for a few seconds to switch into Bluetooth mode
+* Hold `Menu` for a few seconds to switch into Receiver mode
+* Press `Menu` to switch between two recent bluetooth devices
+
+Bluetooth mode key in System Off mode wakes up the keyboard and clears all existing bonds
+(works as a pairing key), the bonds can also be cleared by power-cycling the board by keeping
+the key pressed for a few seconds.
+
+[![](https://kle-render.herokuapp.com/api/3f5dd1c848bb9a7a723161ad5e0c8e39?5)](http://www.keyboard-layout-editor.com/#/gists/3f5dd1c848bb9a7a723161ad5e0c8e39)
 
 ## Building
 
@@ -89,13 +95,12 @@ DM_DISABLE_LOGS=1
 * Debugging via UART
 * Basic QMK layout support
 * Bluetooth pairing shortcut
-
-### TODO
-
 * Switching between RF and Bluetooth modes
 * Switching between Bluetooth devices
 
-Please contribute!
+### TODO
+
+* Full QMK/TMK suport (maybe)
 
 ## References
 

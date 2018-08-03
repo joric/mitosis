@@ -4,8 +4,6 @@ set build=Debug
 
 if "%1"=="" (
 set file=%~dp0custom\iar\%build%\Exe\nrf51822_xxac.hex
-::GCC version
-::set file=%~dp0custom\armgcc\_build\nrf51822_xxac.hex
 ) else (
 set file=%1
 )
@@ -40,7 +38,7 @@ set path=%nordic%;%path%
 echo Uploading...
 
 arm-none-eabi-gdb.exe --quiet --batch -ex "target extended-remote \\.\%port%" -ex "mon swdp_scan" ^
--ex "file %file:\=/%" -ex "att 1" %opt% -ex load -ex kill
+-ex "file %file:\=/%" -ex "att 1" -ex load -ex kill
 
 :end
 

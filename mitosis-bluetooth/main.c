@@ -3,6 +3,10 @@
 #define COMPILE_RIGHT
 #include "mitosis.h"
 
+#define MAX_DEVICES 3			// 2 bluetooth devices + 1 rf
+#define KEY_BT S20
+#define KEY_RF S23
+
 #include <stdint.h>
 #include <stdio.h>
 #include <string.h>
@@ -54,7 +58,7 @@
 #undef app_trace_log
 void app_trace_log(const char *fmt, ...) {
 	va_list list;
-	va_start (list, fmt);
+	va_start(list, fmt);
 	char buf[256] = { 0 };
 	vsprintf(buf, fmt, list);
 	va_end(list);
@@ -62,7 +66,7 @@ void app_trace_log(const char *fmt, ...) {
 		app_uart_put(*p);
 }
 
-void uart_error_handle (app_uart_evt_t * p_event) {
+void uart_error_handle(app_uart_evt_t * p_event) {
 }
 
 #undef app_trace_init
@@ -73,7 +77,7 @@ void app_trace_init() {
 		APP_UART_FLOW_CONTROL_DISABLED, false,
 		UART_BAUDRATE_BAUDRATE_Baud115200
 	};
-	APP_UART_FIFO_INIT (&comm_params, UART_RX_BUF_SIZE, UART_TX_BUF_SIZE, uart_error_handle, APP_IRQ_PRIORITY_LOW, err_code);
+	APP_UART_FIFO_INIT(&comm_params, UART_RX_BUF_SIZE, UART_TX_BUF_SIZE, uart_error_handle, APP_IRQ_PRIORITY_LOW, err_code);
 	APP_ERROR_CHECK(err_code);
 	app_trace_log("\nUART initialized\n");
 }
@@ -118,9 +122,184 @@ char *error_name(int type) {
 
 #undef APP_ERROR_HANDLER
 #define APP_ERROR_HANDLER(ERR_CODE) app_error_handler_custom((ERR_CODE), __LINE__, (uint8_t*) __FILE__);
-void app_error_handler_custom (ret_code_t error_code, uint32_t line_num, const uint8_t * p_file_name) {
+void app_error_handler_custom(ret_code_t error_code, uint32_t line_num, const uint8_t * p_file_name) {
 	app_trace_log("ERROR 0x%04x (%s) line: %d\n", (int)error_code, error_name(error_code), (int)line_num);
 }
+
+enum {
+	MODE_BT = 0,
+	MODE_RF = 1
+};
+
+static int m_keyboard_mode = 0;
+
+#define printf app_trace_log
+
+//////////////////////////////////////////////////////////////////////////////
+// switch code
+
+static uint16_t m_switch_handle = BLE_CONN_HANDLE_INVALID;
+
+ret_code_t switch_whitelist_create(dm_application_instance_t const *p_handle, ble_gap_whitelist_t * p_whitelist);
+#define _EEPROMSIZE 12
+#define __EEPROM_DATA(a, b, c, d, e, f, g, h) \
+    uint8_t eeprom_data[_EEPROMSIZE] = { (a), (b), (c), (d), (e), (f), (g) }
+uint8_t eeprom_data[_EEPROMSIZE];
+
+#define SIGNATURE   DEVICE_MANAGER_MAX_BONDS
+#define EEPROM_SIZE _EEPROMSIZE
+
+#define nSWITCH_DISABLE_LOGS	// Enable this macro to disable any logs from this module.
+
+#ifndef SWITCH_DISABLE_LOGS
+#define SW_LOG  app_trace_log
+#else
+#define SW_LOG(...)
+#endif
+
+typedef struct {
+	uint32_t signature;
+	dm_device_instance_t devices[DEVICE_MANAGER_MAX_BONDS];
+	uint8_t current_index;
+	uint8_t eeprom[DEVICE_MANAGER_MAX_BONDS][EEPROM_SIZE];
+} switch_context_t;
+
+STATIC_ASSERT(sizeof(switch_context_t) % 4 == 0);
+
+static dm_device_instance_t m_current_device;
+static pstorage_handle_t m_storage_handle;
+static switch_context_t m_switch_context;
+
+static void switch_pstorage_callback(pstorage_handle_t * handle, uint8_t op_code, uint32_t reason, uint8_t * p_data, uint32_t param_len) {
+	if (reason != NRF_SUCCESS)
+		SW_LOG("[SW]: switch_pstorage_callback: %lx\n", reason);
+}
+
+static uint32_t switch_save(void) {
+	uint32_t err_code;
+	pstorage_handle_t block_handle;
+
+	err_code = pstorage_block_identifier_get(&m_storage_handle, 0, &block_handle);
+	if (err_code == NRF_SUCCESS) {
+		err_code = pstorage_update(&block_handle, (uint8_t *) & m_switch_context, sizeof(switch_context_t), 0);
+	}
+	return err_code;
+}
+
+uint32_t switch_init(bool erase_bonds) {
+	uint32_t err_code;
+	pstorage_module_param_t param;
+	pstorage_handle_t block_handle;
+
+	param.block_count = 1;
+	param.block_size = sizeof(switch_context_t);
+	param.cb = switch_pstorage_callback;
+	err_code = pstorage_register(&param, &m_storage_handle);
+	APP_ERROR_CHECK(err_code);
+
+	err_code = pstorage_block_identifier_get(&m_storage_handle, 0, &block_handle);
+	if (err_code == NRF_SUCCESS) {
+		err_code = pstorage_load((uint8_t *) & m_switch_context, &block_handle, sizeof(switch_context_t), 0);
+		if (err_code == NRF_SUCCESS && m_switch_context.signature == SIGNATURE && !erase_bonds) {
+			if (DEVICE_MANAGER_MAX_BONDS <= m_switch_context.current_index)
+				m_switch_context.current_index = 0;
+			for (unsigned i = 0; i < DEVICE_MANAGER_MAX_BONDS; ++i) {
+				if (DEVICE_MANAGER_MAX_BONDS <= m_switch_context.devices[i])
+					m_switch_context.devices[i] = DM_INVALID_ID;
+			}
+		} else {
+			m_switch_context.signature = SIGNATURE;
+			memset(m_switch_context.devices, DM_INVALID_ID, DEVICE_MANAGER_MAX_BONDS);
+			memmove(m_switch_context.eeprom, eeprom_data, EEPROM_SIZE);
+			m_switch_context.current_index = 0;
+			err_code = switch_save();
+		}
+	}
+
+	m_current_device = m_switch_context.devices[m_switch_context.current_index];
+	SW_LOG("[SW]: switch_init: %u [sizeof(switch_context_t) = %u]\n", m_switch_context.current_index, sizeof(switch_context_t));
+	return err_code;
+}
+
+uint32_t switch_select(uint8_t index) {
+	if (DEVICE_MANAGER_MAX_BONDS <= index)
+		index = 0;
+	m_switch_context.current_index = index;
+	m_current_device = m_switch_context.devices[index];
+	SW_LOG("[SW]: switch_select: %u\n", m_switch_context.current_index);
+	return switch_save();
+}
+
+uint32_t switch_update(dm_handle_t const *p_handle) {
+	if (p_handle->device_id < DEVICE_MANAGER_MAX_BONDS) {
+		m_switch_context.devices[m_switch_context.current_index] = p_handle->device_id;
+		m_current_device = p_handle->device_id;
+	}
+	SW_LOG("[SW]: switch_update: %u\n", m_switch_context.current_index);
+	return switch_save();
+}
+
+uint32_t switch_reset(dm_handle_t const *p_handle) {
+	dm_device_delete(p_handle);
+	m_switch_context.devices[m_switch_context.current_index] = DM_INVALID_ID;
+	m_current_device = DM_INVALID_ID;
+	return switch_save();
+}
+
+uint8_t switch_get_current(void) {
+	return m_switch_context.current_index;
+}
+
+uint8_t switch_get_current_device(void) {
+	return m_current_device;
+}
+
+uint32_t switch_filter(dm_handle_t const *p_handle, dm_event_t const *p_event, uint16_t conn_handle) {
+	uint32_t err_code = 0;
+	bool disconnect = false;
+
+	switch (p_event->event_id) {
+		case DM_EVT_CONNECTION:
+			if (p_handle->device_id != DM_INVALID_ID) {
+				if (m_current_device != DM_INVALID_ID) {
+					if (p_handle->device_id != m_current_device)
+						disconnect = true;
+				} else {
+					for (unsigned i = 0; i < DEVICE_MANAGER_MAX_BONDS; ++i) {
+						if (m_switch_context.devices[i] == p_handle->device_id) {
+							disconnect = true;
+							break;
+						}
+					}
+				}
+			}
+			if (disconnect) {
+				err_code = sd_ble_gap_disconnect(conn_handle, BLE_HCI_REMOTE_USER_TERMINATED_CONNECTION);
+				SW_LOG("[SW]: switch_filter: %02x %02x\n", m_current_device, p_handle->device_id);
+				err_code = 1;
+			}
+			break;
+		default:
+			break;
+	}
+
+	return err_code;
+}
+
+uint8_t eeprom_read(uint8_t index) {
+	if (EEPROM_SIZE <= index)
+		return 0;
+	return m_switch_context.eeprom[m_switch_context.current_index][index];
+}
+
+void eeprom_write(uint8_t index, uint8_t val) {
+	if (EEPROM_SIZE <= index)
+		return;
+	m_switch_context.eeprom[m_switch_context.current_index][index] = val;
+	switch_save();
+}
+
+//////////////////////////////////////////////////////////////////////////////
 
 static ble_hids_t m_hids;									/**< Structure used to identify the HID service. */
 static ble_bas_t m_bas;										/**< Structure used to identify the battery service. */
@@ -135,9 +314,6 @@ void RADIO_IRQHandler(void);
 
 #define TX_PAYLOAD_LENGTH   3
 #define ACK_PAYLOAD_LENGTH  1
-
-#define MODE_BLUETOOTH 0
-static int m_keyboard_mode = 0;	// 0 - bt, 1 - receiver
 
 static nrf_radio_request_t m_timeslot_request;
 static uint32_t m_slot_length;
@@ -240,13 +416,15 @@ static void m_on_start(void) {
 	signal_callback_return_param.params.request.p_next = NULL;
 	signal_callback_return_param.callback_action = NRF_RADIO_SIGNAL_CALLBACK_ACTION_NONE;
 
+	nrf_gzll_mode_t mode = m_keyboard_mode == MODE_BT ? NRF_GZLL_MODE_HOST : NRF_GZLL_MODE_DEVICE;
+
 	if (!m_gzll_initialized) {
 		// Initialize Gazell
-		nrf_gzll_init(NRF_GZLL_MODE_HOST);
+		nrf_gzll_init(mode);
 
 		nrf_gzll_set_device_channel_selection_policy(NRF_GZLL_DEVICE_CHANNEL_SELECTION_POLICY_USE_CURRENT);
 		nrf_gzll_set_xosc_ctl(NRF_GZLL_XOSC_CTL_MANUAL);
-		nrf_gzll_set_max_tx_attempts(0);
+		nrf_gzll_set_max_tx_attempts(0);	// NB! 100?? reversebias
 
 		// Addressing
 		nrf_gzll_set_base_address_0(0x01020304);
@@ -262,10 +440,9 @@ static void m_on_start(void) {
 
 		m_gzll_initialized = true;
 	} else {
-		res = nrf_gzll_set_mode(NRF_GZLL_MODE_HOST);
+		res = nrf_gzll_set_mode(mode);
 		ASSERT(res);
 	}
-
 
 
 	NRF_TIMER0->INTENSET = TIMER_INTENSET_COMPARE0_Msk;
@@ -328,21 +505,22 @@ uint32_t gazell_sd_radio_init(void) {
 
 
 void nrf_gzll_device_tx_success(uint32_t pipe, nrf_gzll_device_tx_info_t tx_info) {
-#if 0
-	uint32_t ack_payload_length = ACK_PAYLOAD_LENGTH;
+	if (m_keyboard_mode == MODE_BT)
+		return;
+	uint32_t ack_payload_length = NRF_GZLL_CONST_MAX_PAYLOAD_LENGTH;
 	if (tx_info.payload_received_in_ack) {
-		if (nrf_gzll_fetch_packet_from_rx_fifo(pipe, ack_payload, &ack_payload_length)) {
-			ASSERT(ack_payload_length == 1);
-			m_cmd_received = true;
-		}
+		// Pop packet and write first byte of the payload to the GPIO port.
+		nrf_gzll_fetch_packet_from_rx_fifo(pipe, ack_payload, &ack_payload_length);
 	}
-#endif
 }
 
 void nrf_gzll_device_tx_failed(uint32_t pipe, nrf_gzll_device_tx_info_t tx_info) {
 }
 
 void nrf_gzll_host_rx_data_ready(uint32_t pipe, nrf_gzll_host_rx_info_t rx_info) {
+	if (m_keyboard_mode == MODE_RF)
+		return;
+
 	uint32_t data_payload_length = NRF_GZLL_CONST_MAX_PAYLOAD_LENGTH;
 
 	if (pipe == 0) {
@@ -424,7 +602,7 @@ uint8_t battery_level_get(void) {
 #define PNP_ID_PRODUCT_VERSION				0x0001	/**< Product Version. */
 #define APP_ADV_FAST_INTERVAL				0x0028	/**< Fast advertising interval (in units of 0.625 ms. This value corresponds to 25 ms.). */
 #define APP_ADV_SLOW_INTERVAL				0x0C80	/**< Slow advertising interval (in units of 0.625 ms. This value corrsponds to 2 seconds). */
-#define APP_ADV_FAST_TIMEOUT				15		/**< The duration of the fast advertising period (in seconds). */
+#define APP_ADV_FAST_TIMEOUT				30		/**< The duration of the fast advertising period (in seconds). */
 #define APP_ADV_SLOW_TIMEOUT				180		/**< The duration of the slow advertising period (in seconds). */
 /*lint -emacro(524, MIN_CONN_INTERVAL) // Loss of precision */
 #define MIN_CONN_INTERVAL					MSEC_TO_UNITS(7.5, UNIT_1_25_MS)	/**< Minimum ion interval (7.5 ms) */
@@ -434,6 +612,7 @@ uint8_t battery_level_get(void) {
 #define FIRST_CONN_PARAMS_UPDATE_DELAY		APP_TIMER_TICKS(5000, APP_TIMER_PRESCALER)	/**< Time from initiating event (connect or start of notification) to first time sd_ble_gap_conn_param_update is called (5 seconds). */
 #define NEXT_CONN_PARAMS_UPDATE_DELAY		APP_TIMER_TICKS(30000, APP_TIMER_PRESCALER)	/**< Time between each call to sd_ble_gap_conn_param_update after the first call (30 seconds). */
 #define MAX_CONN_PARAMS_UPDATE_COUNT		3	/**< Number of attempts before giving up the connection parameter negotiation. */
+
 #define SEC_PARAM_BOND						1	/**< Perform bonding. */
 #define SEC_PARAM_MITM						0	/**< Man In The Middle protection not required. */
 #define SEC_PARAM_LESC						0	/**< LE Secure Connections not enabled. */
@@ -442,12 +621,14 @@ uint8_t battery_level_get(void) {
 #define SEC_PARAM_OOB						0	/**< Out Of Band data not available. */
 #define SEC_PARAM_MIN_KEY_SIZE				7	/**< Minimum encryption key size. */
 #define SEC_PARAM_MAX_KEY_SIZE				16	/**< Maximum encryption key size. */
+
 #define OUTPUT_REPORT_INDEX					0	/**< Index of Output Report. */
 #define OUTPUT_REPORT_MAX_LEN				1	/**< Maximum length of Output Report. */
 #define INPUT_REPORT_KEYS_INDEX				0	/**< Index of Input Report. */
 #define OUTPUT_REPORT_BIT_MASK_CAPS_LOCK	0x02	/**< CAPS LOCK bit in Output Report (based on 'LED Page (0x08)' of the Universal Serial Bus HID Usage Tables). */
 #define INPUT_REP_REF_ID					0	/**< Id of reference to Keyboard Input Report. */
 #define OUTPUT_REP_REF_ID					0	/**< Id of reference to Keyboard Output Report. */
+
 #define APP_FEATURE_NOT_SUPPORTED			BLE_GATT_STATUS_ATTERR_APP_BEGIN + 2	/**< Reply when unsupported features are requested. */
 #define BASE_USB_HID_SPEC_VERSION			0x0101	/**< Version number of base USB HID Specification implemented by this application. */
 #define INPUT_REPORT_KEYS_MAX_LEN			8	/**< Maximum length of the Input Report characteristic. */
@@ -467,7 +648,7 @@ uint8_t m_layer = 0;
 static bool m_caps_on = false;
 
 uint8_t get_modifier(uint16_t key) {
-	const int modifiers[] = {KC_LCTRL, KC_LSHIFT, KC_LALT, KC_LGUI, KC_RCTRL, KC_RSHIFT, KC_RALT, KC_RGUI};
+	const int modifiers[] = { KC_LCTRL, KC_LSHIFT, KC_LALT, KC_LGUI, KC_RCTRL, KC_RSHIFT, KC_RALT, KC_RGUI };
 	for (int b = 0; b < 8; b++)
 		if (key == modifiers[b])
 			return 1 << b;
@@ -475,7 +656,10 @@ uint8_t get_modifier(uint16_t key) {
 }
 
 void key_handler() {
-	app_trace_log("%s %d %d\n", __FUNCTION__, keys, keys_recv);
+	//app_trace_log("%s %d %d\n", __FUNCTION__, keys, keys_recv);
+
+	if (m_keyboard_mode == MODE_RF)
+		return;
 
 	const int MAX_KEYS = 6;
 	uint8_t buf[8];
@@ -498,7 +682,7 @@ void key_handler() {
 						modifiers |= modifier;
 					} else if (key & QK_LAYER_TAP) {
 						m_layer = (key >> 8) & 0xf;
-					} else if (keys_sent<MAX_KEYS) {
+					} else if (keys_sent < MAX_KEYS) {
 						buf[2 + keys_sent++] = key;
 					}
 				}
@@ -510,7 +694,7 @@ void key_handler() {
 		m_layer = 0;
 
 	buf[0] = modifiers;
-	buf[1] = 0; // reserved
+	buf[1] = 0;					// reserved
 
 	if (m_conn_handle != BLE_CONN_HANDLE_INVALID) {
 		printf("Sending HID report: %02x %02x %02x %02x %02x %02x %02x %02x\n", buf[0], buf[1], buf[2], buf[3], buf[4], buf[5], buf[6], buf[7]);
@@ -566,8 +750,10 @@ static void send_data() {
 	data_payload[1] = ((keys & 1 << S09) ? 1 : 0) << 7 | ((keys & 1 << S10) ? 1 : 0) << 6 | ((keys & 1 << S11) ? 1 : 0) << 5 | ((keys & 1 << S12) ? 1 : 0) << 4 | ((keys & 1 << S13) ? 1 : 0) << 3 | ((keys & 1 << S14) ? 1 : 0) << 2 | ((keys & 1 << S15) ? 1 : 0) << 1 | ((keys & 1 << S16) ? 1 : 0) << 0;
 	data_payload[2] = ((keys & 1 << S17) ? 1 : 0) << 7 | ((keys & 1 << S18) ? 1 : 0) << 6 | ((keys & 1 << S19) ? 1 : 0) << 5 | ((keys & 1 << S20) ? 1 : 0) << 4 | ((keys & 1 << S21) ? 1 : 0) << 3 | ((keys & 1 << S22) ? 1 : 0) << 2 | ((keys & 1 << S23) ? 1 : 0) << 1 | 0 << 0;
 
-	if (m_keyboard_mode != MODE_BLUETOOTH)
+	if (m_keyboard_mode == MODE_RF) {
 		nrf_gzll_add_packet_to_tx_fifo(PIPE_NUMBER, data_payload, TX_PAYLOAD_LENGTH);
+		return;
+	}
 
 	data_buffer[1] = ((data_payload_right[0] & 1 << 7) ? 1 : 0) << 0 | ((data_payload_right[0] & 1 << 6) ? 1 : 0) << 1 | ((data_payload_right[0] & 1 << 5) ? 1 : 0) << 2 | ((data_payload_right[0] & 1 << 4) ? 1 : 0) << 3 | ((data_payload_right[0] & 1 << 3) ? 1 : 0) << 4;
 	data_buffer[3] = ((data_payload_right[0] & 1 << 2) ? 1 : 0) << 0 | ((data_payload_right[0] & 1 << 1) ? 1 : 0) << 1 | ((data_payload_right[0] & 1 << 0) ? 1 : 0) << 2 | ((data_payload_right[1] & 1 << 7) ? 1 : 0) << 3 | ((data_payload_right[1] & 1 << 6) ? 1 : 0) << 4;
@@ -577,12 +763,26 @@ static void send_data() {
 }
 
 
-#define DEBOUNCE 25 // standard 25 ms refresh
-#define ACTIVITY 4*60*1000 // unactivity time till power off (4 minutes)
-#define PAIRING 7*1000 // hold fn for a few seconds
+#define DEBOUNCE 25				// standard 25 ms refresh
+#define ACTIVITY 4*60*1000		// unactivity time till power off (4 minutes)
+#define REBOOT 6*1000			// hold reboot for a few seconds
+#define PAIRING 2*1000			// hold switch key for a few seconds
 #define DEBOUNCE_MEAS_INTERVAL APP_TIMER_TICKS(DEBOUNCE, APP_TIMER_PRESCALER)
 static uint32_t activity_ticks = 0;
 static uint32_t reset_ticks = 0;
+static uint32_t pairing_ticks = 0;
+
+static uint32_t advertising_restart(ble_adv_mode_t mode) {
+	uint32_t err_code;
+
+	if (m_conn_handle == BLE_CONN_HANDLE_INVALID) {
+		sd_ble_gap_adv_stop();
+		err_code = ble_advertising_start(mode);
+	} else {
+		err_code = sd_ble_gap_disconnect(m_conn_handle, BLE_HCI_REMOTE_USER_TERMINATED_CONNECTION);
+	}
+	return err_code;
+}
 
 // former 1000Hz debounce sampling - it's 25 ms now. do we still need debouncing? seem to work fine
 static void handler_debounce(void *p_context) {
@@ -593,8 +793,13 @@ static void handler_debounce(void *p_context) {
 		keys = keys_snapshot;
 		send_data();
 		key_handler();
-	}
 
+		if (m_keyboard_mode == MODE_BT && keys == (1 << KEY_RF)) {	// menu key
+			m_switch_context.current_index = (m_switch_context.current_index + 1) % (MAX_DEVICES - 1);
+			switch_select(m_switch_context.current_index);
+			advertising_restart(BLE_ADV_MODE_FAST);
+		}
+	}
 	// left half
 	keys_recv = data_payload_left[0] | (data_payload_left[1] << 8) | (data_payload_left[2] << 16);
 	if (keys_recv != keys_recv_snapshot) {
@@ -602,8 +807,9 @@ static void handler_debounce(void *p_context) {
 		key_handler();
 	}
 
-	if ( keys == 0 && keys_recv == 0 ) {
-		if (++activity_ticks > ACTIVITY/DEBOUNCE) {
+	if (keys == 0 && keys_recv == 0) {
+		activity_ticks++;
+		if (activity_ticks * DEBOUNCE > ACTIVITY) {
 			app_trace_log("Shutting down on inactivity...\n");
 			nrf_delay_ms(50);
 			sd_power_system_off();
@@ -612,8 +818,9 @@ static void handler_debounce(void *p_context) {
 		activity_ticks = 0;
 	}
 
-	if ( keys == (1<<S20) ) { // hold fn key only
-		if (++reset_ticks > PAIRING/DEBOUNCE) {
+	if (keys == (1 << KEY_BT) || keys == (1 << KEY_RF)) {	// hardware keys
+		reset_ticks++;
+		if (reset_ticks * DEBOUNCE > REBOOT) {
 			reset_ticks = 0;
 			app_trace_log("Resetting...\n");
 			nrf_delay_ms(50);
@@ -623,6 +830,17 @@ static void handler_debounce(void *p_context) {
 		reset_ticks = 0;
 	}
 
+	if (keys == (1 << KEY_RF)) {	// hardware keys
+		pairing_ticks++;
+		if (pairing_ticks * DEBOUNCE > PAIRING) {
+			pairing_ticks = 0;
+			app_trace_log("Pairing...\n");
+			switch_reset(&m_bonded_peer_handle);
+			advertising_restart(BLE_ADV_MODE_FAST);
+		}
+	} else {
+		pairing_ticks = 0;
+	}
 }
 
 typedef enum {
@@ -927,7 +1145,7 @@ static void timers_start(void) {
 
 
 static void on_hid_rep_char_write(ble_hids_evt_t * p_evt) {
-		if (p_evt->params.char_write.char_id.rep_type == BLE_HIDS_REP_TYPE_OUTPUT) {
+	if (p_evt->params.char_write.char_id.rep_type == BLE_HIDS_REP_TYPE_OUTPUT) {
 		uint32_t err_code;
 		uint8_t report_val;
 		uint8_t report_index = p_evt->params.char_write.char_id.rep_index;
@@ -941,11 +1159,9 @@ static void on_hid_rep_char_write(ble_hids_evt_t * p_evt) {
 			APP_ERROR_CHECK(err_code);
 
 			if (!m_caps_on && ((report_val & OUTPUT_REPORT_BIT_MASK_CAPS_LOCK) != 0)) {
-				//err_code = bsp_indication_set(BSP_INDICATE_ALERT_3);
 				APP_ERROR_CHECK(err_code);
 				m_caps_on = true;
 			} else if (m_caps_on && ((report_val & OUTPUT_REPORT_BIT_MASK_CAPS_LOCK) == 0)) {
-				//err_code = bsp_indication_set(BSP_INDICATE_ALERT_OFF);
 				APP_ERROR_CHECK(err_code);
 				m_caps_on = false;
 			} else {
@@ -1041,6 +1257,7 @@ static void on_adv_evt(ble_adv_evt_t ble_adv_evt) {
 
 	switch (ble_adv_evt) {
 		case BLE_ADV_EVT_DIRECTED:
+			app_trace_log("Directed advertising...\n");
 			break;
 		case BLE_ADV_EVT_FAST:
 			app_trace_log("Fast advertising...\n");
@@ -1053,8 +1270,8 @@ static void on_adv_evt(ble_adv_evt_t ble_adv_evt) {
 			break;
 		case BLE_ADV_EVT_SLOW_WHITELIST:
 			app_trace_log("Slow advertising without whitelist...\n");
-            err_code = ble_advertising_restart_without_whitelist();
-            APP_ERROR_CHECK(err_code);
+			//err_code = ble_advertising_restart_without_whitelist();
+			//APP_ERROR_CHECK(err_code);
 			break;
 		case BLE_ADV_EVT_IDLE:
 			sleep_mode_enter();
@@ -1071,7 +1288,8 @@ static void on_adv_evt(ble_adv_evt_t ble_adv_evt) {
 			whitelist.pp_addrs = p_whitelist_addr;
 			whitelist.pp_irks = p_whitelist_irk;
 
-			err_code = dm_whitelist_create(&m_app_handle, &whitelist);
+			err_code = switch_whitelist_create(&m_app_handle, &whitelist);
+			//err_code = dm_whitelist_create(&m_app_handle, &whitelist);
 			APP_ERROR_CHECK(err_code);
 
 			err_code = ble_advertising_whitelist_reply(&whitelist);
@@ -1083,13 +1301,21 @@ static void on_adv_evt(ble_adv_evt_t ble_adv_evt) {
 			ble_gap_addr_t peer_address;
 			// Only Give peer address if we have a handle to the bonded peer.
 			if (m_bonded_peer_handle.appl_id != DM_INVALID_ID) {
+
 				err_code = dm_peer_addr_get(&m_bonded_peer_handle, &peer_address);
-				if (err_code != (NRF_ERROR_NOT_FOUND | DEVICE_MANAGER_ERR_BASE)) {
-					APP_ERROR_CHECK(err_code);
-					err_code = ble_advertising_peer_addr_reply(&peer_address);
-					APP_ERROR_CHECK(err_code);
-					printf("Address requested: " ADDR_FMT "\n", ADDR_T(peer_address.addr));
-				}
+				APP_ERROR_CHECK(err_code);
+
+				err_code = ble_advertising_peer_addr_reply(&peer_address);
+				APP_ERROR_CHECK(err_code);
+
+				/*
+				   if (err_code != (NRF_ERROR_NOT_FOUND | DEVICE_MANAGER_ERR_BASE)) {
+				   APP_ERROR_CHECK(err_code);
+				   err_code = ble_advertising_peer_addr_reply(&peer_address);
+				   APP_ERROR_CHECK(err_code);
+				   printf("Address requested: " ADDR_FMT "\n", ADDR_T(peer_address.addr));
+				   }
+				 *///NB!
 
 			}
 			break;
@@ -1111,7 +1337,7 @@ static void on_ble_evt(ble_evt_t * p_ble_evt) {
 			m_conn_handle = p_ble_evt->evt.gap_evt.conn_handle;
 			p_addr = &p_ble_evt->evt.gap_evt.params.connected.peer_addr;
 			app_trace_log("Connected to " ADDR_FMT "\n", ADDR_T(p_addr->addr));
-			battery_level_update();
+			//battery_level_update();
 			break;
 
 		case BLE_EVT_TX_COMPLETE:
@@ -1119,21 +1345,25 @@ static void on_ble_evt(ble_evt_t * p_ble_evt) {
 
 		case BLE_GAP_EVT_DISCONNECTED:
 		{
+			m_conn_handle = BLE_CONN_HANDLE_INVALID;
+
 			app_trace_log("Disconnected\n");
+
 			switch (p_ble_evt->evt.gap_evt.params.disconnected.reason) {
 				case BLE_HCI_REMOTE_DEV_TERMINATION_DUE_TO_POWER_OFF:
 					// do nothing, wait for the host
-				break;
+					break;
 				case BLE_HCI_REMOTE_USER_TERMINATED_CONNECTION:
 					// see https://devzone.nordicsemi.com/f/nordic-q-a/9506/bond-deletion-notification
-					app_trace_log("You unpaired us, we unpaired you!\n");
-					dm_device_delete(&m_bonded_peer_handle);
-					ble_advertising_start(BLE_ADV_MODE_FAST);
-					ble_advertising_restart_without_whitelist();
-				break;
+					/*
+					   app_trace_log("You unpaired us, we unpaired you!\n");
+					   dm_device_delete(&m_bonded_peer_handle);
+					   ble_advertising_start(BLE_ADV_MODE_FAST);
+					   ble_advertising_restart_without_whitelist();
+					 */
+					break;
 			}
 			m_caps_on = false;
-			m_conn_handle = BLE_CONN_HANDLE_INVALID;
 			break;
 		}
 
@@ -1169,8 +1399,8 @@ static void on_ble_evt(ble_evt_t * p_ble_evt) {
 
 		case BLE_GATTS_EVT_SYS_ATTR_MISSING:
 			// No system attributes have been stored.
-			err_code = sd_ble_gatts_sys_attr_set(m_conn_handle, NULL, 0, 0);
-			APP_ERROR_CHECK(err_code);
+			//err_code = sd_ble_gatts_sys_attr_set(m_conn_handle, NULL, 0, 0);
+			//APP_ERROR_CHECK(err_code);
 			break;
 
 		default:
@@ -1181,8 +1411,11 @@ static void on_ble_evt(ble_evt_t * p_ble_evt) {
 
 
 static void ble_evt_dispatch(ble_evt_t * p_ble_evt) {
+
+	if (BLE_GAP_EVT_BASE <= p_ble_evt->header.evt_id && p_ble_evt->header.evt_id <= BLE_GAP_EVT_LAST)
+		m_switch_handle = p_ble_evt->evt.gap_evt.conn_handle;
+
 	dm_ble_evt_handler(p_ble_evt);
-	//bsp_btn_ble_on_ble_evt(p_ble_evt);
 	on_ble_evt(p_ble_evt);
 	ble_advertising_on_ble_evt(p_ble_evt);
 	ble_conn_params_on_ble_evt(p_ble_evt);
@@ -1197,6 +1430,18 @@ static void ble_stack_init(void) {
 
 	// Initialize the SoftDevice handler module.
 	SOFTDEVICE_HANDLER_APPSH_INIT(&clock_lf_cfg, true);
+
+/*
+    // Enable BLE stack
+    ble_enable_params_t ble_enable_params;
+    memset(&ble_enable_params, 0, sizeof(ble_enable_params));
+#ifdef S130
+    ble_enable_params.gatts_enable_params.attr_tab_size   = BLE_GATTS_ATTR_TAB_SIZE_DEFAULT;
+#endif
+    ble_enable_params.gatts_enable_params.service_changed = IS_SRVC_CHANGED_CHARACT_PRESENT;
+    err_code = sd_ble_enable(&ble_enable_params, NULL);
+    APP_ERROR_CHECK(err_code);
+*/
 
 	ble_enable_params_t ble_enable_params;
 	err_code = softdevice_enable_get_default_config(CENTRAL_LINK_COUNT, PERIPHERAL_LINK_COUNT, &ble_enable_params);
@@ -1240,8 +1485,8 @@ static void advertising_init(void) {
 
 	ble_adv_modes_config_t options = {
 		BLE_ADV_WHITELIST_ENABLED,
-		BLE_ADV_DIRECTED_ENABLED,
-		BLE_ADV_DIRECTED_SLOW_DISABLED, 0,0,
+		BLE_ADV_DIRECTED_DISABLED,
+		BLE_ADV_DIRECTED_SLOW_DISABLED, 0, 0,
 		BLE_ADV_FAST_ENABLED, APP_ADV_FAST_INTERVAL, APP_ADV_FAST_TIMEOUT,
 		BLE_ADV_SLOW_ENABLED, APP_ADV_SLOW_INTERVAL, APP_ADV_SLOW_TIMEOUT
 	};
@@ -1254,10 +1499,18 @@ static void advertising_init(void) {
 static uint32_t device_manager_evt_handler(dm_handle_t const *p_handle, dm_event_t const *p_event, ret_code_t event_result) {
 	APP_ERROR_CHECK(event_result);
 
+	//SW_LOG("device_manager_evt_handler: %x %x\n", p_event->event_id, p_handle->device_id);
+
+	if (switch_filter(p_handle, p_event, m_switch_handle))
+		return NRF_SUCCESS;
+
 	switch (p_event->event_id) {
 		case DM_EVT_DEVICE_CONTEXT_LOADED:	// Fall through.
 		case DM_EVT_SECURITY_SETUP_COMPLETE:
 			m_bonded_peer_handle = (*p_handle);
+			break;
+		case DM_EVT_LINK_SECURED:
+			switch_update(p_handle);
 			break;
 	}
 
@@ -1296,23 +1549,22 @@ static void device_manager_init(bool erase_bonds) {
 
 	err_code = dm_register(&m_app_handle, &register_param);
 	APP_ERROR_CHECK(err_code);
+
+	err_code = switch_init(erase_bonds);
+	APP_ERROR_CHECK(err_code);
+
+	if (m_switch_context.current_index == MAX_DEVICES - 1) {
+		m_keyboard_mode = MODE_RF;
+	}
+
+	if (erase_bonds) {
+		m_keyboard_mode = MODE_BT;
+		switch_select(0);
+	}
 }
 
 
 static void buttons_leds_init(bool * p_erase_bonds) {
-	*p_erase_bonds = (read_keys() & (1 << S20)) ? 1 : 0;
-}
-
-
-static void power_manage(void) {
-	uint32_t err_code = sd_app_evt_wait();
-	APP_ERROR_CHECK(err_code);
-}
-
-int main(void) {
-	bool erase_bonds;
-	uint32_t err_code;
-
 	gpio_config();
 
 	nrf_gpio_cfg_output(LED_PIN);
@@ -1322,6 +1574,27 @@ int main(void) {
 		nrf_gpio_pin_clear(LED_PIN);
 		nrf_delay_ms(100);
 	}
+
+	sd_power_dcdc_mode_set(NRF_POWER_DCDC_DISABLE);
+
+	*p_erase_bonds = ((read_keys() & (1 << KEY_BT))) ? 1 : 0;
+
+	if (read_keys() == (1 << KEY_RF)) {
+		m_keyboard_mode = MODE_RF;
+		switch_select(MAX_DEVICES - 1);
+	}
+}
+
+
+static void power_manage(void) {
+	uint32_t err_code = sd_app_evt_wait();
+	APP_ERROR_CHECK(err_code);
+}
+
+
+int main(void) {
+	bool erase_bonds;
+	uint32_t err_code;
 
 	// Initialize.
 	app_trace_init();
@@ -1338,10 +1611,19 @@ int main(void) {
 
 	// Start execution.
 	timers_start();
-	err_code = ble_advertising_start(BLE_ADV_MODE_FAST);
-	APP_ERROR_CHECK(err_code);
 
-	app_trace_log("Started (erase_bonds: %d)\n", erase_bonds);
+	app_trace_log("Started (erase_bonds: %d, device: %d)\n", erase_bonds, m_switch_context.current_index);
+
+	if (m_switch_context.current_index == MAX_DEVICES - 1) {
+		m_keyboard_mode = MODE_RF;
+	}
+
+	app_trace_log("Keyboard mode: %s\n", m_keyboard_mode == MODE_RF ? "RECEIVER" : "BLUETOOTH");
+
+	if (m_keyboard_mode == MODE_BT) {
+		err_code = ble_advertising_start(BLE_ADV_MODE_FAST);
+		APP_ERROR_CHECK(err_code);
+	}
 
 	// Enter main loop.
 	for (;;) {

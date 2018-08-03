@@ -32,7 +32,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
   {KC_A,    KC_S,    KC_D,    KC_F,    KC_G,          KC_H,    KC_J,    KC_K,    KC_L,     KC_SCLN },
   {KC_Z,    KC_X,    KC_C,    KC_V,    KC_B,          KC_N,    KC_M,    KC_COMM, KC_DOT,   KC_SLSH },
   {XXXXXXX, KC_LALT, KC_ESC,  KC_TAB,  KC_QUOT,       KC_LEFT, KC_DOWN, KC_UP,   KC_RIGHT, XXXXXXX },
-  {XXXXXXX, KC_LCTL, KC_LGUI, KC_SPC,  KC_LSFT,       DUAL_R,  KC_BSPC, KC_ENT,  KC_RGUI,  XXXXXXX }
+  {XXXXXXX, KC_LCTL, KC_LGUI, KC_SPC,  KC_LSFT,       DUAL_R,  KC_BSPC, KC_ENT,  _______,  XXXXXXX }
 },
 
 
@@ -42,7 +42,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
   {KC_F1,   KC_F2,   KC_F3,  KC_F4,    KC_F5,         KC_F6,   KC_MINS, KC_EQL,  KC_LBRC,  KC_RBRC },
   {KC_F7,   KC_F8,   KC_F9,  KC_F10,   KC_F11,        KC_F12,  KC_BSLS, _______, _______,  KC_QUOT },
   {XXXXXXX, _______, KC_BRK, KC_CAPS,  KC_GRV,        KC_HOME, KC_PGDN, KC_PGUP, KC_END,   XXXXXXX },
-  {XXXXXXX, _______, _______, _______, _______,       _______, KC_DEL,  KC_PSCR, KC_MENU,  XXXXXXX }
+  {XXXXXXX, _______, _______, _______, _______,       _______, KC_DEL,  KC_PSCR, _______,  XXXXXXX }
 }
 
 };
