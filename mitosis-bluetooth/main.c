@@ -3,13 +3,6 @@
 #define COMPILE_RIGHT
 #include "mitosis.h"
 
-#define KEY_FN S20
-#define KEY_ADJUST S23
-#define KEY_D1 S16
-#define KEY_D2 S17
-#define KEY_D3 S18
-#define KEY_D4 S19
-
 #include <stdint.h>
 #include <stdio.h>
 #include <string.h>
@@ -786,6 +779,13 @@ static uint32_t advertising_restart(ble_adv_mode_t mode) {
 	}
 	return err_code;
 }
+
+#define KEY_FN S20
+#define KEY_ADJUST S23
+#define KEY_D1 S16
+#define KEY_D2 S17
+#define KEY_D3 S18
+#define KEY_D4 S19
 
 // former 1000Hz debounce sampling - it's 25 ms now. do we still need debouncing? seem to work fine
 static void handler_debounce(void *p_context) {
