@@ -61,12 +61,10 @@ $(abspath ../../../../components/ble/ble_advertising/ble_advertising.c) \
 $(abspath ../../../../components/ble/ble_services/ble_bas/ble_bas.c) \
 $(abspath ../../../../components/ble/ble_services/ble_dis/ble_dis.c) \
 $(abspath ../../../../components/ble/ble_services/ble_hids/ble_hids.c) \
-$(abspath ../../device_manager_peripheral_switch.c) \
+$(abspath ../../../../components/ble/device_manager/device_manager_peripheral.c) \
 $(abspath ../../../../components/softdevice/common/softdevice_handler/softdevice_handler.c) \
 $(abspath ../../../../components/softdevice/common/softdevice_handler/softdevice_handler_appsh.c) \
 $(abspath ../../../../components/toolchain/system_nrf51.c)
-
-#$(abspath ../../../../components/ble/device_manager/device_manager_peripheral.c)
 
 #assembly files common to all targets
 ASM_SOURCE_FILES  = $(abspath ../../../../components/toolchain/gcc/gcc_startup_nrf51.s)

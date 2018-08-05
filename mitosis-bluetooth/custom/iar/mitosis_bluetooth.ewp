@@ -2073,9 +2073,6 @@
   <group>
     <name>Application</name>
     <file>
-      <name>$PROJ_DIR$\..\..\device_manager_peripheral_switch.c</name>
-    </file>
-    <file>
       <name>$PROJ_DIR$\..\..\keymap.c</name>
     </file>
     <file>
@@ -2117,6 +2114,11 @@
     <file>
       <name>$PROJ_DIR$\..\..\..\..\components\ble\common\ble_srv_common.c</name>
     </file>
+
+    <file>
+      <name>$PROJ_DIR$\..\..\..\..\components\ble\device_manager\device_manager_peripheral.c</name>
+    </file>
+
     <file>
       <name>$PROJ_DIR$\..\..\..\..\examples\bsp\bsp.c</name>
     </file>

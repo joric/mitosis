@@ -3,9 +3,14 @@
 #define COMPILE_RIGHT
 #include "mitosis.h"
 
-#define MAX_DEVICES 3			// 2 bluetooth devices + 1 rf
-#define KEY_BT S20
-#define KEY_RF S23
+#define MAX_DEVICES 4			// 3 bluetooth devices + 1 rf
+
+#define KEY_FN S20
+#define KEY_ADJUST S23
+#define KEY_D1 S16
+#define KEY_D2 S17
+#define KEY_D3 S18
+#define KEY_D4 S19
 
 #include <stdint.h>
 #include <stdio.h>
@@ -140,7 +145,6 @@ static int m_keyboard_mode = 0;
 
 static uint16_t m_switch_handle = BLE_CONN_HANDLE_INVALID;
 
-ret_code_t switch_whitelist_create(dm_application_instance_t const *p_handle, ble_gap_whitelist_t * p_whitelist);
 #define _EEPROMSIZE 12
 #define __EEPROM_DATA(a, b, c, d, e, f, g, h) \
     uint8_t eeprom_data[_EEPROMSIZE] = { (a), (b), (c), (d), (e), (f), (g) }
@@ -240,6 +244,7 @@ uint32_t switch_update(dm_handle_t const *p_handle) {
 }
 
 uint32_t switch_reset(dm_handle_t const *p_handle) {
+	app_trace_log("%s\n", __FUNCTION__);
 	dm_device_delete(p_handle);
 	m_switch_context.devices[m_switch_context.current_index] = DM_INVALID_ID;
 	m_current_device = DM_INVALID_ID;
@@ -275,7 +280,7 @@ uint32_t switch_filter(dm_handle_t const *p_handle, dm_event_t const *p_event, u
 			}
 			if (disconnect) {
 				err_code = sd_ble_gap_disconnect(conn_handle, BLE_HCI_REMOTE_USER_TERMINATED_CONNECTION);
-				SW_LOG("[SW]: switch_filter: %02x %02x\n", m_current_device, p_handle->device_id);
+				SW_LOG("[SW]: FILTERED current_device %02x, handle->device_id %02x\n", m_current_device, p_handle->device_id);
 				err_code = 1;
 			}
 			break;
@@ -521,6 +526,8 @@ void nrf_gzll_host_rx_data_ready(uint32_t pipe, nrf_gzll_host_rx_info_t rx_info)
 	if (m_keyboard_mode == MODE_RF)
 		return;
 
+	//app_trace_log("%s\n", __FUNCTION__);
+
 	uint32_t data_payload_length = NRF_GZLL_CONST_MAX_PAYLOAD_LENGTH;
 
 	if (pipe == 0) {
@@ -541,6 +548,7 @@ void nrf_gzll_host_rx_data_ready(uint32_t pipe, nrf_gzll_host_rx_info_t rx_info)
 	ack_payload[0] = 0x55;
 	nrf_gzll_add_packet_to_tx_fifo(pipe, ack_payload, TX_PAYLOAD_LENGTH);
 
+
 	m_process_gazelle();
 }
 
@@ -557,7 +565,6 @@ char get_debug_cmd(void) {
 	return cmd;
 }
 
-#define VBAT_MAX_IN_MV 3000
 uint8_t battery_level_get(void) {
 	// Configure ADC
 	NRF_ADC->CONFIG = (ADC_CONFIG_RES_8bit << ADC_CONFIG_RES_Pos) | (ADC_CONFIG_INPSEL_SupplyOneThirdPrescaling << ADC_CONFIG_INPSEL_Pos) | (ADC_CONFIG_REFSEL_VBG << ADC_CONFIG_REFSEL_Pos) | (ADC_CONFIG_PSEL_Disabled << ADC_CONFIG_PSEL_Pos) | (ADC_CONFIG_EXTREFSEL_None << ADC_CONFIG_EXTREFSEL_Pos);
@@ -577,9 +584,7 @@ uint8_t battery_level_get(void) {
 	NRF_ADC->EVENTS_END = 0;
 	NRF_ADC->TASKS_STOP = 1;
 
-	int percent = ((vbat_current_in_mv * 100) / VBAT_MAX_IN_MV);
-	if (percent > 100)
-		percent = 100;
+	int percent = battery_level_in_percent(vbat_current_in_mv); // app_util.h
 
 	app_trace_log("Sending BAS report: %d%% (%dmV)\n", percent, vbat_current_in_mv);
 
@@ -602,7 +607,7 @@ uint8_t battery_level_get(void) {
 #define PNP_ID_PRODUCT_VERSION				0x0001	/**< Product Version. */
 #define APP_ADV_FAST_INTERVAL				0x0028	/**< Fast advertising interval (in units of 0.625 ms. This value corresponds to 25 ms.). */
 #define APP_ADV_SLOW_INTERVAL				0x0C80	/**< Slow advertising interval (in units of 0.625 ms. This value corrsponds to 2 seconds). */
-#define APP_ADV_FAST_TIMEOUT				10		/**< The duration of the fast advertising period (in seconds). */
+#define APP_ADV_FAST_TIMEOUT				15		/**< The duration of the fast advertising period (in seconds). */
 #define APP_ADV_SLOW_TIMEOUT				180		/**< The duration of the slow advertising period (in seconds). */
 /*lint -emacro(524, MIN_CONN_INTERVAL) // Loss of precision */
 #define MIN_CONN_INTERVAL					MSEC_TO_UNITS(7.5, UNIT_1_25_MS)	/**< Minimum ion interval (7.5 ms) */
@@ -654,6 +659,7 @@ uint8_t get_modifier(uint16_t key) {
 			return 1 << b;
 	return 0;
 }
+
 
 void key_handler() {
 	//app_trace_log("%s %d %d\n", __FUNCTION__, keys, keys_recv);
@@ -765,13 +771,11 @@ static void send_data() {
 
 #define DEBOUNCE 25				// standard 25 ms refresh
 #define ACTIVITY 4*60*1000		// unactivity time till power off (4 minutes)
-#define REBOOT 6*1000			// hold reboot for a few seconds
-#define PAIRING 1*1000			// hold switch key for a few seconds
+#define RESET_DELAY 250			// delayed reset
 #define DEBOUNCE_MEAS_INTERVAL APP_TIMER_TICKS(DEBOUNCE, APP_TIMER_PRESCALER)
 static uint32_t activity_ticks = 0;
 static uint32_t reset_ticks = 0;
-static uint32_t pairing_ticks = 0;
-static bool m_pairing_reset = false;
+static bool m_delayed_reset = false;
 
 static uint32_t advertising_restart(ble_adv_mode_t mode) {
 	uint32_t err_code;
@@ -795,20 +799,39 @@ static void handler_debounce(void *p_context) {
 		send_data();
 		key_handler();
 
-		if (m_keyboard_mode == MODE_BT) {
-			if (keys == ((1 << KEY_RF)|(1 << KEY_BT))) { // fn + menu
-				app_trace_log("Pairing...\n");
-				switch_reset(&m_bonded_peer_handle);
-				advertising_restart(BLE_ADV_MODE_FAST);
-				ble_advertising_restart_without_whitelist();
-				m_pairing_reset = true;
-			} else if (keys == (1 << KEY_RF)) {	// menu key
-				m_switch_context.current_index = (m_switch_context.current_index + 1) % (MAX_DEVICES - 1);
-				switch_select(m_switch_context.current_index);
+		///////////////////////////////////////
+		// hardware keys
+		int index = keys & (1<<KEY_D1) ? 0 : keys & (1<<KEY_D2) ? 1 : keys & (1<<KEY_D3) ? 2 : keys & (1<<KEY_D4) ? 3 : -1;
+		bool adjust_pressed = keys & (1<<KEY_ADJUST);
+		bool fn_pressed = keys & (1<<KEY_FN);
+		bool rf_pressed = keys & (1<<KEY_D4);
+
+		if (adjust_pressed && index!=-1) {
+			int next_mode = (index==MAX_DEVICES-1 && !fn_pressed) ? MODE_RF : MODE_BT;
+			bool erase_bonds = rf_pressed && fn_pressed && adjust_pressed;
+
+			if (erase_bonds) {
+				index = 0;
+				next_mode = MODE_BT;
+			}
+
+			switch_select(index);
+
+			if (next_mode!=m_keyboard_mode || erase_bonds) {
+				m_delayed_reset = true;
+			}
+
+			if (m_keyboard_mode==MODE_BT && next_mode==MODE_BT) {
+				if (fn_pressed) {
+					switch_reset(&m_bonded_peer_handle);
+				}
 				advertising_restart(BLE_ADV_MODE_FAST);
 			}
 		}
+		/// hardware keys
+		///////////////////////////////////////
 	}
+
 	// left half
 	keys_recv = data_payload_left[0] | (data_payload_left[1] << 8) | (data_payload_left[2] << 16);
 	if (keys_recv != keys_recv_snapshot) {
@@ -827,26 +850,15 @@ static void handler_debounce(void *p_context) {
 		activity_ticks = 0;
 	}
 
-	if (keys == (1 << KEY_BT) || keys == (1 << KEY_RF)) {	// hardware keys
+	if (m_delayed_reset) {
 		reset_ticks++;
-		if (reset_ticks * DEBOUNCE > REBOOT) {
+		if (reset_ticks * DEBOUNCE > RESET_DELAY) {
 			reset_ticks = 0;
-			app_trace_log("Resetting...\n");
-			nrf_delay_ms(50);
-			sd_power_system_off();
-		}
-	} else {
-		reset_ticks = 0;
-	}
-
-	if (m_pairing_reset) {	// hardware keys
-		pairing_ticks++;
-		if (pairing_ticks * DEBOUNCE > PAIRING) {
-			pairing_ticks = 0;
+			m_delayed_reset = false;
 			NVIC_SystemReset();
 		}
 	} else {
-		pairing_ticks = 0;
+		reset_ticks = 0;
 	}
 }
 
@@ -904,6 +916,9 @@ static void battery_level_meas_timeout_handler(void *p_context) {
 
 static void timers_init(void) {
 	uint32_t err_code;
+
+	// windows 10 needs this
+	APP_TIMER_INIT(APP_TIMER_PRESCALER, APP_TIMER_OP_QUEUE_SIZE, false);
 
 	// Initialize timer module, making it use the scheduler.
 	APP_TIMER_APPSH_INIT(APP_TIMER_PRESCALER, APP_TIMER_OP_QUEUE_SIZE, true);
@@ -1277,7 +1292,7 @@ static void on_adv_evt(ble_adv_evt_t ble_adv_evt) {
 			break;
 		case BLE_ADV_EVT_SLOW_WHITELIST:
 			app_trace_log("Slow advertising without whitelist...\n");
-			//err_code = ble_advertising_restart_without_whitelist();
+			err_code = ble_advertising_restart_without_whitelist();
 			//APP_ERROR_CHECK(err_code);
 			break;
 		case BLE_ADV_EVT_IDLE:
@@ -1295,14 +1310,29 @@ static void on_adv_evt(ble_adv_evt_t ble_adv_evt) {
 			whitelist.pp_addrs = p_whitelist_addr;
 			whitelist.pp_irks = p_whitelist_irk;
 
-			err_code = switch_whitelist_create(&m_app_handle, &whitelist);
-			//err_code = dm_whitelist_create(&m_app_handle, &whitelist);
+			err_code = dm_whitelist_create(&m_app_handle, &whitelist);
 			APP_ERROR_CHECK(err_code);
+
+
+			// seems critical for multiple devices
+			if (m_switch_context.devices[m_switch_context.current_index] == DM_INVALID_ID) {
+				whitelist.addr_count = 0;
+				whitelist.irk_count = 0;
+				//app_trace_log("killing whitelist\n");
+			}
+
+			printf("Created whitelist (%d addresses)\n", whitelist.addr_count);
+
+			for (int i=0; i<whitelist.addr_count; i++) {
+				printf( "Whitelist addr %d: " ADDR_FMT "\n", i, ADDR_T(whitelist.pp_addrs[i]->addr) );
+			}
 
 			err_code = ble_advertising_whitelist_reply(&whitelist);
 			APP_ERROR_CHECK(err_code);
+
 			break;
 		}
+
 		case BLE_ADV_EVT_PEER_ADDR_REQUEST:
 		{
 			ble_gap_addr_t peer_address;
@@ -1314,6 +1344,8 @@ static void on_adv_evt(ble_adv_evt_t ble_adv_evt) {
 
 				err_code = ble_advertising_peer_addr_reply(&peer_address);
 				APP_ERROR_CHECK(err_code);
+
+				printf("Address requested: " ADDR_FMT "\n", ADDR_T(peer_address.addr));
 
 				/*
 				   if (err_code != (NRF_ERROR_NOT_FOUND | DEVICE_MANAGER_ERR_BASE)) {
@@ -1336,15 +1368,12 @@ static void on_adv_evt(ble_adv_evt_t ble_adv_evt) {
 static void on_ble_evt(ble_evt_t * p_ble_evt) {
 	uint32_t err_code;
 	ble_gatts_rw_authorize_reply_params_t auth_reply;
-	ble_gap_addr_t *p_addr;
 
 	switch (p_ble_evt->header.evt_id) {
 
 		case BLE_GAP_EVT_CONNECTED:
 			m_conn_handle = p_ble_evt->evt.gap_evt.conn_handle;
-			p_addr = &p_ble_evt->evt.gap_evt.params.connected.peer_addr;
-			app_trace_log("Connected to " ADDR_FMT "\n", ADDR_T(p_addr->addr));
-			battery_level_update();
+			app_trace_log("Requested by " ADDR_FMT "\n", ADDR_T(p_ble_evt->evt.gap_evt.params.connected.peer_addr.addr));
 			break;
 
 		case BLE_EVT_TX_COMPLETE:
@@ -1354,13 +1383,15 @@ static void on_ble_evt(ble_evt_t * p_ble_evt) {
 		{
 			m_conn_handle = BLE_CONN_HANDLE_INVALID;
 
-			app_trace_log("Disconnected\n");
-
 			switch (p_ble_evt->evt.gap_evt.params.disconnected.reason) {
 				case BLE_HCI_REMOTE_DEV_TERMINATION_DUE_TO_POWER_OFF:
 					// do nothing, wait for the host
 					break;
 				case BLE_HCI_REMOTE_USER_TERMINATED_CONNECTION:
+
+					app_trace_log("Rejected remotely by host (mismatched pairing information)\n");
+
+					// switch_reset(&m_bonded_peer_handle); // dont. see whitelist stuff
 					// see https://devzone.nordicsemi.com/f/nordic-q-a/9506/bond-deletion-notification
 					/*
 					   app_trace_log("You unpaired us, we unpaired you!\n");
@@ -1438,18 +1469,6 @@ static void ble_stack_init(void) {
 	// Initialize the SoftDevice handler module.
 	SOFTDEVICE_HANDLER_APPSH_INIT(&clock_lf_cfg, true);
 
-/*
-    // Enable BLE stack
-    ble_enable_params_t ble_enable_params;
-    memset(&ble_enable_params, 0, sizeof(ble_enable_params));
-#ifdef S130
-    ble_enable_params.gatts_enable_params.attr_tab_size   = BLE_GATTS_ATTR_TAB_SIZE_DEFAULT;
-#endif
-    ble_enable_params.gatts_enable_params.service_changed = IS_SRVC_CHANGED_CHARACT_PRESENT;
-    err_code = sd_ble_enable(&ble_enable_params, NULL);
-    APP_ERROR_CHECK(err_code);
-*/
-
 	ble_enable_params_t ble_enable_params;
 	err_code = softdevice_enable_get_default_config(CENTRAL_LINK_COUNT, PERIPHERAL_LINK_COUNT, &ble_enable_params);
 	APP_ERROR_CHECK(err_code);
@@ -1492,6 +1511,8 @@ static void advertising_init(void) {
 
 	ble_adv_modes_config_t options = {
 		BLE_ADV_WHITELIST_ENABLED,
+		//BLE_ADV_WHITELIST_DISABLED,
+		//BLE_ADV_DIRECTED_ENABLED, // can't force it to forget the last connection, incompatible with switch apparently
 		BLE_ADV_DIRECTED_DISABLED,
 		BLE_ADV_DIRECTED_SLOW_DISABLED, 0, 0,
 		BLE_ADV_FAST_ENABLED, APP_ADV_FAST_INTERVAL, APP_ADV_FAST_TIMEOUT,
@@ -1517,7 +1538,9 @@ static uint32_t device_manager_evt_handler(dm_handle_t const *p_handle, dm_event
 			m_bonded_peer_handle = (*p_handle);
 			break;
 		case DM_EVT_LINK_SECURED:
+			app_trace_log("Link secured with " ADDR_FMT "\n", ADDR_T(p_event->event_param.p_gap_param->params.connected.peer_addr.addr));
 			switch_update(p_handle);
+			battery_level_update();
 			break;
 	}
 
@@ -1584,12 +1607,7 @@ static void buttons_leds_init(bool * p_erase_bonds) {
 
 	sd_power_dcdc_mode_set(NRF_POWER_DCDC_DISABLE);
 
-	*p_erase_bonds = ((read_keys() & (1 << KEY_BT))) ? 1 : 0;
-
-	if (read_keys() == (1 << KEY_RF)) {
-		m_keyboard_mode = MODE_RF;
-		switch_select(MAX_DEVICES - 1);
-	}
+	*p_erase_bonds = (read_keys() & ((1<<KEY_FN)|(1<<KEY_ADJUST)|(1<<KEY_D4))) ? 1 : 0;
 }
 
 
