@@ -3,8 +3,6 @@
 #define COMPILE_RIGHT
 #include "mitosis.h"
 
-#define MAX_DEVICES 4			// 3 bluetooth devices + 1 rf
-
 #define KEY_FN S20
 #define KEY_ADJUST S23
 #define KEY_D1 S16
@@ -807,7 +805,7 @@ static void handler_debounce(void *p_context) {
 		bool rf_pressed = keys & (1<<KEY_D4);
 
 		if (adjust_pressed && index!=-1) {
-			int next_mode = (index==MAX_DEVICES-1 && !fn_pressed) ? MODE_RF : MODE_BT;
+			int next_mode = (index==DEVICE_MANAGER_MAX_BONDS-1 && !fn_pressed) ? MODE_RF : MODE_BT;
 			bool erase_bonds = rf_pressed && fn_pressed && adjust_pressed;
 
 			if (erase_bonds) {
@@ -1583,7 +1581,7 @@ static void device_manager_init(bool erase_bonds) {
 	err_code = switch_init(erase_bonds);
 	APP_ERROR_CHECK(err_code);
 
-	if (m_switch_context.current_index == MAX_DEVICES - 1) {
+	if (m_switch_context.current_index == DEVICE_MANAGER_MAX_BONDS - 1) {
 		m_keyboard_mode = MODE_RF;
 	}
 
@@ -1639,7 +1637,7 @@ int main(void) {
 
 	app_trace_log("Started (erase_bonds: %d, device: %d)\n", erase_bonds, m_switch_context.current_index);
 
-	if (m_switch_context.current_index == MAX_DEVICES - 1) {
+	if (m_switch_context.current_index == DEVICE_MANAGER_MAX_BONDS - 1) {
 		m_keyboard_mode = MODE_RF;
 	}
 
