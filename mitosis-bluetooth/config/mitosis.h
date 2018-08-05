@@ -1,4 +1,3 @@
-#include "keymap.h"
 
 #define HAND_SENSE 12
 #define RIGHT_HAND false
@@ -8,36 +7,6 @@
 #define ALPABETICAL false
 
 // left hand pins
-
-#ifdef COMPILE_REVERSED
-
-#define L_LED 17
-
-#define L_S01 2
-#define L_S02 5
-#define L_S03 10
-#define L_S04 15
-#define L_S05 14
-#define L_S06 1
-#define L_S07 4
-#define L_S08 7
-#define L_S09 8
-#define L_S10 13
-#define L_S11 0
-#define L_S12 3
-#define L_S13 6
-#define L_S14 9
-#define L_S15 19
-#define L_S16 25
-#define L_S17 29
-#define L_S18 28
-#define L_S19 30
-#define L_S20 24
-#define L_S21 23
-#define L_S22 22
-#define L_S23 21
-
-#else //not reversed
 
 #define L_LED 23
 
@@ -65,8 +34,6 @@
 #define L_S22 18
 #define L_S23 19
 
-#endif //if reversed - left
-
 #define L_MASK (1<<L_S01 | \
  				1<<L_S02 | \
 				1<<L_S03 | \
@@ -93,36 +60,6 @@
 
 // right hand pins
 
-#ifdef COMPILE_REVERSED
-
-#define R_LED 23
-
-#define R_S01 7
-#define R_S02 4
-#define R_S03 30
-#define R_S04 24
-#define R_S05 28
-#define R_S06 8
-#define R_S07 5
-#define R_S08 2
-#define R_S09 1
-#define R_S10 29
-#define R_S11 9
-#define R_S12 6
-#define R_S13 3
-#define R_S14 0
-#define R_S15 21
-#define R_S16 16
-#define R_S17 13
-#define R_S18 14
-#define R_S19 10
-#define R_S20 15
-#define R_S21 17
-#define R_S22 18
-#define R_S23 19
-
-#else // not-reversed
-
 #define R_LED 17
 
 #define R_S01 2
@@ -148,8 +85,6 @@
 #define R_S21 23
 #define R_S22 22
 #define R_S23 21
-
-#endif //if reversed - right
 
 #define R_MASK (1<<R_S01 | \
  				1<<R_S02 | \

@@ -1,7 +1,12 @@
 // Mitosis-BT, https://github.com/joric/mitosis/tree/devel
 
+#ifdef COMPILE_REVERSED
+#define COMPILE_LEFT
+#else
 #define COMPILE_RIGHT
+#endif
 #include "mitosis.h"
+#include "keymap.h"
 
 #include <stdint.h>
 #include <stdio.h>
