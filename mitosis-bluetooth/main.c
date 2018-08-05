@@ -805,7 +805,7 @@ static void handler_debounce(void *p_context) {
 		bool rf_pressed = keys & (1<<KEY_D4);
 
 		if (adjust_pressed && index!=-1) {
-			int next_mode = (index==DEVICE_MANAGER_MAX_BONDS-1 && !fn_pressed) ? MODE_RF : MODE_BT;
+			int next_mode = (rf_pressed && !fn_pressed) ? MODE_RF : MODE_BT;
 			bool erase_bonds = rf_pressed && fn_pressed && adjust_pressed;
 
 			if (erase_bonds) {
