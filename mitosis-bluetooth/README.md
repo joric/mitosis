@@ -24,8 +24,8 @@ and wakes up on hardware interrupt (any key, usually you press something on a ho
 
 ## Default Layout (Mitosis-BT)
 
-* Press <kbd>Adjust</kbd> + <kbd>←</kbd> <kbd>↓</kbd> <kbd>↑</kbd> <kbd>→</kbd> to switch between three Bluetooth devices and receiver
-* Press <kbd>Fn</kbd> + <kbd>Adjust</kbd> + <kbd>←</kbd> <kbd>↓</kbd> <kbd>↑</kbd> <kbd>→</kbd> to pair three corresponding Bluetooth devices and reset all bonds
+* Press <kbd>Adjust</kbd> + <kbd>←</kbd> <kbd>↓</kbd> <kbd>↑</kbd> <kbd>→</kbd> to switch between three Bluetooth devices and a receiver
+* Press <kbd>Fn</kbd> + <kbd>Adjust</kbd> + <kbd>←</kbd> <kbd>↓</kbd> <kbd>↑</kbd> <kbd>→</kbd> to pair three corresponding Bluetooth devices or reset all bonds
 
 
 [![](https://kle-render.herokuapp.com/api/3f5dd1c848bb9a7a723161ad5e0c8e39?6)](http://www.keyboard-layout-editor.com/#/gists/3f5dd1c848bb9a7a723161ad5e0c8e39)
