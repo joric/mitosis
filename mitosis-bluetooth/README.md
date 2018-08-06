@@ -96,6 +96,36 @@ DM_DISABLE_LOGS=1
 
 * Full QMK/TMK suport (maybe)
 
+#### QMK firwmare has massive incompatibility issues with ICCARM (IAR) that can't be fixed with preprocessor:
+
+* Excessive and unnecessary binary literals (e.g. `0b011` is C++14 only), should use hex or decimals
+* GCC-specific switch case ranges (`case A ... Z`, ), should use `if` and `else`
+* GCC-specific `__attribute__` keyword, e.g. `__attribute__ ((weak))`, should use `__WEAK` define
+* Inplace initializations (`#define MACRO(...) ({static const macro_t __m[]; PROGMEM={__VA_ARGS__}; &__m[0]})`)
+
+So it's either a fully-GCC setup (armgcc and maybe uVision Keil) or patching QMK
+(changes are small but I don't know if they ever get merged to the upstream).
+I've patched and compiled QMK for ICCARM but couldn't get correct keycodes so far.
+
+#### Patching QMK for IAR
+
+* add `#ifdef __ICCARM__` for IAR-specific code
+* add `__attribute__(x)=`  to the preprocessor directives, use `__weak` or whatever instead
+* add dummy Atmel-specific variables and functions `PORTF`, `PORTD`, etc.
+
+#### Step by step QMK embedding guide:
+
+* add `QMK_KEYBOARD_H="your_hardware_name.h"` to the preprocessor directives
+* add `#include "keyboard.h"`, add QMK paths (quantum/, tmk_core/common/, etc.)
+* add `keyboard_task()` to the main loop
+* implement matrix callback `matrix_row_t matrix_get_row(uint8_t row)`
+* implement HID report callback `void send_keyboard(report_keyboard_t * report)`
+* implement timer callbacks using nrf-specific `app_timer_cnt_get`
+
+See this GCC-only TMK core-based project for example (all API calls are precisely the same):
+
+* https://github.com/Lotlab/nrf51822-keyboard
+
 ## References
 
 * [My fork of the Mitosis repository (bonus documentation included)](https://github.com/joric/mitosis/tree/devel)
