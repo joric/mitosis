@@ -117,10 +117,9 @@ I've patched and compiled QMK for ICCARM but couldn't get correct keycodes so fa
 
 * add `QMK_KEYBOARD_H="your_hardware_name.h"` to the preprocessor directives
 * add `#include "keyboard.h"`, add QMK paths (quantum/, tmk_core/common/, etc.)
+* add `timer_read32()` and other timer callbacks (e.g. use `app_timer_cnt_get` for nrf5x)
+* add `host_set_driver(&driver)` to the init sequence, implement host driver callbacks
 * add `keyboard_task()` to the main loop
-* implement matrix callback `matrix_row_t matrix_get_row(uint8_t row)`
-* implement HID report callback `void send_keyboard(report_keyboard_t * report)`
-* implement timer callbacks using nrf-specific `app_timer_cnt_get`
 
 See this GCC-only TMK core-based project for example (all API calls are precisely the same):
 
