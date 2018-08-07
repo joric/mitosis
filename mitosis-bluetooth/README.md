@@ -96,16 +96,18 @@ DM_DISABLE_LOGS=1
 
 * Full QMK/TMK suport (maybe)
 
-#### QMK firwmare has massive incompatibility issues with ICCARM (IAR) that can't be fixed with preprocessor:
+QMK firwmare has massive incompatibility issues with ICCARM (IAR) that can't be fixed with preprocessor.
+So it's either a fully-GCC setup (armgcc and maybe uVision Keil) or patching QMK
+(changes are small but I don't know if they ever get merged to the upstream).
+I've patched and compiled QMK for ICCARM but couldn't get correct keycodes so far.
+
+#### QMK incompatibility issues
 
 * Excessive and unnecessary binary literals (e.g. `0b011` is C++14 only), should use hex or decimals
 * GCC-specific switch case ranges (`case A ... Z`, ), should use `if` and `else`
 * GCC-specific `__attribute__` keyword, e.g. `__attribute__ ((weak))`, should use `__WEAK` define
 * Inplace initializations (`#define MACRO(...) ({static const macro_t __m[]; PROGMEM={__VA_ARGS__}; &__m[0]})`)
 
-So it's either a fully-GCC setup (armgcc and maybe uVision Keil) or patching QMK
-(changes are small but I don't know if they ever get merged to the upstream).
-I've patched and compiled QMK for ICCARM but couldn't get correct keycodes so far.
 
 #### Patching QMK for IAR
 
@@ -113,12 +115,13 @@ I've patched and compiled QMK for ICCARM but couldn't get correct keycodes so fa
 * add `__attribute__(x)=`  to the preprocessor directives, use `__weak` or whatever instead
 * add dummy Atmel-specific variables and functions `PORTF`, `PORTD`, etc.
 
-#### Step by step QMK embedding guide:
+#### QMK embedding guide
 
 * add `QMK_KEYBOARD_H="your_hardware_name.h"` to the preprocessor directives
 * add `#include "keyboard.h"`, add QMK paths (quantum/, tmk_core/common/, etc.)
-* add `timer_read32()` and other timer callbacks (e.g. use `app_timer_cnt_get` for nrf5x)
-* add `host_set_driver(&driver)` to the init sequence, implement host driver callbacks
+* implement `timer_read32()` if it's incompatible (e.g. use `app_timer_cnt_get` for nrf5x)
+* implement `matrix_row_t matrix_get_row(uint8_t row)` callback (just read from array)
+* implement host driver callbacks, add `host_set_driver(&driver)` to the init sequence
 * add `keyboard_task()` to the main loop
 
 See this GCC-only TMK core-based project for example (all API calls are precisely the same):
