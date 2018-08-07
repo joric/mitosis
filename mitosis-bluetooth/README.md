@@ -101,6 +101,8 @@ So it's either a fully-GCC setup (armgcc and maybe uVision Keil) or patching QMK
 (changes are small but I don't know if they ever get merged to the upstream).
 I've patched and compiled QMK for ICCARM but couldn't get correct keycodes so far.
 
+**This is all for future releases, mitosis-bluetooth compiles just fine without QMK**
+
 #### QMK incompatibility issues
 
 * Excessive and unnecessary binary literals (e.g. `0b011` is C++14 only), should use hex or decimals
