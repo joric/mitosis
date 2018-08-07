@@ -96,12 +96,12 @@ DM_DISABLE_LOGS=1
 
 * Full QMK/TMK suport (maybe)
 
+#### QMK support is still in progress (Mitosis-Bluetooth compiles fine without QMK)
+
 QMK firwmare has massive incompatibility issues with ICCARM (IAR) that can't be fixed with preprocessor.
 So it's either a fully-GCC setup (armgcc and maybe uVision Keil) or patching QMK
 (changes are small but I don't know if they ever get merged to the upstream).
 I've patched and compiled QMK for ICCARM but couldn't get correct keycodes so far.
-
-**This is all for future releases, mitosis-bluetooth compiles just fine without QMK**
 
 #### QMK incompatibility issues
 
