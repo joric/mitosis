@@ -48,7 +48,12 @@ Working GCC linker settings for softdevice s130 2.0.0 and [YJ-14015] modules (25
   FLASH (rx) : ORIGIN = 0x1b000, LENGTH = 0x25000
   RAM (rwx) :  ORIGIN = 0x20002000, LENGTH = 0x2000
 ```
-To build with this settings, set stack and heap to 1024 or something in `gcc_startup_nrf51.S`.
+To build with this settings, set stack and heap to 1024 or something in `gcc_startup_nrf51.S` (originally 2048).
+Erasing the chip and and flashing merged hex also might help. You could also use Makefile:
+
+```
+ASMFLAGS += -D__HEAP_SIZE=1024 -D__STACK_SIZE=1024
+```
 
 ## Debugging
 
@@ -80,6 +85,8 @@ NRF_LOG_ENABLED=1
 ENABLE_DEBUG_LOG_SUPPORT=1
 DM_DISABLE_LOGS=1
 ```
+
+The latest (2017) SDK 12.3 with nrf51 support just uses `NRF_LOG_ENABLED` in `sdk_config.h` (UART settings are there too).
 
 ## Status
 
