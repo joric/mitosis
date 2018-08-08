@@ -48,6 +48,7 @@ Working GCC linker settings for softdevice s130 2.0.0 and [YJ-14015] modules (25
   FLASH (rx) : ORIGIN = 0x1b000, LENGTH = 0x25000
   RAM (rwx) :  ORIGIN = 0x20002000, LENGTH = 0x2000
 ```
+To build with this settings, set stack and heap to 1024 or something in `gcc_startup_nrf51.S`.
 
 ## Debugging
 
