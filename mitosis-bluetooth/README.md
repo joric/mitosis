@@ -49,7 +49,7 @@ Working GCC linker settings for softdevice s130 2.0.0 and [YJ-14015] modules (25
   RAM (rwx) :  ORIGIN = 0x20002000, LENGTH = 0x2000
 ```
 To build with this settings, set stack and heap to 1024 or something in `gcc_startup_nrf51.S` (originally 2048).
-Erasing the chip and and flashing merged hex also might help. You could also use Makefile:
+Erasing the chip and flashing merged hex also might help. You could also use Makefile:
 
 ```
 ASMFLAGS += -D__HEAP_SIZE=1024 -D__STACK_SIZE=1024

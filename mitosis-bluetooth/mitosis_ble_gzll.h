@@ -714,7 +714,7 @@ void key_handler()
 
     if (m_conn_handle != BLE_CONN_HANDLE_INVALID)
     {
-        printf("Sending HID report: %02x %02x %02x %02x %02x %02x %02x %02x\n", buf[0], buf[1], buf[2], buf[3], buf[4], buf[5], buf[6], buf[7]);
+        printf("report %02x %02x %02x %02x %02x %02x %02x %02x\n", buf[0], buf[1], buf[2], buf[3], buf[4], buf[5], buf[6], buf[7]);
         uint32_t err_code = ble_hids_inp_rep_send(&m_hids, INPUT_REPORT_KEYS_INDEX, INPUT_REPORT_KEYS_MAX_LEN, buf);
         APP_ERROR_CHECK(err_code);
     }
@@ -772,7 +772,7 @@ static void keyboard_scan_timeout_handler(void *p_context)
 
 void mitosis_init()
 {
-    printf("MITOSIS_INIT\n");
+    printf("Mitosis init\n");
     gpio_config();
 
     nrf_gpio_cfg_output(LED_PIN);
