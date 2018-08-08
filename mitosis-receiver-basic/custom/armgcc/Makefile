@@ -44,11 +44,12 @@ $(abspath ../../../../components/libraries/util/app_error_weak.c) \
 $(abspath ../../../../components/libraries/fifo/app_fifo.c) \
 $(abspath ../../../../components/libraries/util/app_util_platform.c) \
 $(abspath ../../../../components/libraries/util/nrf_assert.c) \
-$(abspath ../../../../components/libraries/uart/retarget.c) \
 $(abspath ../../../../components/libraries/uart/app_uart_fifo.c) \
 $(abspath ../../../../components/drivers_nrf/delay/nrf_delay.c) \
 $(abspath ../../../../components/drivers_nrf/common/nrf_drv_common.c) \
 $(abspath ../../../../components/drivers_nrf/uart/nrf_drv_uart.c) \
+
+#$(abspath ../../../../components/libraries/uart/retarget.c) \
 
 #assembly files common to all targets
 ASM_SOURCE_FILES  = $(abspath ../../../../components/toolchain/gcc/gcc_startup_nrf51.s)
