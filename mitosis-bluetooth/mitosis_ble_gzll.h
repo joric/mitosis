@@ -53,7 +53,8 @@ radio_mode_t running_mode = BLE;
 #define RTS_PIN_NUMBER -1
 #define HWFC false
 
-void debug_log(const char *fmt, ...) {
+void debug_log(const char *fmt, ...)
+{
     va_list list;
     va_start(list, fmt);
     char buf[256] = { 0 };
@@ -63,10 +64,12 @@ void debug_log(const char *fmt, ...) {
         app_uart_put(*p); // needs fifo library
 }
 
-void uart_error_handle(app_uart_evt_t * p_event) {
+void uart_error_handle(app_uart_evt_t * p_event)
+{
 }
 
-uint32_t debug_init() {
+uint32_t debug_init()
+{
     uint32_t err_code;
     const app_uart_comm_params_t comm_params = {
         RX_PIN_NUMBER, TX_PIN_NUMBER, RTS_PIN_NUMBER, CTS_PIN_NUMBER,
@@ -80,7 +83,7 @@ uint32_t debug_init() {
 }
 
 #undef APP_ERROR_CHECK
-#define APP_ERROR_CHECK(x) if (x!=NRF_SUCCESS) printf("ERROR in line %d\n", x)
+#define APP_ERROR_CHECK(x) if (x!=NRF_SUCCESS) printf("ERROR 0x%04x in line %d\n", x, __LINE__)
 
 #endif // SIMPLE_DEBUG
 
@@ -98,10 +101,12 @@ static volatile bool m_gzll_initialized = false;
 
 static nrf_radio_signal_callback_return_param_t signal_callback_return_param;
 
-void HardFault_Handler(uint32_t program_counter, uint32_t link_register) {
+void HardFault_Handler(uint32_t program_counter, uint32_t link_register)
+{
 }
 
-void m_configure_next_event(void) {
+void m_configure_next_event(void)
+{
     m_slot_length = 10000;
     m_timeslot_request.request_type = NRF_RADIO_REQ_TYPE_EARLIEST;
     m_timeslot_request.params.earliest.hfclk = NRF_RADIO_HFCLK_CFG_NO_GUARANTEE;
@@ -110,10 +115,12 @@ void m_configure_next_event(void) {
     m_timeslot_request.params.earliest.timeout_us = 100000;
 }
 
-void sys_evt_dispatch_ble_gzll(uint32_t evt_id) {
+void sys_evt_dispatch_ble_gzll(uint32_t evt_id)
+{
     uint32_t err_code;
 
-    switch (evt_id) {
+    switch (evt_id)
+    {
         case NRF_EVT_RADIO_SIGNAL_CALLBACK_INVALID_RETURN:
             ASSERT(false);
             break;
@@ -161,10 +168,11 @@ static uint32_t keys = 0, keys_snapshot = 0;
 static uint32_t keys_recv = 0, keys_recv_snapshot = 0;
 static uint8_t data_buffer[10];
 
-void m_process_gazell() {
-
+void m_process_gazell()
+{
     // detecting received packet from interupt, and unpacking
-    if (packet_received_left) {
+    if (packet_received_left)
+    {
         packet_received_left = false;
         data_buffer[0] = ((data_payload_left[0] & 1 << 3) ? 1 : 0) << 0 | ((data_payload_left[0] & 1 << 4) ? 1 : 0) << 1 | ((data_payload_left[0] & 1 << 5) ? 1 : 0) << 2 | ((data_payload_left[0] & 1 << 6) ? 1 : 0) << 3 | ((data_payload_left[0] & 1 << 7) ? 1 : 0) << 4;
         data_buffer[2] = ((data_payload_left[1] & 1 << 6) ? 1 : 0) << 0 | ((data_payload_left[1] & 1 << 7) ? 1 : 0) << 1 | ((data_payload_left[0] & 1 << 0) ? 1 : 0) << 2 | ((data_payload_left[0] & 1 << 1) ? 1 : 0) << 3 | ((data_payload_left[0] & 1 << 2) ? 1 : 0) << 4;
@@ -173,7 +181,8 @@ void m_process_gazell() {
         data_buffer[8] = ((data_payload_left[2] & 1 << 1) ? 1 : 0) << 1 | ((data_payload_left[2] & 1 << 2) ? 1 : 0) << 2 | ((data_payload_left[2] & 1 << 3) ? 1 : 0) << 3 | ((data_payload_left[2] & 1 << 4) ? 1 : 0) << 4;
     }
 
-    if (packet_received_right) {
+    if (packet_received_right)
+    {
         packet_received_right = false;
         data_buffer[1] = ((data_payload_right[0] & 1 << 7) ? 1 : 0) << 0 | ((data_payload_right[0] & 1 << 6) ? 1 : 0) << 1 | ((data_payload_right[0] & 1 << 5) ? 1 : 0) << 2 | ((data_payload_right[0] & 1 << 4) ? 1 : 0) << 3 | ((data_payload_right[0] & 1 << 3) ? 1 : 0) << 4;
         data_buffer[3] = ((data_payload_right[0] & 1 << 2) ? 1 : 0) << 0 | ((data_payload_right[0] & 1 << 1) ? 1 : 0) << 1 | ((data_payload_right[0] & 1 << 0) ? 1 : 0) << 2 | ((data_payload_right[1] & 1 << 7) ? 1 : 0) << 3 | ((data_payload_right[1] & 1 << 6) ? 1 : 0) << 4;
@@ -184,13 +193,15 @@ void m_process_gazell() {
 }
 
 
-static void m_on_start(void) {
+static void m_on_start(void)
+{
     bool res = false;
     signal_callback_return_param.params.request.p_next = NULL;
     signal_callback_return_param.callback_action = NRF_RADIO_SIGNAL_CALLBACK_ACTION_NONE;
     nrf_gzll_mode_t mode = running_mode == BLE ? NRF_GZLL_MODE_HOST : NRF_GZLL_MODE_DEVICE;
 
-    if (!m_gzll_initialized) {
+    if (!m_gzll_initialized)
+    {
         // Initialize Gazell
         nrf_gzll_init(mode);
 
@@ -226,7 +237,8 @@ static void m_on_start(void) {
 static void m_on_multitimer(void)
 {
     NRF_TIMER0->EVENTS_COMPARE[0] = 0;
-    if (nrf_gzll_get_mode() != NRF_GZLL_MODE_SUSPEND) {
+    if (nrf_gzll_get_mode() != NRF_GZLL_MODE_SUSPEND)
+    {
         signal_callback_return_param.params.request.p_next = NULL;
         signal_callback_return_param.callback_action = NRF_RADIO_SIGNAL_CALLBACK_ACTION_NONE;
         (void)nrf_gzll_set_mode(NRF_GZLL_MODE_SUSPEND);
@@ -243,7 +255,7 @@ static void m_on_multitimer(void)
 nrf_radio_signal_callback_return_param_t *m_radio_callback(uint8_t signal_type)
 {
     switch (signal_type)
-	{
+    {
         case NRF_RADIO_CALLBACK_SIGNAL_TYPE_START:
             m_on_start();
             break;
@@ -270,7 +282,7 @@ uint32_t gazell_sd_radio_init(void)
     m_configure_next_event();
     err_code = sd_radio_request(&m_timeslot_request);
     if (err_code != NRF_SUCCESS)
-	{
+    {
         (void)sd_radio_session_close();
         return err_code;
     }
@@ -284,7 +296,7 @@ void nrf_gzll_device_tx_success(uint32_t pipe, nrf_gzll_device_tx_info_t tx_info
         return;
     uint32_t ack_payload_length = NRF_GZLL_CONST_MAX_PAYLOAD_LENGTH;
     if (tx_info.payload_received_in_ack)
-	{
+    {
         // Pop packet and write first byte of the payload to the GPIO port.
         nrf_gzll_fetch_packet_from_rx_fifo(pipe, ack_payload, &ack_payload_length);
     }
@@ -303,12 +315,15 @@ void nrf_gzll_host_rx_data_ready(uint32_t pipe, nrf_gzll_host_rx_info_t rx_info)
 
     uint32_t data_payload_length = NRF_GZLL_CONST_MAX_PAYLOAD_LENGTH;
 
-    if (pipe == 0) {
+    if (pipe == 0)
+    {
         packet_received_left = true;
         left_active = 0;
         // Pop packet and write first byte of the payload to the GPIO port.
         nrf_gzll_fetch_packet_from_rx_fifo(pipe, data_payload_left, &data_payload_length);
-    } else if (pipe == 1) {
+    }
+    else if (pipe == 1)
+    {
         packet_received_right = true;
         right_active = 0;
         // Pop packet and write first byte of the payload to the GPIO port.
@@ -354,7 +369,7 @@ uint8_t get_battery_level(void)
     NRF_ADC->TASKS_START = 1;
 
     while (!NRF_ADC->EVENTS_END)
-	{
+    {
     }
 
     uint16_t vbg_in_mv = 1200;
@@ -420,7 +435,8 @@ static void send_data()
     data_payload[1] = ((keys & 1 << S09) ? 1 : 0) << 7 | ((keys & 1 << S10) ? 1 : 0) << 6 | ((keys & 1 << S11) ? 1 : 0) << 5 | ((keys & 1 << S12) ? 1 : 0) << 4 | ((keys & 1 << S13) ? 1 : 0) << 3 | ((keys & 1 << S14) ? 1 : 0) << 2 | ((keys & 1 << S15) ? 1 : 0) << 1 | ((keys & 1 << S16) ? 1 : 0) << 0;
     data_payload[2] = ((keys & 1 << S17) ? 1 : 0) << 7 | ((keys & 1 << S18) ? 1 : 0) << 6 | ((keys & 1 << S19) ? 1 : 0) << 5 | ((keys & 1 << S20) ? 1 : 0) << 4 | ((keys & 1 << S21) ? 1 : 0) << 3 | ((keys & 1 << S22) ? 1 : 0) << 2 | ((keys & 1 << S23) ? 1 : 0) << 1 | 0 << 0;
 
-    if (running_mode == GAZELL) {
+    if (running_mode == GAZELL)
+    {
         nrf_gzll_add_packet_to_tx_fifo(PIPE_NUMBER, data_payload, TX_PAYLOAD_LENGTH);
         return;
     }
@@ -449,11 +465,12 @@ static bool m_delayed_reset = false;
 #define KEY_D4 S19
 
 // former 1000Hz debounce sampling - it's 25 ms now. do we still need debouncing? seem to work fine
-static void handler_debounce(void *p_context) {
-
+static void handler_debounce(void *p_context)
+{
     // right half
     keys_snapshot = read_keys();
-    if (keys != keys_snapshot) {
+    if (keys != keys_snapshot)
+    {
         keys = keys_snapshot;
         send_data();
         key_handler();
@@ -465,23 +482,28 @@ static void handler_debounce(void *p_context) {
         bool fn_pressed = keys & (1<<KEY_FN);
         bool rf_pressed = keys & (1<<KEY_D4);
 
-        if (adjust_pressed && index!=-1) {
+        if (adjust_pressed && index!=-1)
+        {
             int next_mode = (rf_pressed && !fn_pressed) ? GAZELL : BLE;
             bool erase_bonds = rf_pressed && fn_pressed && adjust_pressed;
 
-            if (erase_bonds) {
+            if (erase_bonds)
+            {
                 index = 0;
                 next_mode = BLE;
             }
 
             //switch_select(index);
 
-            if (next_mode!=running_mode || erase_bonds) {
+            if (next_mode!=running_mode || erase_bonds)
+            {
                 m_delayed_reset = true;
             }
 
-            if (running_mode==BLE && next_mode==BLE) {
-                if (fn_pressed) {
+            if (running_mode==BLE && next_mode==BLE)
+            {
+                if (fn_pressed)
+                {
                     //switch_reset(&m_bonded_peer_handle);
                 }
                 //advertising_restart(BLE_ADV_MODE_FAST);
@@ -493,14 +515,17 @@ static void handler_debounce(void *p_context) {
 
     // left half
     keys_recv = data_payload_left[0] | (data_payload_left[1] << 8) | (data_payload_left[2] << 16);
-    if (keys_recv != keys_recv_snapshot) {
+    if (keys_recv != keys_recv_snapshot)
+    {
         keys_recv_snapshot = keys_recv;
         key_handler();
     }
 
-    if (keys == 0 && keys_recv == 0) {
+    if (keys == 0 && keys_recv == 0)
+    {
         activity_ticks++;
-        if (activity_ticks * DEBOUNCE > ACTIVITY) {
+        if (activity_ticks * DEBOUNCE > ACTIVITY)
+        {
             printf("Shutting down on inactivity...\n");
             //nrf_delay_ms(50);
             sd_power_system_off();
@@ -509,14 +534,18 @@ static void handler_debounce(void *p_context) {
         activity_ticks = 0;
     }
 
-    if (m_delayed_reset) {
+    if (m_delayed_reset)
+    {
         reset_ticks++;
-        if (reset_ticks * DEBOUNCE > RESET_DELAY) {
+        if (reset_ticks * DEBOUNCE > RESET_DELAY)
+        {
             reset_ticks = 0;
             m_delayed_reset = false;
             NVIC_SystemReset();
         }
-    } else {
+    }
+    else
+    {
         reset_ticks = 0;
     }
 }
@@ -547,21 +576,31 @@ void key_handler()
     int keys_sent = 0;
     memset(buf, 0, sizeof(buf));
 
-    for (uint8_t row = 0; row < MATRIX_ROWS; row++) {
+    for (uint8_t row = 0; row < MATRIX_ROWS; row++)
+    {
         uint16_t val = (uint16_t) data_buffer[row * 2] | (uint16_t) data_buffer[row * 2 + 1] << 5;
-        if (val) {
-            for (int col = 0; col < 16; col++) {
-                if (val & (1 << col)) {
+        if (val)
+        {
+            for (int col = 0; col < 16; col++)
+            {
+                if (val & (1 << col))
+                {
                     keys_pressed++;
                     uint16_t key = keymaps[m_layer][row][col];
                     if (key == KC_TRNS)
                         key = keymaps[0][row][col];
                     uint8_t modifier = get_modifier(key);
-                    if (modifier) {
+
+                    if (modifier)
+                    {
                         modifiers |= modifier;
-                    } else if (key & QK_LAYER_TAP) {
+                    }
+                    else if (key & QK_LAYER_TAP)
+                    {
                         m_layer = (key >> 8) & 0xf;
-                    } else if (keys_sent < MAX_KEYS) {
+                    }
+                    else if (keys_sent < MAX_KEYS)
+                    {
                         buf[2 + keys_sent++] = key;
                     }
                 }
@@ -575,7 +614,8 @@ void key_handler()
     buf[0] = modifiers;
     buf[1] = 0; // reserved
 
-    if (m_conn_handle != BLE_CONN_HANDLE_INVALID) {
+    if (m_conn_handle != BLE_CONN_HANDLE_INVALID)
+    {
         printf("Sending HID report: %02x %02x %02x %02x %02x %02x %02x %02x\n", buf[0], buf[1], buf[2], buf[3], buf[4], buf[5], buf[6], buf[7]);
         uint32_t err_code = ble_hids_inp_rep_send(&m_hids, INPUT_REPORT_KEYS_INDEX, INPUT_REPORT_KEYS_MAX_LEN, buf);
         APP_ERROR_CHECK(err_code);
@@ -583,11 +623,12 @@ void key_handler()
 
 }
 
-void keyboard_task() {
+void keyboard_task()
+{
     keys_snapshot = read_keys();
 
     if (keys != keys_snapshot)
-	{
+    {
         keys = keys_snapshot;
         send_data();
         key_handler();
@@ -596,7 +637,7 @@ void keyboard_task() {
     keys_recv = data_payload_left[0] | (data_payload_left[1] << 8) | (data_payload_left[2] << 16);
 
     if (keys_recv != keys_recv_snapshot)
-	{
+    {
         keys_recv_snapshot = keys_recv;
         key_handler();
     }
@@ -634,7 +675,7 @@ void mitosis_init()
 
     nrf_gpio_cfg_output(LED_PIN);
     for (int i = 0; i < 3; i++)
-	{
+    {
         nrf_gpio_pin_set(LED_PIN);
         nrf_delay_ms(100);
         nrf_gpio_pin_clear(LED_PIN);

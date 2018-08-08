@@ -1148,6 +1148,9 @@
     <group>
         <name>Application</name>
         <file>
+            <name>$PROJ_DIR$\..\..\config\custom_board.h</name>
+        </file>
+        <file>
             <name>$PROJ_DIR$\..\..\main.c</name>
         </file>
         <file>

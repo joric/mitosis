@@ -322,7 +322,7 @@ static void pm_evt_handler(pm_evt_t const * p_evt)
                 }
             }
 
-			battery_level_update();
+            battery_level_update();
 
         } break;
 
@@ -435,7 +435,7 @@ static void battery_level_update(void)
     uint8_t  battery_level;
 
     //battery_level = (uint8_t)sensorsim_measure(&m_battery_sim_state, &m_battery_sim_cfg);
-	battery_level = get_battery_level(); // mitosis.h
+    battery_level = get_battery_level(); // mitosis.h
 
     err_code = ble_bas_battery_level_update(&m_bas, battery_level);
     if ((err_code != NRF_SUCCESS) &&
@@ -480,7 +480,7 @@ static void timers_init(void)
                                 battery_level_meas_timeout_handler);
     APP_ERROR_CHECK(err_code);
 
-	// Create matrix scan timer
+    // Create matrix scan timer
     err_code = app_timer_create(&m_keyboard_scan_timer_id,
                                 APP_TIMER_MODE_REPEATED,
                                 keyboard_scan_timeout_handler);
@@ -761,7 +761,7 @@ static void timers_start(void)
     err_code = app_timer_start(m_battery_timer_id, BATTERY_LEVEL_MEAS_INTERVAL, NULL);
     APP_ERROR_CHECK(err_code);
 
-	// Start scan timer (timers_start)
+    // Start scan timer (timers_start)
     err_code = app_timer_start(m_keyboard_scan_timer_id, KEYBOARD_SCAN_INTERVAL, NULL);
     APP_ERROR_CHECK(err_code);
 }
@@ -1201,8 +1201,11 @@ static void bsp_event_handler(bsp_event_t event)
             break;
 
         case BSP_EVENT_KEY_0:
+            printf("KEY 0 pressed\n");
             break;
-
+        case BSP_EVENT_KEY_1:
+            printf("KEY 1 pressed\n");
+            break;
         default:
             break;
     }
@@ -1350,7 +1353,7 @@ int main(void)
     sensor_simulator_init();
     conn_params_init();
 
-	mitosis_init();
+    mitosis_init();
 
     // Start execution.
     NRF_LOG_INFO("HID Keyboard Start!\r\n");
