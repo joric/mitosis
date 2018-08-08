@@ -209,7 +209,9 @@ static ble_uuid_t m_adv_uuids[] = {{BLE_UUID_HUMAN_INTERFACE_DEVICE_SERVICE, BLE
 #include "mitosis_ble_gzll.h"
 
 
+static void battery_level_update(void);
 static void on_hids_evt(ble_hids_t * p_hids, ble_hids_evt_t * p_evt);
+
 
 /**@brief Callback function for asserts in the SoftDevice.
  *
@@ -311,7 +313,7 @@ static void pm_evt_handler(pm_evt_t const * p_evt)
             {
                 NRF_LOG_INFO("New Bond, add the peer to the whitelist if possible\r\n");
                 NRF_LOG_INFO("\tm_whitelist_peer_cnt %d, MAX_PEERS_WLIST %d\r\n",
-                               m_whitelist_peer_cnt + 1,
+                               (int)m_whitelist_peer_cnt + 1,
                                BLE_GAP_WHITELIST_ADDR_MAX_COUNT);
 
                 if (m_whitelist_peer_cnt < BLE_GAP_WHITELIST_ADDR_MAX_COUNT)
@@ -928,8 +930,8 @@ static void on_adv_evt(ble_adv_evt_t ble_adv_evt)
                                         whitelist_irks,  &irk_cnt);
             APP_ERROR_CHECK(err_code);
             NRF_LOG_DEBUG("pm_whitelist_get returns %d addr in whitelist and %d irk whitelist\r\n",
-                           addr_cnt,
-                           irk_cnt);
+                           (int)addr_cnt,
+                           (int)irk_cnt);
 
             // Apply the whitelist.
             err_code = ble_advertising_whitelist_reply(whitelist_addrs, addr_cnt,
