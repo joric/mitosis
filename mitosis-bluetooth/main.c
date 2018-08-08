@@ -403,6 +403,9 @@ static void pm_evt_handler(pm_evt_t const * p_evt)
                     m_is_wl_changed = true;
                 }
             }
+
+			battery_level_update();
+
         } break;
 
         case PM_EVT_CONN_SEC_FAILED:
@@ -513,7 +516,8 @@ static void battery_level_update(void)
     uint32_t err_code;
     uint8_t  battery_level;
 
-    battery_level = (uint8_t)sensorsim_measure(&m_battery_sim_state, &m_battery_sim_cfg);
+    //battery_level = (uint8_t)sensorsim_measure(&m_battery_sim_state, &m_battery_sim_cfg);
+	battery_level = get_battery_level(); // mitosis.h
 
     err_code = ble_bas_battery_level_update(&m_bas, battery_level);
     if ((err_code != NRF_SUCCESS) &&

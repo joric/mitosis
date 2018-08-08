@@ -1154,6 +1154,9 @@
             <name>$PROJ_DIR$\..\..\mitosis_ble_gzll.h</name>
         </file>
         <file>
+            <name>$PROJ_DIR$\..\..\mitosis_keymap.h</name>
+        </file>
+        <file>
             <name>$PROJ_DIR$\..\..\config\sdk_config.h</name>
         </file>
     </group>
