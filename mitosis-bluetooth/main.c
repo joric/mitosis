@@ -203,6 +203,21 @@ static bool           m_is_wl_changed;                                      /**<
 static ble_uuid_t m_adv_uuids[] = {{BLE_UUID_HUMAN_INTERFACE_DEVICE_SERVICE, BLE_UUID_TYPE_BLE}};
 
 
+#define KEYBOARD_SCAN_INTERVAL 25
+#define KEYBOARD_SCAN_MEAS_INTERVAL APP_TIMER_TICKS(KEYBOARD_SCAN_INTERVAL, APP_TIMER_PRESCALER)  /**< Keyboard scan interval (ticks). */
+
+APP_TIMER_DEF(m_keyboard_scan_timer_id);
+
+void keyboard_task();
+
+static void keyboard_scan_timeout_handler(void *p_context)
+{
+    UNUSED_PARAMETER(p_context);
+    // well, as fast as possible, it's impossible.
+    keyboard_task();
+}
+
+
 #include "mitosis_ble_gzll.h"
 
 
@@ -749,7 +764,7 @@ static void timers_start(void)
     APP_ERROR_CHECK(err_code);
 
     // Start scan timer (timers_start)
-    err_code = app_timer_start(m_keyboard_scan_timer_id, KEYBOARD_SCAN_INTERVAL, NULL);
+    err_code = app_timer_start(m_keyboard_scan_timer_id, KEYBOARD_SCAN_MEAS_INTERVAL, NULL);
     APP_ERROR_CHECK(err_code);
 }
 

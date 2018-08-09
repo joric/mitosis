@@ -603,23 +603,38 @@ static void switch_select(uint8_t index)
 }
 
 
-static void switch_reset()
+static void switch_reset(int index)
 {
-    printf("switch_reset\n");
+    switch_index = index;
     ble_advertising_start(BLE_ADV_MODE_FAST);
+    printf("switch_reset\n");
 }
 
 
-#define DEBOUNCE 25               // standard 25 ms refresh
-#define ACTIVITY 4*60*1000        // unactivity time till power off (4 minutes)
-#define RESET_DELAY 50            // delayed reset
+/*   add to main.c:
+
+    // Create scan timer (timers_init)
+    err_code = app_timer_create(&m_keyboard_scan_timer_id,
+                                APP_TIMER_MODE_REPEATED,
+                                keyboard_scan_timeout_handler);
+    APP_ERROR_CHECK(err_code);
+
+    // Start scan timer (timers_start)
+    err_code = app_timer_start(m_keyboard_scan_timer_id, KEYBOARD_SCAN_INTERVAL, NULL);
+    APP_ERROR_CHECK(err_code);
+*/
+
+
+#define ACTIVITY 4*60*1000  // unactivity time till power off (4 minutes)
+#define RESET_DELAY 50      // delayed reset
 
 #define KEY_FN S20
 #define KEY_ADJUST S23
-#define KEY_D1 S16
-#define KEY_D2 S17
-#define KEY_D3 S18
-#define KEY_D4 S19
+#define KEY_RF S19
+#define SWITCH_COUNT 4
+#define RF_INDEX (SWITCH_COUNT - 1)
+
+static const uint8_t switch_keys[] = { S16, S17, S18, KEY_RF };
 
 static uint8_t m_layer = 0;
 static uint32_t activity_ticks = 0;
@@ -627,42 +642,43 @@ static uint32_t reset_ticks = 0;
 static bool m_delayed_reset = false;
 
 
+// temporary, should be moved to layouts
 void hardware_keys()
 {
-    int peer_index = keys & (1<<KEY_D1) ? 0 : keys & (1<<KEY_D2) ? 1 : keys & (1<<KEY_D3) ? 2 : keys & (1<<KEY_D4) ? 3 : -1;
-    bool adjust_pressed = keys & (1<<KEY_ADJUST);
-    bool fn_pressed = keys & (1<<KEY_FN);
-    bool rf_pressed = keys & (1<<KEY_D4);
-
-    if (adjust_pressed && peer_index!=-1)
+    if (keys & (1<<KEY_ADJUST))
     {
-        int next_mode = (rf_pressed && !fn_pressed) ? GAZELL : BLE;
-        bool erase_bonds = rf_pressed && fn_pressed && adjust_pressed;
+        int index = -1;
 
-        if (erase_bonds)
+        for (int i=0; i<SWITCH_COUNT; i++)
         {
-            peer_index = 0;
-            next_mode = BLE;
+            if (keys & (1 << switch_keys[i]))
+            {
+                index = i;
+                break;
+            }
         }
 
-        switch_select(peer_index);
-
-        if (next_mode!=running_mode || erase_bonds)
+        if (index != -1)
         {
-            m_delayed_reset = true;
-            printf("Delayed reset started\n");
-        }
+            switch_select(index);
 
-        if (fn_pressed && running_mode==BLE && next_mode==BLE)
-        {
-            switch_reset();
+            if (keys & (1<<KEY_FN))
+            {
+                switch_reset(index);
+            }
+
+            if (running_mode != ((index == RF_INDEX) ? GAZELL : BLE))
+            {
+                m_delayed_reset = true;
+                printf("Delayed reset started\n");
+            }
         }
     }
 
     if (m_delayed_reset)
     {
         reset_ticks++;
-        if (reset_ticks * DEBOUNCE > RESET_DELAY)
+        if (reset_ticks * KEYBOARD_SCAN_INTERVAL > RESET_DELAY)
         {
             reset_ticks = 0;
             m_delayed_reset = false;
@@ -693,7 +709,6 @@ void key_handler()
     if (running_mode == GAZELL)
         return;
 
-    const int MAX_KEYS = 6;
     uint8_t buf[8];
     int modifiers = 0;
     int keys_pressed = 0;
@@ -713,8 +728,10 @@ void key_handler()
             {
                 keys_pressed++;
                 uint16_t key = keymaps[m_layer][row][col];
+
                 if (key == KC_TRNS)
                     key = keymaps[0][row][col];
+
                 uint8_t modifier = get_modifier(key);
 
                 if (modifier)
@@ -725,7 +742,7 @@ void key_handler()
                 {
                     m_layer = (key >> 8) & 0xf;
                 }
-                else if (keys_sent < MAX_KEYS)
+                else if (keys_sent < MAX_KEYS_IN_ONE_REPORT)
                 {
                     buf[2 + keys_sent++] = key;
                 }
@@ -772,42 +789,17 @@ void keyboard_task()
     if (keys == keys_snapshot && keys_recv == keys_recv_snapshot)
     {
         activity_ticks++;
-        if (activity_ticks * DEBOUNCE > ACTIVITY)
+        if (activity_ticks * KEYBOARD_SCAN_INTERVAL > ACTIVITY)
         {
             printf("Shutting down on inactivity...\n");
             nrf_delay_ms(50);
             sd_power_system_off();
         }
-    } else {
+    }
+    else
+    {
         activity_ticks = 0;
     }
-}
-
-
-/*   add to main.c:
-
-    // Create scan timer (timers_init)
-    err_code = app_timer_create(&m_keyboard_scan_timer_id,
-                                APP_TIMER_MODE_REPEATED,
-                                keyboard_scan_timeout_handler);
-    APP_ERROR_CHECK(err_code);
-
-    // Start scan timer (timers_start)
-    err_code = app_timer_start(m_keyboard_scan_timer_id, KEYBOARD_SCAN_INTERVAL, NULL);
-    APP_ERROR_CHECK(err_code);
-*/
-
-
-APP_TIMER_DEF(m_keyboard_scan_timer_id);
-#define KEYBOARD_FAST_SCAN_INTERVAL 25
-#define KEYBOARD_SCAN_INTERVAL APP_TIMER_TICKS(KEYBOARD_FAST_SCAN_INTERVAL, APP_TIMER_PRESCALER)                  /**< Keyboard scan interval (ticks). */
-
-
-static void keyboard_scan_timeout_handler(void *p_context)
-{
-    UNUSED_PARAMETER(p_context);
-    // well, as fast as possible, it's impossible.
-    keyboard_task();
 }
 
 
@@ -828,7 +820,7 @@ void mitosis_init(bool erase_bonds)
         nrf_delay_ms(100);
     }
 
-    running_mode = (switch_index == 3 || erase_bonds) ? GAZELL : BLE;
+    running_mode = (switch_index == RF_INDEX && !erase_bonds) ? GAZELL : BLE;
 
     gazell_sd_radio_init();
 }
