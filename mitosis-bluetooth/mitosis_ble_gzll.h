@@ -543,13 +543,22 @@ static void send_data()
 }
 
 
-#define DEBOUNCE 25                // standard 25 ms refresh
-#define ACTIVITY 4*60*1000        // unactivity time till power off (4 minutes)
-#define RESET_DELAY 250            // delayed reset
+static void switch_select(uint8_t index)
+{
+    printf("switch_select %d\n", index);
+}
 
-//static uint32_t activity_ticks = 0;
-//static uint32_t reset_ticks = 0;
-//static bool m_delayed_reset = false;
+
+static void switch_reset()
+{
+    printf("switch_reset\n");
+    ble_advertising_start(BLE_ADV_MODE_FAST);
+}
+
+
+#define DEBOUNCE 25               // standard 25 ms refresh
+#define ACTIVITY 4*60*1000        // unactivity time till power off (4 minutes)
+#define RESET_DELAY 50            // delayed reset
 
 #define KEY_FN S20
 #define KEY_ADJUST S23
@@ -558,75 +567,42 @@ static void send_data()
 #define KEY_D3 S18
 #define KEY_D4 S19
 
-#if 0
-// former 1000Hz debounce sampling - it's 25 ms now. do we still need debouncing? seem to work fine
-static void handler_debounce(void *p_context)
+static uint8_t m_layer = 0;
+static uint32_t activity_ticks = 0;
+static uint32_t reset_ticks = 0;
+static bool m_delayed_reset = false;
+
+
+void hardware_keys()
 {
-    // right half
-    keys_snapshot = read_keys();
-    if (keys != keys_snapshot)
+    int peer_index = keys & (1<<KEY_D1) ? 0 : keys & (1<<KEY_D2) ? 1 : keys & (1<<KEY_D3) ? 2 : keys & (1<<KEY_D4) ? 3 : -1;
+    bool adjust_pressed = keys & (1<<KEY_ADJUST);
+    bool fn_pressed = keys & (1<<KEY_FN);
+    bool rf_pressed = keys & (1<<KEY_D4);
+
+    if (adjust_pressed && peer_index!=-1)
     {
-        keys = keys_snapshot;
-        send_data();
-        key_handler();
+        int next_mode = (rf_pressed && !fn_pressed) ? GAZELL : BLE;
+        bool erase_bonds = rf_pressed && fn_pressed && adjust_pressed;
 
-        ///////////////////////////////////////
-        // hardware keys
-        int index = keys & (1<<KEY_D1) ? 0 : keys & (1<<KEY_D2) ? 1 : keys & (1<<KEY_D3) ? 2 : keys & (1<<KEY_D4) ? 3 : -1;
-        bool adjust_pressed = keys & (1<<KEY_ADJUST);
-        bool fn_pressed = keys & (1<<KEY_FN);
-        bool rf_pressed = keys & (1<<KEY_D4);
-
-        if (adjust_pressed && index!=-1)
+        if (erase_bonds)
         {
-            int next_mode = (rf_pressed && !fn_pressed) ? GAZELL : BLE;
-            bool erase_bonds = rf_pressed && fn_pressed && adjust_pressed;
-
-            if (erase_bonds)
-            {
-                index = 0;
-                next_mode = BLE;
-            }
-
-            //switch_select(index);
-
-            if (next_mode!=running_mode || erase_bonds)
-            {
-                m_delayed_reset = true;
-            }
-
-            if (running_mode==BLE && next_mode==BLE)
-            {
-                if (fn_pressed)
-                {
-                    //switch_reset(&m_bonded_peer_handle);
-                }
-                //advertising_restart(BLE_ADV_MODE_FAST);
-            }
+            peer_index = 0;
+            next_mode = BLE;
         }
-        /// hardware keys
-        ///////////////////////////////////////
-    }
 
-    // left half
-    keys_recv = data_payload_left[0] | (data_payload_left[1] << 8) | (data_payload_left[2] << 16);
-    if (keys_recv != keys_recv_snapshot)
-    {
-        keys_recv_snapshot = keys_recv;
-        key_handler();
-    }
+        switch_select(peer_index);
 
-    if (keys == 0 && keys_recv == 0)
-    {
-        activity_ticks++;
-        if (activity_ticks * DEBOUNCE > ACTIVITY)
+        if (next_mode!=running_mode || erase_bonds)
         {
-            printf("Shutting down on inactivity...\n");
-            //nrf_delay_ms(50);
-            sd_power_system_off();
+            m_delayed_reset = true;
+            printf("Delayed reset started\n");
         }
-    } else {
-        activity_ticks = 0;
+
+        if (fn_pressed && running_mode==BLE && next_mode==BLE)
+        {
+            switch_reset();
+        }
     }
 
     if (m_delayed_reset)
@@ -644,10 +620,6 @@ static void handler_debounce(void *p_context)
         reset_ticks = 0;
     }
 }
-#endif
-
-
-uint8_t m_layer = 0;
 
 
 uint8_t get_modifier(uint16_t key)
@@ -677,30 +649,31 @@ void key_handler()
     for (uint8_t row = 0; row < MATRIX_ROWS; row++)
     {
         uint16_t val = (uint16_t) data_buffer[row * 2] | (uint16_t) data_buffer[row * 2 + 1] << 5;
-        if (val)
-        {
-            for (int col = 0; col < 16; col++)
-            {
-                if (val & (1 << col))
-                {
-                    keys_pressed++;
-                    uint16_t key = keymaps[m_layer][row][col];
-                    if (key == KC_TRNS)
-                        key = keymaps[0][row][col];
-                    uint8_t modifier = get_modifier(key);
 
-                    if (modifier)
-                    {
-                        modifiers |= modifier;
-                    }
-                    else if (key & QK_LAYER_TAP)
-                    {
-                        m_layer = (key >> 8) & 0xf;
-                    }
-                    else if (keys_sent < MAX_KEYS)
-                    {
-                        buf[2 + keys_sent++] = key;
-                    }
+        if (!val)
+            continue;
+
+        for (int col = 0; col < MATRIX_COLS; col++)
+        {
+            if (val & (1 << col))
+            {
+                keys_pressed++;
+                uint16_t key = keymaps[m_layer][row][col];
+                if (key == KC_TRNS)
+                    key = keymaps[0][row][col];
+                uint8_t modifier = get_modifier(key);
+
+                if (modifier)
+                {
+                    modifiers |= modifier;
+                }
+                else if (key & QK_LAYER_TAP)
+                {
+                    m_layer = (key >> 8) & 0xf;
+                }
+                else if (keys_sent < MAX_KEYS)
+                {
+                    buf[2 + keys_sent++] = key;
                 }
             }
         }
@@ -730,6 +703,7 @@ void keyboard_task()
     {
         keys = keys_snapshot;
         send_data();
+        hardware_keys();
         key_handler();
     }
 
@@ -739,6 +713,19 @@ void keyboard_task()
     {
         keys_recv_snapshot = keys_recv;
         key_handler();
+    }
+
+    if (keys == keys_snapshot && keys_recv == keys_recv_snapshot)
+    {
+        activity_ticks++;
+        if (activity_ticks * DEBOUNCE > ACTIVITY)
+        {
+            printf("Shutting down on inactivity...\n");
+            nrf_delay_ms(50);
+            sd_power_system_off();
+        }
+    } else {
+        activity_ticks = 0;
     }
 }
 
