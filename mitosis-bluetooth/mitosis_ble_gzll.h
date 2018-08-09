@@ -15,7 +15,7 @@
 #include "mitosis.h"
 #include "mitosis_keymap.h"
 
-// Receiver support
+// external receiver support
 typedef enum
 {
     BLE,
@@ -545,8 +545,60 @@ static void send_data()
 }
 
 
+static uint32_t switch_index = 0;
+
+#define FILE_ID     0x1111
+#define REC_KEY     0x2222
+
+fds_record_desc_t   record_desc;
+fds_record_t        record;
+fds_record_chunk_t  record_chunk;
+fds_flash_record_t  flash_record;
+
+static void my_fds_evt_handler(fds_evt_t const * const p_fds_evt)
+{
+}
+
+
+static void switch_init()
+{
+    switch_index = 0;
+    fds_find_token_t    ftok ={0}; //Important, make sure you zero init the ftok token
+
+    record.file_id              = FILE_ID;
+    record.key                  = REC_KEY;
+    record_chunk.p_data         = &switch_index;
+    record_chunk.length_words   = 1;
+    record.data.p_chunks        = &record_chunk;
+    record.data.num_chunks      = 1;
+
+    bool found = false;
+    while (fds_record_find(FILE_ID, REC_KEY, &record_desc, &ftok) == FDS_SUCCESS)
+    {
+        found = true;
+        ret_code_t ret = fds_record_open(&record_desc, &flash_record);
+        APP_ERROR_CHECK(ret);
+        switch_index = *(uint32_t *)flash_record.p_data;
+        fds_record_close(&record_desc);
+        printf("loaded fds record, switch_index: %d\n", switch_index);
+    }
+
+    if (!found)
+    {
+        ret_code_t ret = fds_record_write(&record_desc, &record);
+        APP_ERROR_CHECK(ret);
+        printf("created fds record, switch_index: %d\n", switch_index);
+    }
+}
+
+
 static void switch_select(uint8_t index)
 {
+    switch_index = index;
+    record_chunk.p_data         = &switch_index;
+    record.data.p_chunks        = &record_chunk;
+    ret_code_t ret = fds_record_update(&record_desc, &record);
+    APP_ERROR_CHECK(ret);
     printf("switch_select %d\n", index);
 }
 
@@ -759,12 +811,15 @@ static void keyboard_scan_timeout_handler(void *p_context)
 }
 
 
-void mitosis_init()
+void mitosis_init(bool erase_bonds)
 {
     printf("Mitosis init\n");
+
+    switch_init();
     gpio_config();
 
     nrf_gpio_cfg_output(LED_PIN);
+
     for (int i = 0; i < 3; i++)
     {
         nrf_gpio_pin_set(LED_PIN);
@@ -772,6 +827,8 @@ void mitosis_init()
         nrf_gpio_pin_clear(LED_PIN);
         nrf_delay_ms(100);
     }
+
+    running_mode = (switch_index == 3 || erase_bonds) ? GAZELL : BLE;
 
     gazell_sd_radio_init();
 }

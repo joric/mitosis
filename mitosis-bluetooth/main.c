@@ -1187,6 +1187,9 @@ static void bsp_event_handler(bsp_event_t event)
             }
             break;
 
+        case BSP_EVENT_KEY_0:
+            break;
+
         default:
             break;
     }
@@ -1332,12 +1335,16 @@ int main(void)
     advertising_init();
     services_init();
     conn_params_init();
-    mitosis_init();
+    mitosis_init(erase_bonds);
 
     // Start execution.
     NRF_LOG_INFO("HID Keyboard Start!\r\n");
     timers_start();
-    advertising_start();
+
+    if (running_mode == BLE)
+    {
+        advertising_start();
+    }
 
     // Enter main loop.
     for (;;)
