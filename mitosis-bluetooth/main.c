@@ -86,7 +86,7 @@
 #include "nrf_log_ctrl.h"
 
 #if BUTTONS_NUMBER < 2
-#error "Not enough resources on board"
+//#error "Not enough resources on board"
 #endif
 
 #if (NRF_SD_BLE_API_VERSION == 3)
@@ -250,6 +250,8 @@ void assert_nrf_callback(uint16_t line_num, const uint8_t * p_file_name)
  */
 static void peer_list_get(pm_peer_id_t * p_peers, uint32_t * p_size)
 {
+    printf("PEER LIST GET\n");
+
     pm_peer_id_t peer_id;
     uint32_t     peers_to_copy;
 
@@ -261,7 +263,9 @@ static void peer_list_get(pm_peer_id_t * p_peers, uint32_t * p_size)
 
     while ((peer_id != PM_PEER_ID_INVALID) && (peers_to_copy--))
     {
-        p_peers[(*p_size)++] = peer_id;
+        if (switch_peers[switch_index]==peer_id)
+            p_peers[(*p_size)++] = peer_id;
+
         peer_id = pm_next_peer_id_get(peer_id);
     }
 }
@@ -334,6 +338,9 @@ static void pm_evt_handler(pm_evt_t const * p_evt)
                     m_whitelist_peers[m_whitelist_peer_cnt++] = m_peer_id;
                     m_is_wl_changed = true;
                 }
+
+                switch_update(m_peer_id);
+
                 battery_level_update();
             }
         } break;
@@ -892,7 +899,7 @@ static void on_adv_evt(ble_adv_evt_t ble_adv_evt)
             break; //BLE_ADV_EVT_DIRECTED
 
         case BLE_ADV_EVT_FAST:
-            NRF_LOG_INFO("BLE_ADV_EVT_FAST\r\n");
+            //NRF_LOG_INFO("BLE_ADV_EVT_FAST\r\n");
             err_code = bsp_indication_set(BSP_INDICATE_ADVERTISING);
             APP_ERROR_CHECK(err_code);
             break; //BLE_ADV_EVT_FAST
@@ -929,10 +936,11 @@ static void on_adv_evt(ble_adv_evt_t ble_adv_evt)
             err_code = pm_whitelist_get(whitelist_addrs, &addr_cnt,
                                         whitelist_irks,  &irk_cnt);
             APP_ERROR_CHECK(err_code);
+/*
             NRF_LOG_DEBUG("pm_whitelist_get returns %d addr in whitelist and %d irk whitelist\r\n",
                            (int)addr_cnt,
                            (int)irk_cnt);
-
+*/
             // Apply the whitelist.
             err_code = ble_advertising_whitelist_reply(whitelist_addrs, addr_cnt,
                                                        whitelist_irks,  irk_cnt);
@@ -975,7 +983,7 @@ static void on_ble_evt(ble_evt_t * p_ble_evt)
     switch (p_ble_evt->header.evt_id)
     {
         case BLE_GAP_EVT_CONNECTED:
-            NRF_LOG_INFO("Connected\r\n");
+            //NRF_LOG_INFO("Connected\r\n");
             err_code = bsp_indication_set(BSP_INDICATE_CONNECTED);
             APP_ERROR_CHECK(err_code);
 
@@ -987,7 +995,7 @@ static void on_ble_evt(ble_evt_t * p_ble_evt)
             break; // BLE_EVT_TX_COMPLETE
 
         case BLE_GAP_EVT_DISCONNECTED:
-            NRF_LOG_INFO("Disconnected\r\n");
+            //NRF_LOG_INFO("Disconnected\r\n");
             // Dequeue all keys without transmission.
             m_conn_handle = BLE_CONN_HANDLE_INVALID;
 

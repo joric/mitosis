@@ -545,8 +545,6 @@ static void send_data()
 }
 
 
-static uint32_t switch_index = 0;
-
 #define FILE_ID     0x1111
 #define REC_KEY     0x2222
 
@@ -555,75 +553,58 @@ fds_record_t        record;
 fds_record_chunk_t  record_chunk;
 fds_flash_record_t  flash_record;
 
+typedef struct
+{
+    int index;
+    int reserved1;
+    int reserved2;
+} savedata_t;
+
+static savedata_t savedata;
+
 static void my_fds_evt_handler(fds_evt_t const * const p_fds_evt)
 {
 }
 
 
-static void switch_init()
+void eeprom_read()
 {
-    switch_index = 0;
-    fds_find_token_t    ftok ={0}; //Important, make sure you zero init the ftok token
-
+    fds_find_token_t       ftok = {0}; //Important, make sure you zero init the ftok token
     record.file_id              = FILE_ID;
     record.key                  = REC_KEY;
-    record_chunk.p_data         = &switch_index;
-    record_chunk.length_words   = 1;
+    record_chunk.p_data         = &savedata;
     record.data.p_chunks        = &record_chunk;
+    record_chunk.length_words   = sizeof(savedata)/sizeof(uint32_t);
     record.data.num_chunks      = 1;
 
     bool found = false;
+
     while (fds_record_find(FILE_ID, REC_KEY, &record_desc, &ftok) == FDS_SUCCESS)
     {
         found = true;
         ret_code_t ret = fds_record_open(&record_desc, &flash_record);
         APP_ERROR_CHECK(ret);
-        switch_index = *(uint32_t *)flash_record.p_data;
+        savedata = *(savedata_t *)flash_record.p_data;
         fds_record_close(&record_desc);
-        printf("loaded fds record, switch_index: %d\n", switch_index);
     }
 
     if (!found)
     {
         ret_code_t ret = fds_record_write(&record_desc, &record);
         APP_ERROR_CHECK(ret);
-        printf("created fds record, switch_index: %d\n", switch_index);
     }
 }
 
 
-static void switch_select(uint8_t index)
+void eeprom_write()
 {
-    switch_index = index;
-    record_chunk.p_data         = &switch_index;
-    record.data.p_chunks        = &record_chunk;
+    record_chunk.p_data = &savedata;
     ret_code_t ret = fds_record_update(&record_desc, &record);
     APP_ERROR_CHECK(ret);
-    printf("switch_select %d\n", index);
 }
 
 
-static void switch_reset(int index)
-{
-    switch_index = index;
-    ble_advertising_start(BLE_ADV_MODE_FAST);
-    printf("switch_reset\n");
-}
-
-
-/*   add to main.c:
-
-    // Create scan timer (timers_init)
-    err_code = app_timer_create(&m_keyboard_scan_timer_id,
-                                APP_TIMER_MODE_REPEATED,
-                                keyboard_scan_timeout_handler);
-    APP_ERROR_CHECK(err_code);
-
-    // Start scan timer (timers_start)
-    err_code = app_timer_start(m_keyboard_scan_timer_id, KEYBOARD_SCAN_INTERVAL, NULL);
-    APP_ERROR_CHECK(err_code);
-*/
-
+static uint32_t switch_index = 0;
 
 #define ACTIVITY 4*60*1000  // unactivity time till power off (4 minutes)
 #define RESET_DELAY 50      // delayed reset
@@ -632,6 +613,7 @@ static void switch_reset(int index)
 #define KEY_ADJUST S23
 #define KEY_RF S19
 #define SWITCH_COUNT 4
+#define PEERS_COUNT (SWITCH_COUNT - 1)
 #define RF_INDEX (SWITCH_COUNT - 1)
 
 static const uint8_t switch_keys[] = { S16, S17, S18, KEY_RF };
@@ -640,6 +622,71 @@ static uint8_t m_layer = 0;
 static uint32_t activity_ticks = 0;
 static uint32_t reset_ticks = 0;
 static bool m_delayed_reset = false;
+
+pm_peer_id_t switch_peers[PEERS_COUNT];
+
+
+static void switch_update(pm_peer_id_t peer_id)
+{
+    switch_peers[switch_index] = peer_id;
+}
+
+
+static void switch_connect()
+{
+/*
+    // check number of peers, add up to PEERS_COUNT if needed
+    pm_peer_id_t peer_id;
+    uint32_t     peers_to_copy;
+
+    peers_to_copy = (*p_size < BLE_GAP_WHITELIST_ADDR_MAX_COUNT) ?
+                     *p_size : BLE_GAP_WHITELIST_ADDR_MAX_COUNT;
+
+    peer_id = pm_next_peer_id_get(PM_PEER_ID_INVALID);
+    *p_size = 0;
+
+    while ((peer_id != PM_PEER_ID_INVALID) && (peers_to_copy--))
+    {
+        p_peers[(*p_size)++] = peer_id;
+        peer_id = pm_next_peer_id_get(peer_id);
+    }
+*/
+}
+
+
+static void switch_init()
+{
+    eeprom_read();
+    switch_index = savedata.index;
+}
+
+
+static void switch_select(uint8_t index)
+{
+    switch_index = index;
+    savedata.index = switch_index;
+    eeprom_write();
+
+    if (m_conn_handle != BLE_CONN_HANDLE_INVALID)
+        sd_ble_gap_disconnect(m_conn_handle, BLE_HCI_REMOTE_USER_TERMINATED_CONNECTION);
+
+    printf("switch_select: %d\n", switch_index);
+}
+
+
+static void switch_reset(int index)
+{
+    switch_index = index;
+
+    if (m_conn_handle != BLE_CONN_HANDLE_INVALID)
+        sd_ble_gap_disconnect(m_conn_handle, BLE_HCI_REMOTE_USER_TERMINATED_CONNECTION);
+
+    pm_peer_delete(switch_peers[switch_index]);
+
+    //ble_advertising_start(BLE_ADV_MODE_FAST);
+    //ble_advertising_restart_without_whitelist();
+    printf("switch_reset\n");
+}
 
 
 // temporary, should be moved to layouts
@@ -704,7 +751,7 @@ uint8_t get_modifier(uint16_t key)
 
 void key_handler()
 {
-    printf("key_handler %d %d\n", (int)keys_recv, (int)keys);
+    //printf("key_handler %d %d\n", (int)keys_recv, (int)keys);
 
     if (running_mode == GAZELL)
         return;
@@ -758,7 +805,7 @@ void key_handler()
 
     if (m_conn_handle != BLE_CONN_HANDLE_INVALID)
     {
-        printf("report %02x %02x %02x %02x %02x %02x %02x %02x\n", buf[0], buf[1], buf[2], buf[3], buf[4], buf[5], buf[6], buf[7]);
+        //printf("Sending HID report: %02x %02x %02x %02x %02x %02x %02x %02x\n", buf[0], buf[1], buf[2], buf[3], buf[4], buf[5], buf[6], buf[7]);
         uint32_t err_code = ble_hids_inp_rep_send(&m_hids, INPUT_REPORT_KEYS_INDEX, INPUT_REPORT_KEYS_MAX_LEN, buf);
         APP_ERROR_CHECK(err_code);
     }
@@ -821,6 +868,10 @@ void mitosis_init(bool erase_bonds)
     }
 
     running_mode = (switch_index == RF_INDEX && !erase_bonds) ? GAZELL : BLE;
+
+    printf(running_mode == GAZELL ? "RECEIVER MODE\n" : "BLUETOOTH MODE\n");
+
+    printf("SELECTED DEVICE: %d\n", switch_index);
 
     gazell_sd_radio_init();
 }
