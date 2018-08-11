@@ -121,7 +121,7 @@ make mitosis-default
 
 * [Wireless + Split + QMK = Mitosis (Reddit)](https://www.reddit.com/r/MechanicalKeyboards/comments/66588f/wireless_split_qmk_mitosis/)
 * [A collection of Mitosis Kicad ports from Altium (GitHub)](https://github.com/joric/mitosis-hardware/tree/joric_kicad)
-* [Mitosis Bluetooth repository (in development)](https://github.com/joric/mitosis-bluetooth)
+* [Mitosis Bluetooth repository (in development)](https://github.com/joric/bluetosis)
 
 [EasyEDA]: https://easyeda.com
 [OshPark]: https://oshpark.com

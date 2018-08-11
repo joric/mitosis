@@ -2,7 +2,7 @@
 
 Bluetooth firmware for the Mitosis keyboard (BLE and Gazell timesharing via timeslot API)
 
-**This branch is deprecated (SDK 11). Current development (SDK 12) is here: https://github.com/joric/mitosis-bluetooth**
+**This branch is deprecated (SDK 11). Current development (SDK 12) is here: https://github.com/joric/bluetosis**
 
 ## Precompiled Firmware
 
