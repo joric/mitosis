@@ -10,15 +10,15 @@ Bluetooth firmware for the Mitosis keyboard (BLE and Gazell timesharing via time
 
 * [mitosis-bt.hex] (firmware upgrade for the right half, turns Mitosis into a fully wireless split Bluetooth HID keyboard)
 
-You need to flash the right half only. Use [ST-LINK/V2] and [OpenOCD].
+You need to flash the right half only. Use [ST-LINK/V2] and [OpenOCD]. 
+Precompiled firmware is NOT merged with softdevice (s130 2.0.0) because it would violate Nordic redistribution terms,
+so flash softdevice first, the same way (just once).
 
 ```
 openocd -f interface/stlink-v2.cfg -f target/nrf51.cfg ^
 -c init -c "reset halt" -c "flash write_image erase mitosis-bt.hex" -c reset -c exit
 ```
 
-Precompiled firmware is NOT merged with softdevice s130 2.0.0 because it violates Nordic license,
-so you need to flash softdevice first, the same way (just once).
 Current firmware version switches into a System Off mode after a few minutes of inactivity to save the battery,
 and wakes up on hardware interrupt (any key, usually you press something on a home row).
 
