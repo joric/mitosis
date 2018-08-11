@@ -12,6 +12,8 @@ It also makes use of the keyswitch board LED (it blinks two times on powering up
 
 I'm using [modified QMK firmware](https://github.com/joric/qmk_firmware/blob/mitosis-joric/keyboards/mitosis/mitosis.c) (with mitosis-MJT keymap) that adds LED startup sequence to the receiver as well.
 
+**Also check out my [Mitosis Bluetooth](https://github.com/joric/mitosis-bluetooth) firmware (turns Mitosis into a fully wireless split Bluetooth HID keyboard)**
+
 ## IAR support
 
 Original build used blue Waveshare Core51822 (B)
