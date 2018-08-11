@@ -10,15 +10,15 @@ Bluetooth firmware for the Mitosis keyboard (BLE and Gazell timesharing via time
 
 * [mitosis-bt.hex] (firmware upgrade for the right half, turns Mitosis into a fully wireless split Bluetooth HID keyboard)
 
-You need to flash the right half only.
-Use [ST-LINK/V2] and [OpenOCD].
-Precompiled firmware is already merged with softdevice s130 so you don't need to flash softdevice first.
+You need to flash the right half only. Use [ST-LINK/V2] and [OpenOCD].
 
 ```
 openocd -f interface/stlink-v2.cfg -f target/nrf51.cfg ^
 -c init -c "reset halt" -c "flash write_image erase mitosis-bt.hex" -c reset -c exit
 ```
 
+Precompiled firmware is NOT merged with softdevice s130 2.0.0 because it violates Nordic license,
+so you need to flash softdevice first, the same way (just once).
 Current firmware version switches into a System Off mode after a few minutes of inactivity to save the battery,
 and wakes up on hardware interrupt (any key, usually you press something on a home row).
 
@@ -47,6 +47,12 @@ Working GCC linker settings for softdevice s130 2.0.0 and [YJ-14015] modules (25
 ```
   FLASH (rx) : ORIGIN = 0x1b000, LENGTH = 0x25000
   RAM (rwx) :  ORIGIN = 0x20002000, LENGTH = 0x2000
+```
+
+To build with this settings, set stack and heap to 1024 or something in gcc_startup_nrf51.S (originally 2048). Erasing the chip and flashing merged hex also might help. You could also use Makefile:
+
+```
+ASMFLAGS += -D__HEAP_SIZE=1024 -D__STACK_SIZE=1024
 ```
 
 ## Debugging
@@ -135,7 +141,7 @@ See this GCC-only TMK core-based project for example (all API calls are precisel
 * [My fork of the Mitosis repository (bonus documentation included)](https://github.com/joric/mitosis/tree/devel)
 * [Reddit thread](https://redd.it/91s4pu)
 
-[mitosis-bt.hex]: https://raw.githubusercontent.com/joric/mitosis/devel/precompiled_iar/mitosis-bt.hex
+[mitosis-bt.hex]: https://raw.githubusercontent.com/joric/mitosis/devel/precompiled/mitosis-bt.hex
 [ST-LINK/V2]: http://www.ebay.com/itm/331803020521
 [OpenOCD]: http://www.freddiechopin.info/en/download/category/10-openocd-dev
 [YJ-14015]: https://www.ebay.com/itm/282575577879

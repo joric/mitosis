@@ -151,6 +151,7 @@ ASMFLAGS += -DNRF51
 ASMFLAGS += -DS130
 ASMFLAGS += -DBLE_STACK_SUPPORT_REQD
 ASMFLAGS += -DSWI_DISABLE0
+ASMFLAGS += -D__HEAP_SIZE=1024 -D__STACK_SIZE=1024
 
 #default target - first one defined
 default: clean nrf51822_xxac
