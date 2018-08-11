@@ -2,9 +2,7 @@
 
 Bluetooth firmware for the Mitosis keyboard (BLE and Gazell timesharing via timeslot API)
 
-## Video
-
-[![](http://img.youtube.com/vi/Qv22OyWb81g/0.jpg)](https://youtu.be/Qv22OyWb81g)
+**This branch is deprecated (SDK 11). Current development (SDK 12) is here: https://github.com/joric/mitosis-bluetooth**
 
 ## Precompiled Firmware
 
@@ -86,59 +84,9 @@ ENABLE_DEBUG_LOG_SUPPORT=1
 DM_DISABLE_LOGS=1
 ```
 
-## Status
-
-### Works
-
-* Bluetooth and Gazell timesharing
-* Battery level reporting via Bluetooth
-* Debugging via UART
-* Basic QMK layout support
-* Bluetooth pairing shortcut
-* Switching between RF and Bluetooth modes
-* Switching between Bluetooth devices
-
-### TODO
-
-* Full QMK/TMK suport (maybe)
-
-#### QMK support is still in progress (Mitosis-Bluetooth compiles fine without QMK)
-
-QMK firwmare has massive incompatibility issues with ICCARM (IAR) that can't be fixed with preprocessor.
-So it's either a fully-GCC setup (armgcc and maybe uVision Keil) or patching QMK
-(changes are small but I don't know if they ever get merged to the upstream).
-I've patched and compiled QMK for ICCARM but couldn't get correct keycodes so far.
-
-#### QMK incompatibility issues
-
-* Excessive and unnecessary binary literals (e.g. `0b011` is C++14 only), should use hex or decimals
-* GCC-specific switch case ranges (`case A ... Z`, ), should use `if` and `else`
-* GCC-specific `__attribute__` keyword, e.g. `__attribute__ ((weak))`, should use `__WEAK` define
-* Inplace initializations (`#define MACRO(...) ({static const macro_t __m[]; PROGMEM={__VA_ARGS__}; &__m[0]})`)
-
-
-#### Patching QMK for IAR
-
-* add `#ifdef __ICCARM__` for IAR-specific code
-* add `__attribute__(x)=`  to the preprocessor directives, use `__weak` or whatever instead
-* add dummy Atmel-specific variables and functions `PORTF`, `PORTD`, etc.
-
-#### QMK embedding guide
-
-* add `QMK_KEYBOARD_H="your_hardware_name.h"` to the preprocessor directives
-* add `#include "keyboard.h"`, add QMK paths (quantum/, tmk_core/common/, etc.)
-* implement `timer_read32()` if it's incompatible (e.g. use `app_timer_cnt_get` for nrf5x)
-* implement `matrix_row_t matrix_get_row(uint8_t row)` callback (just read from array)
-* implement host driver callbacks, add `host_set_driver(&driver)` to the init sequence
-* add `keyboard_task()` to the main loop
-
-See this GCC-only TMK core-based project for example (all API calls are precisely the same):
-
-* https://github.com/Lotlab/nrf51822-keyboard
-
 ## References
 
-* [My fork of the Mitosis repository (bonus documentation included)](https://github.com/joric/mitosis/tree/devel)
+* [Mitosis Bluetooth repository](https://github.com/joric/mitosis-bluetooth)
 * [Reddit thread](https://redd.it/91s4pu)
 
 [mitosis-bt.hex]: https://raw.githubusercontent.com/joric/mitosis/devel/precompiled/mitosis-bt.hex
