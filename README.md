@@ -29,7 +29,6 @@ This repository now supports GCC for YJ-14015 as well, so there's no need for IA
 Use GCC-prebuild firmware from the precompiled folder or apply this diff https://github.com/reversebias/mitosis/pull/7
 (update: it's already merged into upstream).
 
-
 ## nRF51 Firmware
 
 This firmware is used for the nRF51 modules on the keyboard halves and the receiver.
@@ -41,6 +40,11 @@ This precompiled firmware features YJ-14015 support and status LEDs support.
 * [precompiled-basic-left.hex](https://raw.githubusercontent.com/joric/mitosis/devel/precompiled_iar/precompiled-basic-left.hex) (left half)
 * [precompiled-basic-right.hex](https://raw.githubusercontent.com/joric/mitosis/devel/precompiled_iar/precompiled-basic-right.hex) (right half)
 * [precompiled-basic-receiver.hex](https://raw.githubusercontent.com/joric/mitosis/devel/precompiled_iar/precompiled-basic-receiver.hex) (receiver)
+
+There is also GCC-built firmware for a single plate (reversed) version.
+
+* [precompiled-reversed-left.hex](https://raw.githubusercontent.com/joric/mitosis/devel/precompiled/precompiled-reversed-left.hex) (left)
+* [precompiled-reversed-right.hex](https://raw.githubusercontent.com/joric/mitosis/devel/precompiled/precompiled-reversed-right.hex) (right)
 
 ### Uploading nRF51 Firmware
 
