@@ -1,6 +1,6 @@
 
-#define COMPILE_RIGHT
-//#define COMPILE_LEFT
+//#define COMPILE_RIGHT
+#define COMPILE_LEFT
 
 #include "mitosis.h"
 #include "nrf_drv_config.h"
@@ -10,6 +10,7 @@
 #include "nrf_drv_clock.h"
 #include "nrf_drv_rtc.h"
 
+#include "rgb_modes.h"
 
 /*****************************************************************************/
 /** Configuration */
@@ -216,13 +217,17 @@ int main()
     NRF_GPIOTE->INTENSET = GPIOTE_INTENSET_PORT_Msk;
     NVIC_EnableIRQ(GPIOTE_IRQn);
 
+    rgb_mode = 0;
+    rgb_init();
 
     // Main loop, constantly sleep, waiting for RTC and gpio IRQs
     while(1)
     {
         __SEV();
         __WFE();
-        __WFE(); 
+        __WFE();
+
+        rgb_task();
     }
 }
 
