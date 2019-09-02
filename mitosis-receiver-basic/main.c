@@ -14,8 +14,20 @@
 #define UART_RX_BUF_SIZE 1                           /**< UART RX buffer size. */
 
 
+// I am using BlueMicro daughter board with 3.3V Pro Micro on top
+// See https://github.com/jpconstantineau/NRF52-Board/tree/master/YJ-14015
+// Picture: https://i.imgur.com/Ed3KmLV.jpg
+// CTS/RTS pins are never really used anywhere
+
+#define USE_BLUEMICRO
+#ifdef USE_BLUEMICRO 
+#define RX_PIN_NUMBER  14 //promicro TX0
+#define TX_PIN_NUMBER  13 //promicro RX1
+#else
 #define RX_PIN_NUMBER  25
 #define TX_PIN_NUMBER  24
+#endif
+
 #define CTS_PIN_NUMBER 23
 #define RTS_PIN_NUMBER 22
 #define HWFC           false
@@ -75,7 +87,7 @@ int main(void)
           CTS_PIN_NUMBER,
           APP_UART_FLOW_CONTROL_DISABLED,
           false,
-          UART_BAUDRATE_BAUDRATE_Baud1M
+          UART_BAUDRATE_BAUDRATE_Baud250000
       };
 
     APP_UART_FIFO_INIT(&comm_params,

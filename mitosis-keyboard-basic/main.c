@@ -1,6 +1,5 @@
-
-//#define COMPILE_RIGHT
-#define COMPILE_LEFT
+#define COMPILE_RIGHT
+//#define COMPILE_LEFT
 
 #include "mitosis.h"
 #include "nrf_drv_config.h"
@@ -112,7 +111,23 @@ static void handler_maintenance(nrf_drv_rtc_int_type_t int_type)
     send_data();
 }
 
-// 1000Hz debounce sampling
+int hw_keys() {
+    return (keys & (1<<S16)) && (keys & (1<<S17)) && (keys & (1<<S18)); //thumb keys
+}
+
+int hw_last = 0;
+void hw_keys_handler() {
+    if (hw_keys() && !hw_last) {
+        rgb_mode = (rgb_mode + 1) % rgb_num_modes();
+        hw_last = 1;
+    }
+    if (!hw_keys()) {
+        hw_last = 0;
+    }
+}
+
+
+// 1000Hz deboudfnce sampling
 static void handler_debounce(nrf_drv_rtc_int_type_t int_type)
 {
     // debouncing, waits until there have been no transitions in 5ms (assuming five 1ms ticks)
@@ -126,6 +141,7 @@ static void handler_debounce(nrf_drv_rtc_int_type_t int_type)
             if (debounce_ticks == DEBOUNCE)
             {
                 keys = keys_snapshot;
+                hw_keys_handler();
                 send_data();
             }
         }
@@ -217,7 +233,6 @@ int main()
     NRF_GPIOTE->INTENSET = GPIOTE_INTENSET_PORT_Msk;
     NVIC_EnableIRQ(GPIOTE_IRQn);
 
-    rgb_mode = 0;
     rgb_init();
 
     // Main loop, constantly sleep, waiting for RTC and gpio IRQs
@@ -226,7 +241,6 @@ int main()
         __SEV();
         __WFE();
         __WFE();
-
         rgb_task();
     }
 }

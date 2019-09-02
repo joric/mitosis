@@ -13,7 +13,8 @@
 #define RGB_DI_PIN 21
 #endif
 
-int rgb_mode = 0;
+uint8_t rgb_mode = 0;
+uint8_t last_rgb_mode = 0;
 neopixel_strip_t m_strip;
 uint8_t dig_pin_num = RGB_DI_PIN;
 uint8_t leds_per_strip = RGBLED_NUM;
@@ -22,22 +23,50 @@ uint8_t leds_per_strip = RGBLED_NUM;
 uint64_t current_ms=0;
 uint64_t millis(void) {
   //return(NRF_RTC0->COUNTER / 32.768);
-
     return(NRF_RTC1->COUNTER/1.024);
+}
 
-  //  return current_ms++;
+/*
+still small glitches
+needs to move to ble_radio_notification_init with radio_active == false
+ble_radio_notification_init(6, NRF_RADIO_NOTIFICATION_DISTANCE_5500US, your_radio_callback_handler);
+#include "ble_radio_notification.h"
+void your_radio_callback_handler(bool radio_active) {
+    if (radio_active == false) {
+        neopixel_show(&m_strip);
+    }
+}
+*/
+void rgb_update() {
+    uint8_t region; sd_nvic_critical_region_enter(&region);
+    neopixel_show(&m_strip);
+    sd_nvic_critical_region_exit(region);
+}
+
+void rgb_off() {
+    for (int i = 0; i < RGBLED_NUM/2; i++)
+        neopixel_set_color(&m_strip, i, 0,0,0);
+    rgb_update();
+    for (int i = RGBLED_NUM/2; i < RGBLED_NUM; i++)
+        neopixel_set_color(&m_strip, i, 0,0,0);
+    rgb_update();
 }
 
 void rgb_init() {
     nrf_gpio_cfg_output(RGB_DI_PIN);
     neopixel_init(&m_strip, dig_pin_num, leds_per_strip);
-    neopixel_clear(&m_strip);
+    neopixel_set_color_and_show(&m_strip, 0, 0,0,64);
+    nrf_delay_ms(50);
+
+/*
     for (int i=0; i<3; i++) {
         neopixel_set_color_and_show(&m_strip, 0, 0,0,64);
         nrf_delay_ms(100);
         neopixel_set_color_and_show(&m_strip, 0, 0,0,0);
         nrf_delay_ms(100);
     }
+*/
+    rgb_off();
 }
 
 #define RGB_W 8
@@ -92,6 +121,24 @@ int usqrt(int x) {
     return a;
 }
 
+void rgb_color(uint32_t c) {
+    for (int i=0; i<leds_per_strip; i++) {
+        setColor(i, c);
+    }
+}
+
+void rgb_w1() { rgb_color(0xffffff); }
+void rgb_w2() { rgb_color(0x101010); }
+void rgb_w3() { rgb_color(0x020202); }
+
+void rgb_c1() { rgb_color(0x200000); }
+void rgb_c2() { rgb_color(0x002000); }
+void rgb_c3() { rgb_color(0x000020); }
+
+void rgb_c4() { rgb_color(0x200080); }
+void rgb_c5() { rgb_color(0x202000); }
+void rgb_c6() { rgb_color(0x002020); }
+
 void rgb_breathing() {
     int ms = millis();
     for (int i=0; i<leds_per_strip; i++) {
@@ -129,56 +176,34 @@ void rgb_linear() {
 
 uint64_t last_ms = 0;
 uint64_t counter = 0;
-int last_rgb_mode = 0;
 
+void rgb_none(){}
 typedef void (*func_type)(void);
-func_type rgb_func[] = { rgb_linear, rgb_breathing, rgb_wipe };
+func_type rgb_func[] = { rgb_none, rgb_wipe, rgb_linear, rgb_breathing,
+    rgb_w3,
+    rgb_c1, rgb_c2, rgb_c3,
+    rgb_c4, rgb_c5, rgb_c6,
+    rgb_w1
+};
+int rgb_num_modes() { return sizeof(rgb_func)/sizeof(rgb_func[0]); }
 
-/*
-every 25 ms
-still small glitches
-needs to move to ble_radio_notification_init with radio_active == false
-ble_radio_notification_init(6, NRF_RADIO_NOTIFICATION_DISTANCE_5500US, your_radio_callback_handler);
-#include "ble_radio_notification.h"
-void your_radio_callback_handler(bool radio_active) {
-    if (radio_active == false) {
-        neopixel_show(&m_strip);
-    }
-}
-*/
+// every 25 ms
 void rgb_task() {
 
-    int num_modes = sizeof(rgb_func)/sizeof(rgb_func[0]);
-
-    if (rgb_mode<0)
-        rgb_mode = 0;
-
-    rgb_mode = rgb_mode % (num_modes + 1);
-
-    // last mode means rgb disabled
-    bool disabled = rgb_mode==num_modes;
-    if (disabled && last_rgb_mode != rgb_mode) {
-        neopixel_clear(&m_strip);
-        neopixel_show(&m_strip);
+    if (last_rgb_mode != rgb_mode) {
+        last_rgb_mode = rgb_mode;
+        if (rgb_mode==0)
+            rgb_off();
     }
 
-    last_rgb_mode = rgb_mode;
-
-    if (disabled)
+    if (rgb_mode==0)
         return;
 
     uint64_t ms = millis();
-
     int fps = 15;
     if (ms >= last_ms + 1000/fps) {
-
-        if (rgb_mode<sizeof(rgb_func)) rgb_func[rgb_mode]();
-  
-        uint8_t region; sd_nvic_critical_region_enter(&region);
-        neopixel_show(&m_strip);
-        sd_nvic_critical_region_exit(region);
-
+        if (rgb_mode<rgb_num_modes()) rgb_func[rgb_mode]();
+        rgb_update();
         last_ms = ms;
     }
 }
-
