@@ -127,17 +127,17 @@ void rgb_color(uint32_t c) {
     }
 }
 
-void rgb_w1() { rgb_color(0xffffff); }
-void rgb_w2() { rgb_color(0x101010); }
-void rgb_w3() { rgb_color(0x020202); }
+void rgb_w1() { rgb_color(0x808080); } //bright white
+void rgb_w2() { rgb_color(0x404040); } //medium white
+void rgb_w3() { rgb_color(0x020202); } //dim white
 
-void rgb_c1() { rgb_color(0x200000); }
-void rgb_c2() { rgb_color(0x002000); }
-void rgb_c3() { rgb_color(0x000020); }
+void rgb_c1() { rgb_color(0x200000); } //blue
+void rgb_c2() { rgb_color(0x002000); } //red
+void rgb_c3() { rgb_color(0x000020); } // green
 
-void rgb_c4() { rgb_color(0x200080); }
-void rgb_c5() { rgb_color(0x202000); }
-void rgb_c6() { rgb_color(0x002020); }
+void rgb_c4() { rgb_color(0x200080); } //purple
+void rgb_c5() { rgb_color(0x800F00); } //orange
+void rgb_c6() { rgb_color(0x002020); } //cyan
 
 void rgb_breathing() {
     int ms = millis();
@@ -180,10 +180,9 @@ uint64_t counter = 0;
 void rgb_none(){}
 typedef void (*func_type)(void);
 func_type rgb_func[] = { rgb_none, rgb_wipe, rgb_linear, rgb_breathing,
-    rgb_w3,
+    rgb_w2,
     rgb_c1, rgb_c2, rgb_c3,
-    rgb_c4, rgb_c5, rgb_c6,
-    rgb_w1
+    rgb_c4, rgb_c5, rgb_c6
 };
 int rgb_num_modes() { return sizeof(rgb_func)/sizeof(rgb_func[0]); }
 
